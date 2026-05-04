@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aegis DMS — Digital Legacy System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    body { background: var(--bg, #DDE8F4); color: var(--ink, #0B1C2C); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border, #8AAAC8); border-radius: 99px; }
+    input, textarea, button { font-family: inherit; }
+    input[type=range] { height: 4px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Tweaks panel -->
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <!-- Hand-drawn icons -->
+  <script type="text/babel" src="aegis-icons.jsx"></script>
+
+  <!-- Logo -->
+  <script type="text/babel" src="aegis-logo.jsx"></script>
+
+  <!-- Mortality animations -->
+  <script type="text/babel" src="aegis-animations.jsx"></script>
+
+  <!-- Inner pages -->
+  <script type="text/babel" src="aegis-inner.jsx"></script>
+
+  <!-- Outer pages + app shell -->
+  <script type="text/babel" src="aegis-app.jsx"></script>
+
+  <!-- Root bootstrap -->
+  <script type="text/babel">
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "theme": "blueprint",
+      "sketchIntensity": "full",
+      "accentColor": "",
+      "tiltAmount": 1.25,
+      "headingScale": 1,
+      "cardStyle": "sketchy",
+      "density": "comfortable",
+      "showDoodles": true,
+      "buttonShape": "sketchy",
+      "sidebarWidth": 220,
+      "logoSize": "md"
+    }/*EDITMODE-END*/;
+
+    const THEMES = {
+      blueprint: {
+        bg: '#DDE8F4', ink: '#0B1C2C', accent: '#1A6B9A',
+        muted: '#4A6B8A', surface: '#C8D9ED', border: '#8AAAC8',
+        danger: '#C0392B',
+      },
+      cream: {
+        bg: '#F7F4EE', ink: '#1C1917', accent: '#A0522D',
+        muted: '#8B7355', surface: '#EDE9E0', border: '#C4B89A',
+        danger: '#C0392B',
+      },
+      midnight: {
+        bg: '#111111', ink: '#F0EBE0', accent: '#E8C840',
+        muted: '#888880', surface: '#1E1E1E', border: '#333330',
+        danger: '#E53935',
+      },
+    };
+
+    function TweaksToggle({ panelOpen, onToggle }) {
+      if (panelOpen) return null;
+      return (
+        <button
+          onClick={onToggle}
+          title="Open Tweaks"
+          style={{
+            position: 'fixed', bottom: 16, right: 16, zIndex: 2147483645,
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'rgba(11,28,44,0.75)', color: '#DDE8F4',
+            border: '1.5px solid rgba(138,170,200,0.4)', cursor: 'pointer',
+            fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            transition: 'opacity 0.15s',
+          }}
+        >⚙</button>
+      );
+    }
+
+    function Root() {
+      const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+      const [panelOpen, setPanelOpen] = React.useState(false);
+
+      const baseTheme = THEMES[tweaks.theme] || THEMES.blueprint;
+      const theme = {
+        ...baseTheme,
+        accent: tweaks.accentColor || baseTheme.accent,
+      };
+
+      window.__aegisTheme = theme;
+      window.__aegisTweaks = tweaks;
+
+      React.useEffect(() => {
+        document.body.style.background = theme.bg;
+        document.body.style.color = theme.ink;
+      }, [theme]);
+
+      // Track panel open/close via the message protocol
+      React.useEffect(() => {
+        const onMsg = (e) => {
+          const type = e?.data?.type;
+          if (type === '__edit_mode_available') return;
+          if (type === '__edit_mode_dismissed') setPanelOpen(false);
+        };
+        window.addEventListener('message', onMsg);
+        return () => window.removeEventListener('message', onMsg);
+      }, []);
+
+      const openPanel = () => {
+        setPanelOpen(true);
+        window.postMessage({ type: '__activate_edit_mode' }, '*');
+      };
+
+      return (
+        <React.Fragment>
+          <AegisApp key={tweaks.theme} />
+          <TweaksToggle panelOpen={panelOpen} onToggle={openPanel} />
+          <TweaksPanel>
+            <TweakSection title="Color Theme">
+              <TweakRadio id="theme"
+                options={[
+                  { value: 'blueprint', label: 'Blueprint' },
+                  { value: 'cream', label: 'Cream' },
+                  { value: 'midnight', label: 'Midnight' },
+                ]}
+                value={tweaks.theme} onChange={v => setTweak('theme', v)}
+              />
+            </TweakSection>
+            <TweakSection title="Accent Color">
+              <TweakColor id="accentColor" value={tweaks.accentColor || theme.accent}
+                onChange={v => setTweak('accentColor', v)} />
+            </TweakSection>
+            <TweakSection title="Card Style">
+              <TweakRadio id="cardStyle"
+                options={[
+                  { value: 'sketchy', label: 'Sketchy' },
+                  { value: 'sharp', label: 'Sharp' },
+                  { value: 'pill', label: 'Pill' },
+                ]}
+                value={tweaks.cardStyle} onChange={v => setTweak('cardStyle', v)}
+              />
+            </TweakSection>
+            <TweakSection title="Button Shape">
+              <TweakRadio id="buttonShape"
+                options={[
+                  { value: 'sketchy', label: 'Sketchy' },
+                  { value: 'pill', label: 'Pill' },
+                  { value: 'sharp', label: 'Sharp' },
+                ]}
+                value={tweaks.buttonShape} onChange={v => setTweak('buttonShape', v)}
+              />
+            </TweakSection>
+            <TweakSection title="Density">
+              <TweakRadio id="density"
+                options={[
+                  { value: 'comfortable', label: 'Comfortable' },
+                  { value: 'compact', label: 'Compact' },
+                ]}
+                value={tweaks.density} onChange={v => setTweak('density', v)}
+              />
+            </TweakSection>
+            <TweakSection title="Card Tilt">
+              <TweakSlider id="tiltAmount" min={0} max={3} step={0.25}
+                value={tweaks.tiltAmount} onChange={v => setTweak('tiltAmount', v)} />
+            </TweakSection>
+            <TweakSection title="Heading Scale">
+              <TweakSlider id="headingScale" min={0.7} max={1.5} step={0.05}
+                value={tweaks.headingScale} onChange={v => setTweak('headingScale', v)} />
+            </TweakSection>
+            <TweakSection title="Sidebar Width">
+              <TweakSlider id="sidebarWidth" min={160} max={300} step={10}
+                value={tweaks.sidebarWidth} onChange={v => setTweak('sidebarWidth', v)} />
+            </TweakSection>
+            <TweakSection title="Logo Size">
+              <TweakRadio id="logoSize"
+                options={[
+                  { value: 'sm', label: 'Small' },
+                  { value: 'md', label: 'Medium' },
+                  { value: 'lg', label: 'Large' },
+                ]}
+                value={tweaks.logoSize} onChange={v => setTweak('logoSize', v)}
+              />
+            </TweakSection>
+            <TweakSection title="Corner Doodles">
+              <TweakToggle id="showDoodles" label="Show on landing page"
+                value={tweaks.showDoodles} onChange={v => setTweak('showDoodles', v)} />
+            </TweakSection>
+          </TweaksPanel>
+        </React.Fragment>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+  </script>
+</body>
+</html>
