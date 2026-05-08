@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "unchecked=$(grep -r -e \"- \\[ \\]\" docs/superpowers/plans/*saas-phase*.md 2>/dev/null | wc -l | tr -d \" \\t\"); stale=$(grep -e \"Task ___\" CLAUDE.md 2>/dev/null | wc -l | tr -d \" \\t\"); msgs=\"\"; [ \"$unchecked\" -gt 0 ] && msgs=\"${unchecked} unchecked boxes in saas-phase plan(s). \"; [ \"$stale\" -gt 0 ] && msgs=\"${msgs}CLAUDE.md session handoff has blank Task fields. \"; [ -n \"$msgs\" ] && printf '{\"systemMessage\":\"TRACKING GAP DETECTED: %sUpdate plan checkboxes and update.md before ending session.\"}' \"$msgs\" || true"
+          }
+        ]
+      }
+    ]
+  }
+}
