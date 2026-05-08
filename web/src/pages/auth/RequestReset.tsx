@@ -1,0 +1,61 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { post } from '../../lib/api';
+
+export default function RequestReset() {
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await post('/api/auth/request-reset', { email });
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Request failed');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (sent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-brand-bg">
+        <div className="w-full max-w-md p-8 bg-brand-surface border-2 border-brand-border rounded-lg text-center">
+          <h1 className="font-hand text-4xl font-bold mb-4 text-brand-ink">Check Your Email</h1>
+          <p className="font-sans text-sm text-brand-muted mb-4">
+            If an account exists with that email, we sent a password reset link.
+          </p>
+          <Link to="/login" className="font-sans text-sm text-brand-accent hover:underline">Back to login</Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 bg-brand-bg">
+      <form onSubmit={handleSubmit} className="w-full max-w-md p-8 bg-brand-surface border-2 border-brand-border rounded-lg">
+        <h1 className="font-hand text-4xl font-bold mb-2 text-brand-ink">Reset Password</h1>
+        <p className="font-sans text-sm text-brand-muted mb-6">Enter your email to receive a reset link.</p>
+
+        <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
+          className="w-full font-sans text-sm p-3 mb-4 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent" />
+
+        {error && <div className="font-sans text-sm mb-3 text-brand-danger">{error}</div>}
+
+        <button type="submit" disabled={loading}
+          className="w-full font-sans font-semibold text-sm p-3 cursor-pointer bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors disabled:opacity-50">
+          {loading ? 'Sending...' : 'Send Reset Link'}
+        </button>
+
+        <p className="font-sans text-sm text-brand-muted mt-4 text-center">
+          <Link to="/login" className="text-brand-accent hover:underline">Back to login</Link>
+        </p>
+      </form>
+    </div>
+  );
+}
