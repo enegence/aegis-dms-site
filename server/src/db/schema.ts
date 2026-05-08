@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, jsonb, uuid, integer, serial } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, jsonb, uuid, integer, serial, index } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -205,7 +205,7 @@ export const trustAcknowledgements = pgTable('trust_acknowledgements', {
 
 export const notificationEvents = pgTable('notification_events', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   relayConnectionId: uuid('relay_connection_id').references(() => relayConnections.id, { onDelete: 'set null' }),
   switchId: uuid('switch_id').references(() => switches.id, { onDelete: 'set null' }),
   contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'set null' }),
@@ -216,4 +216,8 @@ export const notificationEvents = pgTable('notification_events', {
   failureReason: text('failure_reason'),
   sentAt: timestamp('sent_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+}, (table) => ({
+  userIdx: index('notification_events_user_id_idx').on(table.userId),
+  relayIdx: index('notification_events_relay_id_idx').on(table.relayConnectionId),
+  switchIdx: index('notification_events_switch_id_idx').on(table.switchId),
+}));
