@@ -1,0 +1,24 @@
+# WSL/Windows metadata artifacts
+*:Zone.Identifier
+*:mshield
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Worktrees
+.worktrees/
