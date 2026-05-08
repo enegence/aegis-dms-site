@@ -5,6 +5,13 @@ import Register from './pages/auth/Register';
 import Login from './pages/auth/Login';
 import RequestReset from './pages/auth/RequestReset';
 import ResetPassword from './pages/auth/ResetPassword';
+import Dashboard from './pages/app/Dashboard';
+import Estate from './pages/app/Estate';
+import Contacts from './pages/app/Contacts';
+import Trigger from './pages/app/Trigger';
+import Relay from './pages/app/Relay';
+import Landing from './pages/marketing/Landing';
+import Pricing from './pages/marketing/Pricing';
 
 interface AuthUser {
   id: string;
@@ -21,6 +28,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({ user: null, setUser: () => {} });
 export const useAuth = () => useContext(AuthContext);
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  return user ? <>{children}</> : <Navigate to="/login" />;
+}
 
 function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -44,19 +56,25 @@ function App() {
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <Routes>
+        {/* Public marketing */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/pricing" element={<Pricing />} />
+
+        {/* Auth */}
         <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register />} />
         <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
         <Route path="/forgot-password" element={<RequestReset />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/dashboard" element={
-          user ? (
-            <div className="min-h-screen p-8">
-              <h1 className="font-hand text-4xl font-bold mb-4">Dashboard</h1>
-              <p className="font-sans text-brand-muted">Welcome, {user.displayName}. Dashboard coming soon.</p>
-            </div>
-          ) : <Navigate to="/login" />
-        } />
-        <Route path="*" element={<Navigate to={user ? '/dashboard' : '/login'} />} />
+
+        {/* App (protected) */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/estate" element={<ProtectedRoute><Estate /></ProtectedRoute>} />
+        <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
+        <Route path="/switches" element={<ProtectedRoute><Trigger /></ProtectedRoute>} />
+        <Route path="/relay" element={<ProtectedRoute><Relay /></ProtectedRoute>} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to={user ? '/dashboard' : '/'} />} />
       </Routes>
     </AuthContext.Provider>
   );
