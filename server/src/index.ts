@@ -12,6 +12,7 @@ import { billingRoutes } from './routes/billing.js';
 import { pricingRoutes } from './routes/pricing.js';
 import { csrfRoutes } from './routes/csrf.js';
 import { estateItemRoutes } from './routes/estate-items.js';
+import { contactRoutes } from './routes/contacts.js';
 import { relayRoutes } from './routes/relay.js';
 
 declare module 'fastify' {
@@ -59,6 +60,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(pricingRoutes);
   await app.register(csrfRoutes);
   await app.register(estateItemRoutes);
+  await app.register(contactRoutes);
   await app.register(relayRoutes);
 
   app.addHook('onRequest', async (req, reply) => {
