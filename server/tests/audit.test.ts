@@ -26,17 +26,39 @@ describe('Audit service', () => {
       expect(result.email).toBe('[REDACTED]');
     });
 
-    it('redacts keys containing sensitive substrings', () => {
+    it('redacts keys by exact match and camelCase suffix', () => {
       const result = sanitizeAuditMetadata({ userEmail: 'x', apiKey: 'secret', smtpPassword: 'pw' });
       expect(result.userEmail).toBe('[REDACTED]');
       expect(result.apiKey).toBe('[REDACTED]');
       expect(result.smtpPassword).toBe('[REDACTED]');
     });
 
+    it('does not redact non-sensitive keys with similar substrings', () => {
+      const result = sanitizeAuditMetadata({
+        accountId: 'some-uuid',
+        tokenExpiry: '2027-01-01',
+        hostname: 'relay.example.com',
+        count: 3,
+      });
+      expect(result.accountId).toBe('some-uuid');
+      expect(result.tokenExpiry).toBe('2027-01-01');
+      expect(result.hostname).toBe('relay.example.com');
+      expect(result.count).toBe(3);
+    });
+
     it('redacts nested sensitive keys', () => {
       const result = sanitizeAuditMetadata({ config: { smtpPassword: 'pw', host: 'smtp.example.com' } });
       expect((result.config as any).smtpPassword).toBe('[REDACTED]');
       expect((result.config as any).host).toBe('smtp.example.com');
+    });
+
+    it('sanitizes objects inside arrays', () => {
+      const result = sanitizeAuditMetadata({
+        items: [{ email: 'x@y.com', status: 'ok' }, 'string_item'],
+      });
+      expect((result.items as any[])[0].email).toBe('[REDACTED]');
+      expect((result.items as any[])[0].status).toBe('ok');
+      expect((result.items as any[])[1]).toBe('string_item');
     });
 
     it('preserves null values for non-sensitive keys', () => {
@@ -86,14 +108,43 @@ describe('Audit service', () => {
     });
 
     it('stores relayConnectionId in metadata when provided', async () => {
-      await expect(
-        writeAuditEvent(app.db, {
-          eventType: 'relay_connected',
-          actorType: 'relay',
-          relayConnectionId: 'conn-uuid-123',
-          metadata: { status: 'online' },
-        })
-      ).resolves.not.toThrow();
+      const testEventType = 'relay_connected_' + Date.now();
+
+      await writeAuditEvent(app.db, {
+        eventType: testEventType,
+        actorType: 'relay',
+        relayConnectionId: 'conn-uuid-123',
+        metadata: { status: 'online' },
+      });
+
+      const { auditEvents } = await import('../src/db/schema.js');
+      const { eq } = await import('drizzle-orm');
+      const rows = await app.db.select().from(auditEvents).where(eq(auditEvents.eventType, testEventType));
+
+      expect(rows).toHaveLength(1);
+      const storedMetadata = rows[0].metadata as Record<string, unknown>;
+      expect(storedMetadata.relayConnectionId).toBe('conn-uuid-123');
+      expect(storedMetadata.status).toBe('online');
+    });
+
+    it('stores releaseRunId in metadata when provided', async () => {
+      const testEventType = 'release_run_started_' + Date.now();
+
+      await writeAuditEvent(app.db, {
+        eventType: testEventType,
+        actorType: 'system',
+        releaseRunId: 'run-uuid-456',
+        metadata: { step: 'notify' },
+      });
+
+      const { auditEvents } = await import('../src/db/schema.js');
+      const { eq } = await import('drizzle-orm');
+      const rows = await app.db.select().from(auditEvents).where(eq(auditEvents.eventType, testEventType));
+
+      expect(rows).toHaveLength(1);
+      const storedMetadata = rows[0].metadata as Record<string, unknown>;
+      expect(storedMetadata.releaseRunId).toBe('run-uuid-456');
+      expect(storedMetadata.step).toBe('notify');
     });
 
     it('handles null metadata gracefully', async () => {
