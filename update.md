@@ -119,10 +119,10 @@ aegis-dms-site/
 - [x] Task 1B: DeadDrop contract package compatibility
 - [x] Task 2: Docker Compose dev environment (PostgreSQL)
 - [x] Task 3: Fastify server + health check
-- [x] Task 4: Database schema + Drizzle setup ← WE ARE HERE
-- [ ] Task 5: Auth — password hashing + session management
-- [ ] Task 6: Email service (Postmark)
-- [ ] Task 7: Auth routes — register, login, email verify, password reset
+- [x] Task 4: Database schema + Drizzle setup
+- [x] Task 5: Auth — password hashing + session management
+- [x] Task 6: Email service (Postmark)
+- [x] Task 7: Auth routes — register, login, email verify, password reset ← WE ARE HERE
 - [ ] Task 8: Stripe billing — checkout, webhook, subscription lifecycle
 - [ ] Task 9: Public pricing API
 - [ ] Task 10: React + Vite frontend scaffold

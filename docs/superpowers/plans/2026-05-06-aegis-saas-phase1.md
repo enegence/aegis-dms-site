@@ -1177,7 +1177,7 @@ git commit -m "feat: postmark email service with verify and reset templates"
 - Modify: `server/src/index.ts` (register routes + db + auth plugin)
 - Test: `server/tests/auth-routes.test.ts`
 
-- [ ] **Step 1: Write auth routes tests**
+- [x] **Step 1: Write auth routes tests**
 
 Create `server/tests/auth-routes.test.ts`:
 
@@ -1360,12 +1360,12 @@ describe('Auth routes', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd server && npx vitest run tests/auth-routes.test.ts`
 Expected: FAIL
 
-- [ ] **Step 3: Create auth routes**
+- [x] **Step 3: Create auth routes**
 
 Create `server/src/routes/auth.ts`:
 
@@ -1647,7 +1647,7 @@ export async function authRoutes(app: FastifyInstance) {
 }
 ```
 
-- [ ] **Step 4: Update index.ts to wire up DB, auth, and routes**
+- [x] **Step 4: Update index.ts to wire up DB, auth, and routes**
 
 Replace `server/src/index.ts`:
 
@@ -1712,14 +1712,14 @@ if (isMainModule) {
 }
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run: `cd server && npx vitest run`
 Expected: All tests PASS (health + auth + auth-routes)
 
 **Note:** Auth route tests require a running Postgres instance (docker compose up). Tests hit real DB — this is intentional (integration tests, not mocked).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/routes/auth.ts server/src/index.ts server/tests/auth-routes.test.ts
