@@ -1,0 +1,197 @@
+import { pgTable, text, timestamp, boolean, jsonb, uuid, integer, serial } from 'drizzle-orm/pg-core';
+
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull().unique(),
+  displayName: text('display_name').notNull(),
+  passwordHash: text('password_hash').notNull(),
+  emailVerified: boolean('email_verified').notNull().default(false),
+  emailVerifyToken: text('email_verify_token'),
+  emailVerifyTokenExpiresAt: timestamp('email_verify_token_expires_at'),
+  passwordResetTokenHash: text('password_reset_token_hash'),
+  passwordResetExpiresAt: timestamp('password_reset_expires_at'),
+  totpSecretEncrypted: text('totp_secret_encrypted'),
+  totpEnabled: boolean('totp_enabled').notNull().default(false),
+  timezone: text('timezone').notNull().default('UTC'),
+  phone: text('phone'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const sessions = pgTable('sessions', {
+  id: text('id').primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const subscriptions = pgTable('subscriptions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  stripeCustomerId: text('stripe_customer_id').notNull(),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  plan: text('plan').notNull(),
+  status: text('status').notNull().default('active'),
+  currentPeriodEnd: timestamp('current_period_end'),
+  cancelledAt: timestamp('cancelled_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const relayConnections = pgTable('relay_connections', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  apiKeyHash: text('api_key_hash').notNull(),
+  label: text('label'),
+  lastHeartbeatAt: timestamp('last_heartbeat_at'),
+  lastHeartbeatData: jsonb('last_heartbeat_data'),
+  offlineAlertSentAt: timestamp('offline_alert_sent_at'),
+  status: text('status').notNull().default('active'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const stripeWebhookEvents = pgTable('stripe_webhook_events', {
+  id: text('id').primaryKey(),
+  type: text('type').notNull(),
+  processedAt: timestamp('processed_at').notNull().defaultNow(),
+});
+
+export const estateItems = pgTable('estate_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  category: text('category').notNull(),
+  title: text('title').notNull(),
+  institutionNameEncrypted: text('institution_name_encrypted'),
+  accountTypeEncrypted: text('account_type_encrypted'),
+  referenceHintEncrypted: text('reference_hint_encrypted'),
+  assetDescriptionEncrypted: text('asset_description_encrypted'),
+  locationNotesEncrypted: text('location_notes_encrypted'),
+  executorNotesEncrypted: text('executor_notes_encrypted'),
+  sensitiveFlag: boolean('sensitive_flag').notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const contacts = pgTable('contacts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  fullNameEncrypted: text('full_name_encrypted').notNull(),
+  relationshipEncrypted: text('relationship_encrypted'),
+  priorityOrder: integer('priority_order').notNull(),
+  emailEncrypted: text('email_encrypted').notNull(),
+  phoneEncrypted: text('phone_encrypted'),
+  telegramHandleEncrypted: text('telegram_handle_encrypted'),
+  preferredChannels: jsonb('preferred_channels').notNull().default(['email']),
+  confirmationWindowHours: integer('confirmation_window_hours').notNull().default(48),
+  claimPinHash: text('claim_pin_hash'),
+  backupNotesEncrypted: text('backup_notes_encrypted'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const switches = pgTable('switches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  mode: text('mode').notNull(),
+  status: text('status').notNull().default('draft'),
+  triggerAt: timestamp('trigger_at'),
+  heartbeatIntervalDays: integer('heartbeat_interval_days'),
+  nextCheckInDueAt: timestamp('next_check_in_due_at'),
+  warningStartsAt: timestamp('warning_starts_at'),
+  gracePeriodHours: integer('grace_period_hours').notNull().default(72),
+  warningWindowDays: integer('warning_window_days').notNull().default(3),
+  lastCheckInAt: timestamp('last_check_in_at'),
+  lastPacketSyncAt: timestamp('last_packet_sync_at'),
+  selectedContactIds: jsonb('selected_contact_ids').default([]),
+  selectedEstateItemIds: jsonb('selected_estate_item_ids').default([]),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const packets = pgTable('packets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  switchId: uuid('switch_id').notNull().references(() => switches.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull(),
+  encryptionAlgorithm: text('encryption_algorithm').notNull().default('aes-256-gcm'),
+  keyId: text('key_id').notNull(),
+  contentHash: text('content_hash').notNull(),
+  encryptedObjectHash: text('encrypted_object_hash'),
+  storageProvider: text('storage_provider'),
+  storageBucket: text('storage_bucket'),
+  storageObjectKey: text('storage_object_key'),
+  storageRegion: text('storage_region'),
+  deletionStatus: text('deletion_status'),
+  lastVerifiedAt: timestamp('last_verified_at'),
+  expiresAt: timestamp('expires_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const contactClaims = pgTable('contact_claims', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  switchId: uuid('switch_id').notNull().references(() => switches.id),
+  packetId: uuid('packet_id').notNull().references(() => packets.id),
+  contactId: uuid('contact_id').notNull().references(() => contacts.id),
+  claimToken: text('claim_token').notNull().unique(),
+  status: text('status').notNull().default('pending'),
+  notifiedAt: timestamp('notified_at'),
+  openedAt: timestamp('opened_at'),
+  verifiedAt: timestamp('verified_at'),
+  acceptedAt: timestamp('accepted_at'),
+  packetDownloadedAt: timestamp('packet_downloaded_at'),
+  keyViewedAt: timestamp('key_viewed_at'),
+  acknowledgedAt: timestamp('acknowledged_at'),
+  expiresAt: timestamp('expires_at').notNull(),
+  escalatedAt: timestamp('escalated_at'),
+  failedAt: timestamp('failed_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const auditEvents = pgTable('audit_events', {
+  id: serial('id').primaryKey(),
+  userId: uuid('user_id').references(() => users.id),
+  switchId: uuid('switch_id').references(() => switches.id),
+  eventType: text('event_type').notNull(),
+  actorType: text('actor_type').notNull(),
+  actorId: text('actor_id'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const encryptionKeys = pgTable('encryption_keys', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  purpose: text('purpose').notNull(),
+  keyMaterialEncrypted: text('key_material_encrypted').notNull(),
+  algorithm: text('algorithm').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  rotatedAt: timestamp('rotated_at'),
+});
+
+export const releaseRuns = pgTable('release_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  triggeringSwitchId: uuid('triggering_switch_id').notNull().references(() => switches.id),
+  status: text('status').notNull().default('active'),
+  activePacketId: uuid('active_packet_id').references(() => packets.id),
+  currentContactClaimId: uuid('current_contact_claim_id').references(() => contactClaims.id),
+  suppressedSwitchIds: jsonb('suppressed_switch_ids').notNull().default([]),
+  metadata: jsonb('metadata'),
+  startedAt: timestamp('started_at').notNull().defaultNow(),
+  completedAt: timestamp('completed_at'),
+  cancelledAt: timestamp('cancelled_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const trustAcknowledgements = pgTable('trust_acknowledgements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  mode: text('mode').notNull(),
+  version: text('version').notNull(),
+  acceptedAt: timestamp('accepted_at').notNull().defaultNow(),
+  ipHash: text('ip_hash'),
+  userAgentHash: text('user_agent_hash'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
