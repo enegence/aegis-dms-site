@@ -8,6 +8,7 @@ import authPlugin from './auth/plugin.js';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
 import { billingRoutes } from './routes/billing.js';
+import { pricingRoutes } from './routes/pricing.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -51,6 +52,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(healthRoutes);
   await app.register(authRoutes);
   await app.register(billingRoutes);
+  await app.register(pricingRoutes);
 
   return app;
 }
