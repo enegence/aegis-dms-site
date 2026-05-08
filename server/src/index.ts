@@ -3,17 +3,24 @@ import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import formbody from '@fastify/formbody';
 import { loadConfig, type AppConfig } from './config.js';
+import { getDb, type AegisDb } from './db/index.js';
+import authPlugin from './auth/plugin.js';
 import { healthRoutes } from './routes/health.js';
+import { authRoutes } from './routes/auth.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
     config: AppConfig;
+    db: AegisDb;
+    requireAuth: (req: import('fastify').FastifyRequest, reply: import('fastify').FastifyReply) => Promise<void>;
   }
 }
 
 export async function buildApp(overrides: Partial<AppConfig> = {}) {
   const config = loadConfig(overrides);
   const app = Fastify({ logger: !config.testing });
+
+  const db = getDb(config.databaseUrl);
 
   await app.register(cookie, { secret: config.secretKey });
   await app.register(cors, {
@@ -23,8 +30,11 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(formbody);
 
   app.decorate('config', config);
+  app.decorate('db', db);
 
+  await app.register(authPlugin);
   await app.register(healthRoutes);
+  await app.register(authRoutes);
 
   return app;
 }
@@ -42,10 +52,7 @@ async function start() {
   }
 }
 
-const isMainModule =
-  process.argv[1] &&
-  !process.argv[1].includes('vitest') &&
-  !process.env.VITEST;
+const isMainModule = process.argv[1] && !process.argv[1].includes('vitest') && !process.env.VITEST;
 if (isMainModule) {
   start();
 }
