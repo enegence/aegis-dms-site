@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import { createHash, randomBytes } from 'crypto';
 import type { AegisDb } from '../db/index.js';
 import { relayConnections } from '../db/schema.js';
@@ -69,7 +69,14 @@ export async function rotateRelayKey(
   const apiKeyHash = hashApiKey(rawApiKey);
   const [updated] = await db.update(relayConnections)
     .set({ apiKeyHash, updatedAt: new Date() })
-    .where(and(eq(relayConnections.id, id), eq(relayConnections.userId, userId)))
+    .where(
+      and(
+        eq(relayConnections.id, id),
+        eq(relayConnections.userId, userId),
+        // Cannot rotate a revoked connection
+        ne(relayConnections.status, 'disconnected'),
+      )
+    )
     .returning();
   if (!updated) return null;
   return { connection: updated, rawApiKey };
@@ -91,19 +98,19 @@ export async function deleteRelayConnection(
   db: AegisDb,
   userId: string,
   id: string,
-): Promise<boolean> {
+): Promise<{ deleted: boolean; action: 'deleted' | 'revoked' } | null> {
   // Hard delete only if never sent a heartbeat (no relay history)
   const [conn] = await db.select().from(relayConnections)
     .where(and(eq(relayConnections.id, id), eq(relayConnections.userId, userId)));
-  if (!conn) return false;
+  if (!conn) return null;
   if (conn.lastHeartbeatAt !== null) {
     // Has relay history — revoke instead of delete
     await revokeRelayConnection(db, userId, id);
-    return true;
+    return { deleted: true, action: 'revoked' };
   }
   await db.delete(relayConnections)
     .where(and(eq(relayConnections.id, id), eq(relayConnections.userId, userId)));
-  return true;
+  return { deleted: true, action: 'deleted' };
 }
 
 export { hashApiKey };

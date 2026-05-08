@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { createHash } from 'crypto';
 import { buildApp } from '../src/index.js';
 import { hashApiKey } from '../src/services/relay-connections.js';
 
@@ -278,27 +279,55 @@ describe('Relay connection management', () => {
       expect(body.apiKey).not.toBe(originalKey);
     });
 
-    it('old key hash is invalidated after rotation', async () => {
-      const csrfToken = await getCsrf(app, cookies);
+    it('rotate-key invalidates old key hash in DB', async () => {
+      // Create connection
       const createRes = await app.inject({
-        method: 'POST',
-        url: '/api/relay/connections',
-        headers: { cookie: cookies, 'x-csrf-token': csrfToken },
-        payload: { label: 'Key Invalidation Test' },
+        method: 'POST', url: '/api/relay/connections',
+        headers: { cookie: cookies, 'x-csrf-token': await getCsrf(app, cookies) },
+        payload: { label: 'Rotation Test' },
       });
-      const { connection, apiKey: originalKey } = JSON.parse(createRes.payload);
-      const originalHash = hashApiKey(originalKey);
+      const { connection, apiKey: oldKey } = JSON.parse(createRes.payload);
 
-      const rotateToken = await getCsrf(app, cookies);
+      // Rotate
       const rotateRes = await app.inject({
-        method: 'POST',
-        url: `/api/relay/connections/${connection.id}/rotate-key`,
-        headers: { cookie: cookies, 'x-csrf-token': rotateToken },
+        method: 'POST', url: `/api/relay/connections/${connection.id}/rotate-key`,
+        headers: { cookie: cookies, 'x-csrf-token': await getCsrf(app, cookies) },
       });
       const { apiKey: newKey } = JSON.parse(rotateRes.payload);
-      const newHash = hashApiKey(newKey);
+      expect(newKey).not.toBe(oldKey);
 
-      expect(newHash).not.toBe(originalHash);
+      // Verify DB hash matches new key
+      const { relayConnections } = await import('../src/db/schema.js');
+      const { eq } = await import('drizzle-orm');
+      const rows = await app.db.select({ apiKeyHash: relayConnections.apiKeyHash })
+        .from(relayConnections)
+        .where(eq(relayConnections.id, connection.id));
+      expect(rows).toHaveLength(1);
+      const expectedHash = createHash('sha256').update(newKey).digest('hex');
+      expect(rows[0].apiKeyHash).toBe(expectedHash);
+      // Old key hash should NOT match stored hash
+      const oldHash = createHash('sha256').update(oldKey).digest('hex');
+      expect(rows[0].apiKeyHash).not.toBe(oldHash);
+    });
+
+    it('rotate-key on revoked connection returns 404', async () => {
+      // Create + revoke
+      const createRes = await app.inject({
+        method: 'POST', url: '/api/relay/connections',
+        headers: { cookie: cookies, 'x-csrf-token': await getCsrf(app, cookies) },
+        payload: { label: 'Revoke Test' },
+      });
+      const { connection } = JSON.parse(createRes.payload);
+      await app.inject({
+        method: 'POST', url: `/api/relay/connections/${connection.id}/revoke`,
+        headers: { cookie: cookies, 'x-csrf-token': await getCsrf(app, cookies) },
+      });
+      // Attempt rotate
+      const rotateRes = await app.inject({
+        method: 'POST', url: `/api/relay/connections/${connection.id}/rotate-key`,
+        headers: { cookie: cookies, 'x-csrf-token': await getCsrf(app, cookies) },
+      });
+      expect(rotateRes.statusCode).toBe(404);
     });
 
     it('returns 403 without CSRF token', async () => {

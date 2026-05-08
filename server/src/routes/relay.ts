@@ -80,9 +80,10 @@ export async function relayRoutes(app: FastifyInstance) {
   }, async (req, reply) => {
     const params = RelayConnectionParamsSchema.safeParse(req.params);
     if (!params.success) return reply.status(400).send({ error: 'Invalid id' });
-    const ok = await relayService.deleteRelayConnection(app.db, req.userId!, params.data.id);
-    if (!ok) return reply.status(404).send({ error: 'Not found' });
-    await writeAuditEvent(app.db, { userId: req.userId, eventType: 'relay_connection_deleted', actorType: 'user', metadata: { connectionId: params.data.id } });
+    const result = await relayService.deleteRelayConnection(app.db, req.userId!, params.data.id);
+    if (!result) return reply.status(404).send({ error: 'Not found' });
+    const auditEventType = result.action === 'revoked' ? 'relay_connection_revoked' : 'relay_connection_deleted';
+    await writeAuditEvent(app.db, { userId: req.userId, eventType: auditEventType, actorType: 'user', metadata: { connectionId: params.data.id } });
     return reply.send({ ok: true });
   });
 }
