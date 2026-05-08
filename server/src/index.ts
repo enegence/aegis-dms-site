@@ -14,6 +14,7 @@ import { csrfRoutes } from './routes/csrf.js';
 import { estateItemRoutes } from './routes/estate-items.js';
 import { contactRoutes } from './routes/contacts.js';
 import { relayRoutes } from './routes/relay.js';
+import { switchRoutes } from './routes/switches.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -62,6 +63,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(estateItemRoutes);
   await app.register(contactRoutes);
   await app.register(relayRoutes);
+  await app.register(switchRoutes);
 
   app.addHook('onRequest', async (req, reply) => {
     const method = req.method;
