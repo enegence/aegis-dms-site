@@ -53,7 +53,89 @@ export interface Subscription {
 export interface RelayConnection {
   id: string;
   label: string | null;
-  lastHeartbeatAt: string | null;
   status: RelayConnectionStatus;
+  lastHeartbeatAt: string | null;
+  lastExpectedHeartbeatAt: string | null;
+  mode: string;
   createdAt: string;
+}
+
+export interface EstateItem {
+  id: string;
+  category: string;
+  title: string;
+  institutionName: string | null;
+  accountType: string | null;
+  referenceHint: string | null;
+  assetDescription: string | null;
+  locationNotes: string | null;
+  executorNotes: string | null;
+  sensitiveFlag: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Contact {
+  id: string;
+  fullName: string;
+  relationship: string | null;
+  priorityOrder: number;
+  email: string;
+  phone: string | null;
+  telegramHandle: string | null;
+  preferredChannels: string[];
+  confirmationWindowHours: number;
+  backupNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ReadinessStatus = 'ready' | 'not_ready' | 'warning';
+
+export interface Switch {
+  id: string;
+  name: string;
+  mode: SwitchMode;
+  status: SwitchStatus;
+  triggerAt: string | null;
+  heartbeatIntervalDays: number | null;
+  nextCheckInDueAt: string | null;
+  warningStartsAt: string | null;
+  gracePeriodHours: number;
+  warningWindowDays: number;
+  lastCheckInAt: string | null;
+  selectedContactIds: string[];
+  selectedEstateItemIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReadinessCheck {
+  id: string;
+  label: string;
+  status: ReadinessStatus;
+  required: boolean;
+  message: string;
+  resolutionHint?: string;
+}
+
+export interface SwitchReadiness {
+  switchId: string;
+  status: ReadinessStatus;
+  checks: ReadinessCheck[];
+}
+
+export interface HostedDashboardSummary {
+  user: { displayName: string; emailVerified: boolean };
+  subscription: { plan: string | null; status: string | null };
+  estateItemCount: number;
+  contactCount: number;
+  activeSwitchCount: number;
+  warningSwitchCount: number;
+  triggeredSwitchCount: number;
+  relayConnectionCount: number;
+  offlineRelayConnectionCount: number;
+  nextSwitch: Switch | null;
+  nextActionAt: string | null;
 }
