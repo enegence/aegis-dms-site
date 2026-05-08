@@ -7,12 +7,17 @@ import { getDb, type AegisDb } from './db/index.js';
 import authPlugin from './auth/plugin.js';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
+import { billingRoutes } from './routes/billing.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
     config: AppConfig;
     db: AegisDb;
     requireAuth: (req: import('fastify').FastifyRequest, reply: import('fastify').FastifyReply) => Promise<void>;
+  }
+  interface FastifyRequest {
+    userId?: string;
+    rawBody?: string;
   }
 }
 
@@ -29,12 +34,23 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   });
   await app.register(formbody);
 
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, function (req, body, done) {
+    try {
+      const json = JSON.parse(body as string);
+      (req as any).rawBody = body;
+      done(null, json);
+    } catch (err) {
+      done(err as Error, undefined);
+    }
+  });
+
   app.decorate('config', config);
   app.decorate('db', db);
 
   await app.register(authPlugin);
   await app.register(healthRoutes);
   await app.register(authRoutes);
+  await app.register(billingRoutes);
 
   return app;
 }
