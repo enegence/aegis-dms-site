@@ -14,6 +14,11 @@ export interface RelayMonitorResult {
 
 const GRACE_MINUTES = parseInt(process.env.AEGIS_RELAY_OFFLINE_GRACE_MINUTES ?? '10', 10);
 
+function sanitizeFailureReason(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.replace(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, '[redacted]').slice(0, 200);
+}
+
 const ALERT_EMAIL_SUBJECT = 'Aegis Relay has not heard from your self-hosted instance';
 const ALERT_EMAIL_BODY = `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 40px 20px;">
   <h1 style="font-size: 24px; color: #0B1C2C;">Aegis Relay Alert</h1>
@@ -122,7 +127,7 @@ export async function runRelayMonitorOnce(
 
         result.alertsSent++;
       } catch (emailErr) {
-        const failureReason = emailErr instanceof Error ? emailErr.message : String(emailErr);
+        const failureReason = sanitizeFailureReason(emailErr);
 
         await writeNotificationEvent(db, {
           userId: connection.userId,
