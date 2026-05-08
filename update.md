@@ -116,10 +116,9 @@ aegis-dms-site/
 
 **SaaS: IN PROGRESS**
 - [x] Task 1: Initialize project structure
-- [x] Task 1B: DeadDrop contract package compatibility ← WE ARE HERE
-- [ ] Task 2: Docker Compose dev environment (PostgreSQL)
-- [ ] Task 2: Docker Compose dev environment (PostgreSQL) ← NEXT
-- [ ] Task 3: Fastify server + health check
+- [x] Task 1B: DeadDrop contract package compatibility
+- [x] Task 2: Docker Compose dev environment (PostgreSQL)
+- [x] Task 3: Fastify server + health check ← WE ARE HERE
 - [ ] Task 4: Database schema + Drizzle setup
 - [ ] Task 5: Auth — password hashing + session management
 - [ ] Task 6: Email service (Postmark)

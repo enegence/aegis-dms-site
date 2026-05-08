@@ -408,7 +408,7 @@ git commit -m "chore: docker compose with postgresql for local dev"
 - Create: `server/src/routes/health.ts`
 - Test: `server/tests/health.test.ts`
 
-- [ ] **Step 1: Write the health check test**
+- [x] **Step 1: Write the health check test**
 
 Create `server/tests/health.test.ts`:
 
@@ -437,12 +437,12 @@ describe('GET /health', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd server && npx vitest run tests/health.test.ts`
 Expected: FAIL — `buildApp` not found
 
-- [ ] **Step 3: Create config.ts**
+- [x] **Step 3: Create config.ts**
 
 Create `server/src/config.ts`:
 
@@ -510,7 +510,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
 }
 ```
 
-- [ ] **Step 4: Create health route**
+- [x] **Step 4: Create health route**
 
 Create `server/src/routes/health.ts`:
 
@@ -531,7 +531,7 @@ export async function healthRoutes(app: FastifyInstance) {
 }
 ```
 
-- [ ] **Step 5: Create server entry point**
+- [x] **Step 5: Create server entry point**
 
 Create `server/src/index.ts`:
 
@@ -586,12 +586,12 @@ if (isMainModule) {
 }
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `cd server && npx vitest run tests/health.test.ts`
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add server/src/index.ts server/src/config.ts server/src/routes/health.ts server/tests/health.test.ts
