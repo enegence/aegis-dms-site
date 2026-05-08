@@ -608,7 +608,7 @@ git commit -m "feat: fastify server with health check endpoint"
 - Create: `server/src/db/migrate.ts`
 - Create: `server/drizzle.config.ts`
 
-- [ ] **Step 1: Create drizzle.config.ts**
+- [x] **Step 1: Create drizzle.config.ts**
 
 Create `server/drizzle.config.ts`:
 
@@ -625,7 +625,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 2: Create the full schema**
+- [x] **Step 2: Create the full schema**
 
 Create `server/src/db/schema.ts`:
 
@@ -831,7 +831,7 @@ export const trustAcknowledgements = pgTable('trust_acknowledgements', {
 });
 ```
 
-- [ ] **Step 3: Create database connection module**
+- [x] **Step 3: Create database connection module**
 
 Create `server/src/db/index.ts`:
 
@@ -857,7 +857,7 @@ export function getDb(connectionString?: string): ReturnType<typeof createDb> {
 export type AegisDb = ReturnType<typeof createDb>;
 ```
 
-- [ ] **Step 4: Create migration runner**
+- [x] **Step 4: Create migration runner**
 
 Create `server/src/db/migrate.ts`:
 
@@ -879,17 +879,17 @@ console.log('Migrations applied successfully');
 await client.end();
 ```
 
-- [ ] **Step 5: Generate initial migration**
+- [x] **Step 5: Generate initial migration**
 
 Run: `cd server && npx drizzle-kit generate`
 Expected: Migration files created in `server/drizzle/`
 
-- [ ] **Step 6: Apply migration**
+- [x] **Step 6: Apply migration**
 
 Run: `cd server && npx tsx src/db/migrate.ts`
 Expected: "Migrations applied successfully"
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add server/src/db/ server/drizzle.config.ts server/drizzle/

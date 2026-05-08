@@ -118,8 +118,8 @@ aegis-dms-site/
 - [x] Task 1: Initialize project structure
 - [x] Task 1B: DeadDrop contract package compatibility
 - [x] Task 2: Docker Compose dev environment (PostgreSQL)
-- [x] Task 3: Fastify server + health check ← WE ARE HERE
-- [ ] Task 4: Database schema + Drizzle setup
+- [x] Task 3: Fastify server + health check
+- [x] Task 4: Database schema + Drizzle setup ← WE ARE HERE
 - [ ] Task 5: Auth — password hashing + session management
 - [ ] Task 6: Email service (Postmark)
 - [ ] Task 7: Auth routes — register, login, email verify, password reset
