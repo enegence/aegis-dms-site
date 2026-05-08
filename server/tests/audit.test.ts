@@ -67,15 +67,22 @@ describe('Audit service', () => {
     });
 
     it('redacts sensitive metadata before writing', async () => {
-      await expect(
-        writeAuditEvent(app.db, {
-          eventType: 'test_event',
-          actorType: 'system',
-          metadata: { email: 'sensitive@example.com', status: 'ok' },
-        })
-      ).resolves.not.toThrow();
-      // If we could query back: the stored metadata should have email as [REDACTED]
-      // That verification is in sanitizeAuditMetadata unit tests above
+      const testEventType = 'test_redaction_event_' + Date.now();
+
+      await writeAuditEvent(app.db, {
+        eventType: testEventType,
+        actorType: 'system',
+        metadata: { email: 'sensitive@example.com', status: 'ok' },
+      });
+
+      const { auditEvents } = await import('../src/db/schema.js');
+      const { eq } = await import('drizzle-orm');
+      const rows = await app.db.select().from(auditEvents).where(eq(auditEvents.eventType, testEventType));
+
+      expect(rows).toHaveLength(1);
+      const storedMetadata = rows[0].metadata as Record<string, unknown>;
+      expect(storedMetadata.email).toBe('[REDACTED]');
+      expect(storedMetadata.status).toBe('ok');
     });
 
     it('stores relayConnectionId in metadata when provided', async () => {
