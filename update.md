@@ -127,7 +127,13 @@ aegis-dms-site/
 - [x] Task 9: Public pricing API
 - [x] Task 10: React + Vite frontend scaffold
 - [x] Task 11: Auth pages — register, login, reset password
-- [x] Task 12: CSRF protection ← WE ARE HERE (Phase 1 complete)
+- [x] Task 12: CSRF protection (Phase 1 complete)
+
+### Phase 2: Core Domain Logic (SaaS — In Progress)
+
+**SaaS Phase 2:**
+- [ ] Task 1: DB schema extensions (notification_events, relay_connections columns, encrypted fields) ← WE ARE HERE
+- [x] Task 2: Shared types + Zod API schemas (relay, estate, contacts, switches, dashboard)
 
 ### Phase 2: Core Domain Logic
 
