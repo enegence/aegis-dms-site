@@ -1,6 +1,6 @@
 # Aegis DMS Site — Phase 2: Core Domain Logic
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Implement the core runtime behavior for the commercial Aegis DMS Site: Relay heartbeat API, Relay connection management, Relay offline monitor and alerts, hosted estate/contact/switch CRUD, hosted switch readiness/actions, app dashboard, marketing/pricing pages, and billing portal access — all with tests.
 
@@ -75,7 +75,7 @@ Before starting, the engineer needs:
 - Update/Create: `server/drizzle/*.sql`
 - Test: `server/tests/schema-phase2.test.ts`
 
-- [ ] **Step 1: Review required existing tables**
+- [x] **Step 1: Review required existing tables**
 
 Confirm these tables exist:
 
@@ -96,7 +96,7 @@ trust_acknowledgements
 audit_events
 ```
 
-- [ ] **Step 2: Confirm SaaS sensitive fields are encrypted**
+- [x] **Step 2: Confirm SaaS sensitive fields are encrypted**
 
 Estate sensitive fields must be encrypted:
 
@@ -122,7 +122,7 @@ backupNotesEncrypted
 
 Do not proceed if Phase 1 left plaintext versions of those fields.
 
-- [ ] **Step 3: Extend relay connections**
+- [x] **Step 3: Extend relay connections**
 
 Confirm/add fields:
 
@@ -142,7 +142,7 @@ revokedAt
 
 For Phase 2, only `relay_monitoring` behavior is required. `relay_escrow_future` can be rejected or disabled until Phase 3.
 
-- [ ] **Step 4: Add notification events table if missing**
+- [x] **Step 4: Add notification events table if missing**
 
 ```typescript
 export const notificationEvents = pgTable('notification_events', {
@@ -161,7 +161,7 @@ export const notificationEvents = pgTable('notification_events', {
 });
 ```
 
-- [ ] **Step 5: Add hosted switch runtime fields if missing**
+- [x] **Step 5: Add hosted switch runtime fields if missing**
 
 The `switches` table should support:
 
@@ -182,7 +182,7 @@ selectedContactIds
 selectedEstateItemIds
 ```
 
-- [ ] **Step 6: Write schema tests**
+- [x] **Step 6: Write schema tests**
 
 Test:
 
@@ -193,7 +193,7 @@ Test:
 - `trust_acknowledgements` exists;
 - `notification_events` exists.
 
-- [ ] **Step 7: Update test setup truncation list**
+- [x] **Step 7: Update test setup truncation list**
 
 Add `notification_events` to the TRUNCATE in `server/tests/setup.ts`:
 
@@ -201,7 +201,7 @@ Add `notification_events` to the TRUNCATE in `server/tests/setup.ts`:
 await client`TRUNCATE users, sessions, subscriptions, relay_connections, stripe_webhook_events, estate_items, contacts, switches, audit_events, encryption_keys, trust_acknowledgements, notification_events CASCADE`;
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add server/src/db server/drizzle server/tests/schema-phase2.test.ts server/tests/setup.ts
@@ -299,7 +299,7 @@ git commit -m "feat: add phase two saas domain schemas"
 - Create: `server/src/services/audit.ts`
 - Test: `server/tests/audit.test.ts`
 
-- [ ] **Step 1: Create audit writer**
+- [x] **Step 1: Create audit writer**
 
 ```typescript
 export interface AuditInput {
@@ -314,7 +314,7 @@ export interface AuditInput {
 }
 ```
 
-- [ ] **Step 2: Sanitize metadata**
+- [x] **Step 2: Sanitize metadata**
 
 Reject or redact keys containing:
 
@@ -334,11 +334,11 @@ executorNotes
 stripeSecret
 ```
 
-- [ ] **Step 3: Add tests**
+- [x] **Step 3: Add tests**
 
 Test write, query, redaction/rejection, and no plaintext PII.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add server/src/services/audit.ts server/tests/audit.test.ts
@@ -358,11 +358,11 @@ git commit -m "feat: add saas audit service"
 - Create: `server/src/services/contact-mapper.ts`
 - Test: `server/tests/field-encryption-domain.test.ts`
 
-- [ ] **Step 1: Confirm encryption service**
+- [x] **Step 1: Confirm encryption service**
 
 Use AES-256-GCM field encryption from Phase 1. If the Phase 1 service only exists for secrets, extend it safely for domain field encryption.
 
-- [ ] **Step 2: Create estate mapper**
+- [x] **Step 2: Create estate mapper**
 
 Map API input/output to encrypted DB fields:
 
@@ -375,7 +375,7 @@ locationNotes <-> locationNotesEncrypted
 executorNotes <-> executorNotesEncrypted
 ```
 
-- [ ] **Step 3: Create contact mapper**
+- [x] **Step 3: Create contact mapper**
 
 Map:
 
@@ -388,7 +388,7 @@ telegramHandle <-> telegramHandleEncrypted
 backupNotes <-> backupNotesEncrypted
 ```
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -398,7 +398,7 @@ Test:
 - wrong key fails safely;
 - empty optional fields stay null.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/services/field-encrypt.ts server/src/services/estate-mapper.ts server/src/services/contact-mapper.ts server/tests/field-encryption-domain.test.ts
@@ -418,7 +418,7 @@ git commit -m "feat: add encrypted domain mappers"
 - Update: `server/src/index.ts`
 - Test: `server/tests/relay-connections.test.ts`
 
-- [ ] **Step 1: Implement API key generation and hashing**
+- [x] **Step 1: Implement API key generation and hashing**
 
 Rules:
 
@@ -430,7 +430,7 @@ Do not log API key.
 Do not include API key in audit metadata.
 ```
 
-- [ ] **Step 2: Implement authenticated Relay connection routes**
+- [x] **Step 2: Implement authenticated Relay connection routes**
 
 Routes:
 
@@ -449,7 +449,7 @@ Notes:
 - Auth + CSRF required.
 - Delete can hard-delete only if no release history exists; otherwise revoke/disconnect.
 
-- [ ] **Step 3: Add subscription gating placeholder**
+- [x] **Step 3: Add subscription gating placeholder**
 
 If billing/subscriptions are already implemented, require Relay or Hosted subscription for active Relay connections. If subscription gating is not stable yet, add a clear TODO and central helper in `server/src/services/subscription-gate.ts`:
 
@@ -459,7 +459,7 @@ export async function canUseRelay(db: AegisDb, userId: string): Promise<boolean>
 export async function canUseHosted(db: AegisDb, userId: string): Promise<boolean>;
 ```
 
-- [ ] **Step 4: Add audit events**
+- [x] **Step 4: Add audit events**
 
 Events:
 
@@ -471,7 +471,7 @@ relay_connection_revoked
 relay_connection_deleted
 ```
 
-- [ ] **Step 5: Add tests**
+- [x] **Step 5: Add tests**
 
 Test:
 
@@ -482,7 +482,7 @@ Test:
 - revoke prevents heartbeat acceptance;
 - CSRF/auth required for management routes.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/services/relay-connections.ts server/src/routes/relay.ts server/src/index.ts server/tests/relay-connections.test.ts
@@ -502,7 +502,7 @@ git commit -m "feat: add relay connection management"
 - Create: `server/src/services/relay-heartbeats.ts`
 - Test: `server/tests/relay-heartbeat.test.ts`
 
-- [ ] **Step 1: Implement Relay API-key auth**
+- [x] **Step 1: Implement Relay API-key auth**
 
 Support:
 
@@ -517,7 +517,7 @@ Rules:
 - Rate limit heartbeat endpoint by key/IP.
 - Do not require browser CSRF for API-key heartbeat route.
 
-- [ ] **Step 2: Implement heartbeat endpoint**
+- [x] **Step 2: Implement heartbeat endpoint**
 
 Route:
 
@@ -536,7 +536,7 @@ lastHeartbeatData
 status = active
 ```
 
-- [ ] **Step 3: Implement status endpoint**
+- [x] **Step 3: Implement status endpoint**
 
 Route:
 
@@ -556,13 +556,13 @@ Authenticated by API key. Returns:
 }
 ```
 
-- [ ] **Step 4: Add audit events**
+- [x] **Step 4: Add audit events**
 
 Audit `relay_heartbeat_received` with no sensitive payload.
 
 Do not log full heartbeat metadata if it includes owner-local URLs or sensitive local config.
 
-- [ ] **Step 5: Add tests**
+- [x] **Step 5: Add tests**
 
 Test:
 
@@ -574,7 +574,7 @@ Test:
 - `lastHeartbeatAt` updates;
 - status flips back to active after offline.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/services/relay-auth.ts server/src/services/relay-heartbeats.ts server/src/routes/relay.ts server/tests/relay-heartbeat.test.ts
@@ -595,7 +595,7 @@ git commit -m "feat: add relay heartbeat api"
 - Update: `server/src/index.ts` if worker starts with API process in dev
 - Test: `server/tests/relay-monitor.test.ts`
 
-- [ ] **Step 1: Implement monitor logic**
+- [x] **Step 1: Implement monitor logic**
 
 For each active Relay connection:
 
@@ -612,7 +612,7 @@ Define default grace:
 AEGIS_RELAY_OFFLINE_GRACE_MINUTES=10
 ```
 
-- [ ] **Step 2: Implement alert email**
+- [x] **Step 2: Implement alert email**
 
 Use Postmark service from Phase 1.
 
@@ -625,11 +625,11 @@ Body: Your Aegis Core instance missed its expected heartbeat. Relay Monitoring i
 
 No sensitive estate/contact data.
 
-- [ ] **Step 3: Prevent alert spam**
+- [x] **Step 3: Prevent alert spam**
 
 Use `offlineAlertSentAt` / `notification_events` to avoid repeated messages every worker tick.
 
-- [ ] **Step 4: Add worker runner**
+- [x] **Step 4: Add worker runner**
 
 ```typescript
 export async function runRelayMonitorOnce(now?: Date): Promise<RelayMonitorResult>;
@@ -643,7 +643,7 @@ AEGIS_WORKER_ENABLED=true
 AEGIS_WORKER_INTERVAL_SECONDS=60
 ```
 
-- [ ] **Step 5: Add tests**
+- [x] **Step 5: Add tests**
 
 Test:
 
@@ -654,7 +654,7 @@ Test:
 - revoked/disconnected ignored;
 - audit metadata redacted.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/worker server/src/services/relay-monitor.ts server/src/services/notification-events.ts server/tests/relay-monitor.test.ts
@@ -674,7 +674,7 @@ git commit -m "feat: add relay offline monitor"
 - Update: `server/src/index.ts` (already imports `estateItemRoutes` from `estate-items.ts` — no change needed)
 - Test: `server/tests/estate.test.ts`
 
-- [ ] **Step 1: Implement estate service**
+- [x] **Step 1: Implement estate service**
 
 Methods:
 
@@ -686,11 +686,11 @@ updateEstateItem(userId, id, input)
 deleteEstateItem(userId, id)
 ```
 
-- [ ] **Step 2: Encrypt sensitive fields**
+- [x] **Step 2: Encrypt sensitive fields**
 
 Use mapper from Task 4. Do not store plaintext sensitive fields.
 
-- [ ] **Step 3: Implement routes**
+- [x] **Step 3: Implement routes**
 
 ```text
 GET    /api/estate-items
@@ -702,7 +702,7 @@ DELETE /api/estate-items/:id
 
 Auth + CSRF for state-changing routes.
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -713,7 +713,7 @@ Test:
 - delete works;
 - audit events contain no PII.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/services/estate.ts server/src/routes/estate.ts server/src/index.ts server/tests/estate.test.ts
@@ -733,7 +733,7 @@ git commit -m "feat: add hosted estate item crud"
 - Update: `server/src/index.ts`
 - Test: `server/tests/contacts.test.ts`
 
-- [ ] **Step 1: Implement contact service**
+- [x] **Step 1: Implement contact service**
 
 Methods:
 
@@ -746,11 +746,11 @@ deleteContact(userId, id)
 reorderContacts(userId, orderedIds)
 ```
 
-- [ ] **Step 2: Encrypt sensitive fields**
+- [x] **Step 2: Encrypt sensitive fields**
 
 Use contact mapper. Never store plaintext names/emails/phones/Telegram handles.
 
-- [ ] **Step 3: Implement routes**
+- [x] **Step 3: Implement routes**
 
 ```text
 GET    /api/contacts
@@ -761,7 +761,7 @@ DELETE /api/contacts/:id
 POST   /api/contacts/reorder
 ```
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -772,7 +772,7 @@ Test:
 - reorder validation rejects missing/foreign IDs;
 - audit metadata redacted.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/services/contacts.ts server/src/routes/contacts.ts server/src/index.ts server/tests/contacts.test.ts
@@ -793,7 +793,7 @@ git commit -m "feat: add hosted contact crud"
 - Test: `server/tests/switch-engine.test.ts`
 - Test: `server/tests/readiness.test.ts`
 
-- [ ] **Step 1: Implement switch repository**
+- [x] **Step 1: Implement switch repository**
 
 Methods:
 
@@ -808,7 +808,7 @@ createReleaseRun(userId, input)
 markSwitchStatus(userId, switchId, status, patch)
 ```
 
-- [ ] **Step 2: Implement hosted state machine**
+- [x] **Step 2: Implement hosted state machine**
 
 Support:
 
@@ -824,7 +824,7 @@ release-run constraint
 
 Do not implement packet/cascade in Phase 2. Triggered hosted switches should create a release run with `active_pending_packet` or equivalent status for Phase 3 handoff.
 
-- [ ] **Step 3: Implement readiness service**
+- [x] **Step 3: Implement readiness service**
 
 Readiness checks:
 
@@ -839,7 +839,7 @@ notification service available
 packet/storage readiness placeholder warning for Phase 3
 ```
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -851,7 +851,7 @@ Test:
 - triggered state creates/attaches release run;
 - audit metadata redacted.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/services/switch-repository.ts server/src/services/switch-engine.ts server/src/services/readiness.ts server/tests/switch-engine.test.ts server/tests/readiness.test.ts
@@ -870,7 +870,7 @@ git commit -m "feat: add hosted switch engine and readiness"
 - Update: `server/src/index.ts`
 - Test: `server/tests/switches.test.ts`
 
-- [ ] **Step 1: Implement CRUD routes**
+- [x] **Step 1: Implement CRUD routes**
 
 ```text
 GET    /api/switches
@@ -880,7 +880,7 @@ PUT    /api/switches/:id
 DELETE /api/switches/:id
 ```
 
-- [ ] **Step 2: Implement action routes**
+- [x] **Step 2: Implement action routes**
 
 ```text
 GET  /api/switches/:id/readiness
@@ -891,7 +891,7 @@ POST /api/switches/:id/check-in
 POST /api/switches/:id/evaluate
 ```
 
-- [ ] **Step 3: Apply auth/security**
+- [x] **Step 3: Apply auth/security**
 
 Rules:
 
@@ -900,11 +900,11 @@ Rules:
 - Email verification required for arming.
 - Subscription/trial policy enforced through a central helper.
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test CRUD, action routes, readiness failures, CSRF, cross-user isolation, and audit events.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/routes/switches.ts server/src/index.ts server/tests/switches.test.ts
@@ -923,7 +923,7 @@ git commit -m "feat: add hosted switch api"
 - Update: `server/src/index.ts`
 - Test: `server/tests/dashboard.test.ts`
 
-- [ ] **Step 1: Implement route**
+- [x] **Step 1: Implement route**
 
 ```text
 GET /api/dashboard
@@ -947,11 +947,11 @@ interface HostedDashboardSummary {
 }
 ```
 
-- [ ] **Step 2: Add tests**
+- [x] **Step 2: Add tests**
 
 Test empty dashboard, with hosted data, with relay connections, and cross-user isolation.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add server/src/routes/dashboard.ts server/src/index.ts server/tests/dashboard.test.ts
@@ -970,13 +970,13 @@ git commit -m "feat: add hosted dashboard api"
 - Update: `server/src/services/stripe.ts`
 - Test: `server/tests/billing-portal.test.ts`
 
-- [ ] **Step 1: Add portal helper**
+- [x] **Step 1: Add portal helper**
 
 ```typescript
 createBillingPortalSession(userId, returnUrl): Promise<{ url: string }>;
 ```
 
-- [ ] **Step 2: Add route**
+- [x] **Step 2: Add route**
 
 ```text
 POST /api/billing/portal
@@ -984,7 +984,7 @@ POST /api/billing/portal
 
 Auth + CSRF required.
 
-- [ ] **Step 3: Add tests**
+- [x] **Step 3: Add tests**
 
 Mock Stripe. Test:
 
@@ -994,7 +994,7 @@ Mock Stripe. Test:
 - portal URL returned;
 - no Stripe secrets leaked.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add server/src/routes/billing.ts server/src/services/stripe.ts server/tests/billing-portal.test.ts
@@ -1017,7 +1017,7 @@ git commit -m "feat: add stripe billing portal route"
 - Create: `web/src/lib/dashboard.ts`
 - Create: `web/src/lib/billing.ts`
 
-- [ ] **Step 1: Add Relay helpers**
+- [x] **Step 1: Add Relay helpers**
 
 ```typescript
 listRelayConnections()
@@ -1027,7 +1027,7 @@ revokeRelayConnection(id)
 deleteRelayConnection(id)
 ```
 
-- [ ] **Step 2: Add Hosted CRUD helpers**
+- [x] **Step 2: Add Hosted CRUD helpers**
 
 ```typescript
 listEstateItems()
@@ -1041,7 +1041,7 @@ deleteContact(id)
 reorderContacts(ids)
 ```
 
-- [ ] **Step 3: Add switch/dashboard/billing helpers**
+- [x] **Step 3: Add switch/dashboard/billing helpers**
 
 ```typescript
 listSwitches()
@@ -1055,11 +1055,11 @@ getDashboard()
 openBillingPortal()
 ```
 
-- [ ] **Step 4: Preserve CSRF behavior**
+- [x] **Step 4: Preserve CSRF behavior**
 
 All browser state-changing requests must use CSRF-enabled API wrapper.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add web/src/lib
@@ -1081,23 +1081,23 @@ git commit -m "feat: add phase two frontend api clients"
 - Create: `web/src/components/dashboard/CountdownCard.tsx`
 - Update: `web/src/App.tsx`
 
-- [ ] **Step 1: Fetch dashboard summary**
+- [x] **Step 1: Fetch dashboard summary**
 
 Use `GET /api/dashboard`.
 
-- [ ] **Step 2: Show hosted summary**
+- [x] **Step 2: Show hosted summary**
 
 Show estate items, contacts, active switches, warning switches, triggered switches.
 
-- [ ] **Step 3: Show Relay summary**
+- [x] **Step 3: Show Relay summary**
 
 Show active/offline/disconnected Relay connections.
 
-- [ ] **Step 4: Show subscription status**
+- [x] **Step 4: Show subscription status**
 
 Show plan/status and link to billing portal.
 
-- [ ] **Step 5: Add empty states**
+- [x] **Step 5: Add empty states**
 
 Prompt user to:
 
@@ -1108,7 +1108,7 @@ create first switch
 connect self-hosted Relay instance
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add web/src/pages/app/Dashboard.tsx web/src/components/dashboard web/src/App.tsx
@@ -1131,17 +1131,17 @@ git commit -m "feat: add hosted app dashboard"
 - Create: `web/src/components/contacts/ContactCard.tsx`
 - Update: `web/src/App.tsx`
 
-- [ ] **Step 1: Estate UI**
+- [x] **Step 1: Estate UI**
 
 Support list/create/edit/delete.
 
 Do not display scary/legal copy yet beyond basic disclaimers.
 
-- [ ] **Step 2: Contact UI**
+- [x] **Step 2: Contact UI**
 
 Support list/create/edit/delete/reorder.
 
-- [ ] **Step 3: UX privacy copy**
+- [x] **Step 3: UX privacy copy**
 
 Add brief note:
 
@@ -1149,7 +1149,7 @@ Add brief note:
 Sensitive estate and contact details are encrypted at rest. Aegis Hosted is a managed service and requires trusting Aegis SaaS with server-side encryption for v1.
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add web/src/pages/app/Estate.tsx web/src/pages/app/Contacts.tsx web/src/components/estate web/src/components/contacts web/src/App.tsx
@@ -1171,7 +1171,7 @@ git commit -m "feat: add hosted estate and contacts ui"
 - Create: `web/src/components/switches/SwitchActionButtons.tsx`
 - Update: `web/src/App.tsx`
 
-- [ ] **Step 1: Build switch list and form**
+- [x] **Step 1: Build switch list and form**
 
 Support:
 
@@ -1186,11 +1186,11 @@ selected contacts
 selected estate items
 ```
 
-- [ ] **Step 2: Build readiness checklist**
+- [x] **Step 2: Build readiness checklist**
 
 Use server readiness response.
 
-- [ ] **Step 3: Build actions**
+- [x] **Step 3: Build actions**
 
 Support:
 
@@ -1201,7 +1201,7 @@ cancel
 check in
 ```
 
-- [ ] **Step 4: Phase 2 limitation copy**
+- [x] **Step 4: Phase 2 limitation copy**
 
 Show where appropriate:
 
@@ -1209,7 +1209,7 @@ Show where appropriate:
 Phase 2 supports switch scheduling, reminders, and trigger-state tracking. Managed packet release and contact cascade are added in the next phase.
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add web/src/pages/app/Trigger.tsx web/src/components/switches web/src/App.tsx
@@ -1230,7 +1230,7 @@ git commit -m "feat: add hosted switch ui"
 - Create: `web/src/components/relay/RelayApiKeyReveal.tsx`
 - Update: `web/src/App.tsx`
 
-- [ ] **Step 1: List Relay connections**
+- [x] **Step 1: List Relay connections**
 
 Show:
 
@@ -1242,7 +1242,7 @@ next expected heartbeat
 created date
 ```
 
-- [ ] **Step 2: Create connection**
+- [x] **Step 2: Create connection**
 
 After creation, display raw API key once with copy button and warning:
 
@@ -1250,11 +1250,11 @@ After creation, display raw API key once with copy button and warning:
 Copy this key now. Aegis stores only a hash and cannot show it again.
 ```
 
-- [ ] **Step 3: Rotate/revoke**
+- [x] **Step 3: Rotate/revoke**
 
 Add rotate key and revoke actions.
 
-- [ ] **Step 4: Clarify Relay Monitoring vs Escrow**
+- [x] **Step 4: Clarify Relay Monitoring vs Escrow**
 
 For Phase 2, label this as Relay Monitoring.
 
@@ -1264,7 +1264,7 @@ Copy:
 Relay Monitoring detects missed heartbeats and alerts you. It does not complete release by itself unless Relay Escrow is configured in a later phase.
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add web/src/pages/app/Relay.tsx web/src/components/relay web/src/App.tsx
@@ -1285,7 +1285,7 @@ git commit -m "feat: add relay management ui"
 - Create: `web/src/components/marketing/PricingCards.tsx`
 - Update: `web/src/App.tsx`
 
-- [ ] **Step 1: Landing page**
+- [x] **Step 1: Landing page**
 
 Explain:
 
@@ -1302,13 +1302,13 @@ Recommended positioning:
 Encrypted legacy-release infrastructure for self-hosters, families, and platforms.
 ```
 
-- [ ] **Step 2: Pricing page**
+- [x] **Step 2: Pricing page**
 
 Use `/api/pricing`.
 
 If price is null, show `View current pricing` link or `Pricing coming soon` depending on response.
 
-- [ ] **Step 3: Avoid unsafe claims**
+- [x] **Step 3: Avoid unsafe claims**
 
 Do not claim:
 
@@ -1319,7 +1319,7 @@ legal replacement
 production audited security
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add web/src/pages/marketing web/src/components/marketing web/src/App.tsx
@@ -1340,11 +1340,11 @@ git commit -m "feat: add marketing and pricing pages"
 - Create/Update: `docs/security.md`
 - Update: `README.md`
 
-- [ ] **Step 1: Document Relay Monitoring**
+- [x] **Step 1: Document Relay Monitoring**
 
 Include heartbeat setup, API key handling, and offline alert behavior.
 
-- [ ] **Step 2: Document Hosted limitations**
+- [x] **Step 2: Document Hosted limitations**
 
 State:
 
@@ -1352,11 +1352,11 @@ State:
 Phase 2 supports hosted data management and switch scheduling. Managed packet generation, contact cascade, and release flows are Phase 3.
 ```
 
-- [ ] **Step 3: Document trust model**
+- [x] **Step 3: Document trust model**
 
 Mention server-side encryption for Hosted v1 and no zero-knowledge claim.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs README.md
@@ -1369,28 +1369,28 @@ git commit -m "docs: document phase two saas behavior"
 
 **Goal:** Verify SaaS Phase 2 works locally.
 
-- [ ] **Step 1: Run tests**
+- [x] **Step 1: Run tests**
 
 ```bash
 cd server
 npm test
 ```
 
-- [ ] **Step 2: Build frontend**
+- [x] **Step 2: Build frontend**
 
 ```bash
 cd web
 npm run build
 ```
 
-- [ ] **Step 3: Start local stack**
+- [x] **Step 3: Start local stack**
 
 ```bash
 docker compose up -d
 npm run dev
 ```
 
-- [ ] **Step 4: Manual Relay smoke test**
+- [x] **Step 4: Manual Relay smoke test**
 
 Test:
 
@@ -1407,7 +1407,7 @@ Test:
 10. Confirm no API key appears in logs/audit.
 ```
 
-- [ ] **Step 5: Manual Hosted smoke test**
+- [x] **Step 5: Manual Hosted smoke test**
 
 Test:
 
@@ -1423,7 +1423,7 @@ Test:
 9. Confirm audit logs contain no plaintext PII.
 ```
 
-- [ ] **Step 6: Final commit**
+- [x] **Step 6: Final commit**
 
 ```bash
 git status

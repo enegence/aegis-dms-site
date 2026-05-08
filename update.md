@@ -129,11 +129,30 @@ aegis-dms-site/
 - [x] Task 11: Auth pages — register, login, reset password
 - [x] Task 12: CSRF protection (Phase 1 complete)
 
-### Phase 2: Core Domain Logic (SaaS — In Progress)
+### Phase 2: Core Domain Logic (SaaS — COMPLETE)
 
-**SaaS Phase 2:**
-- [ ] Task 1: DB schema extensions (notification_events, relay_connections columns, encrypted fields) ← WE ARE HERE
-- [x] Task 2: Shared types + Zod API schemas (relay, estate, contacts, switches, dashboard)
+**SaaS Phase 2: COMPLETE** (175 passing tests)
+- [x] Task 1: DB schema extensions
+- [x] Task 2: Shared types + Zod API schemas
+- [x] Task 3: Redacted audit service
+- [x] Task 4: Field encryption domain helpers
+- [x] Task 5: Relay connection management
+- [x] Task 6: Relay heartbeat API
+- [x] Task 7: Relay offline monitor worker
+- [x] Task 8: Hosted estate item CRUD
+- [x] Task 9: Hosted contact CRUD
+- [x] Task 10: Hosted switch repository and state machine
+- [x] Task 11: Hosted switch API routes
+- [x] Task 12: Hosted dashboard API
+- [x] Task 13: Billing portal route
+- [x] Task 14: Frontend API client helpers
+- [x] Task 15: App dashboard UI
+- [x] Task 16: Hosted estate and contact UI
+- [x] Task 17: Hosted switch UI
+- [x] Task 18: Relay management UI
+- [x] Task 19: Marketing landing and pricing pages
+- [x] Task 20: Documentation
+- [x] Task 21: End-to-end verification
 
 ### Phase 2: Core Domain Logic
 

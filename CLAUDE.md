@@ -49,10 +49,10 @@ After completing each numbered Task (not each step), update `update.md`:
 
 At the END of every session (or when context is getting long), update this section:
 
-**Last completed:** Task 12 (CSRF protection) — SaaS Phase 1 fully complete
-**Next up:** SaaS Phase 2 — Relay API, Hosted CRUD, billing UI, marketing pages
-**Blockers/notes:** None. All Phase 1 tasks merged to main. 25 tests passing.
-**Tests passing:** 25 (7 test files: health, auth, auth-routes, email, billing, pricing, csrf)
+**Last completed:** Task 21 — SaaS Phase 2 fully complete
+**Next up:** Phase 3 — Packet builder, managed storage, hosted cascade, relay escrow, admin dashboard
+**Blockers/notes:** None. All Phase 2 tasks complete. 175 tests passing.
+**Tests passing:** 175 (21 test files)
 
 ## Non-Negotiable Constraints
 
