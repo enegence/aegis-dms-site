@@ -6,7 +6,7 @@ export interface ContactInput {
   email: string;
   phone?: string | null;
   telegramHandle?: string | null;
-  preferredChannels?: string[];
+  preferredChannels?: Array<'email' | 'telegram'>;
   confirmationWindowHours?: number;
   backupNotes?: string | null;
   priorityOrder?: number;
@@ -51,7 +51,7 @@ export function decryptContact(row: ContactDbRow, encryptionKey: string) {
     email: decryptFieldIfPresent(row.emailEncrypted, encryptionKey) ?? '',
     phone: decryptFieldIfPresent(row.phoneEncrypted, encryptionKey),
     telegramHandle: decryptFieldIfPresent(row.telegramHandleEncrypted, encryptionKey),
-    preferredChannels: Array.isArray(row.preferredChannels) ? row.preferredChannels : ['email'],
+    preferredChannels: (Array.isArray(row.preferredChannels) ? row.preferredChannels : ['email']) as Array<'email' | 'telegram'>,
     confirmationWindowHours: row.confirmationWindowHours,
     backupNotes: decryptFieldIfPresent(row.backupNotesEncrypted, encryptionKey),
     createdAt: row.createdAt.toISOString(),
