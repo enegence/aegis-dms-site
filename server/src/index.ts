@@ -5,10 +5,13 @@ import formbody from '@fastify/formbody';
 import { loadConfig, type AppConfig } from './config.js';
 import { getDb, type AegisDb } from './db/index.js';
 import authPlugin from './auth/plugin.js';
+import { validateCsrfToken } from './auth/csrf.js';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
 import { billingRoutes } from './routes/billing.js';
 import { pricingRoutes } from './routes/pricing.js';
+import { csrfRoutes } from './routes/csrf.js';
+import { estateItemRoutes } from './routes/estate-items.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -53,6 +56,32 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(authRoutes);
   await app.register(billingRoutes);
   await app.register(pricingRoutes);
+  await app.register(csrfRoutes);
+  await app.register(estateItemRoutes);
+
+  app.addHook('onRequest', async (req, reply) => {
+    const method = req.method;
+    const url = req.url;
+
+    if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) return;
+    if (!url.startsWith('/api/')) return;
+
+    const exemptPaths = [
+      '/api/auth/register', '/api/auth/login', '/api/auth/logout',
+      '/api/auth/forgot-password', '/api/auth/reset-password',
+      '/api/auth/request-reset', '/api/auth/verify-email',
+      '/api/billing/webhook',
+    ];
+    if (exemptPaths.some(p => url.startsWith(p))) return;
+
+    const sessionId = req.cookies?.aegis_session;
+    if (!sessionId) return;
+
+    const csrfToken = req.headers['x-csrf-token'] as string | undefined;
+    if (!csrfToken || !validateCsrfToken(csrfToken, sessionId, app.config.secretKey)) {
+      return reply.status(403).send({ error: 'CSRF token missing or invalid' });
+    }
+  });
 
   return app;
 }

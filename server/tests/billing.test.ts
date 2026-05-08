@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { buildApp } from '../src/index.js';
 
+async function getCsrf(app: Awaited<ReturnType<typeof buildApp>>, cookies: string): Promise<string> {
+  const res = await app.inject({ method: 'GET', url: '/api/csrf', headers: { cookie: cookies } });
+  return JSON.parse(res.payload).csrfToken;
+}
+
 describe('Billing routes', () => {
   let app: Awaited<ReturnType<typeof buildApp>>;
   let cookies: string;
@@ -41,10 +46,11 @@ describe('Billing routes', () => {
   });
 
   it('rejects checkout with invalid plan', async () => {
+    const csrfToken = await getCsrf(app, cookies);
     const res = await app.inject({
       method: 'POST',
       url: '/api/billing/checkout',
-      headers: { cookie: cookies },
+      headers: { cookie: cookies, 'x-csrf-token': csrfToken },
       payload: { plan: 'invalid' },
     });
     expect(res.statusCode).toBe(400);
