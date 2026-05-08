@@ -1,6 +1,6 @@
 # Aegis DMS Site — Phase 1: Foundation
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Scaffold the commercial Aegis DMS Site repo with a working Fastify + PostgreSQL + React/Vite stack, multi-user auth (register, login, email verify, password reset), Stripe billing (checkout, webhooks, subscription lifecycle), a public pricing API endpoint, and Docker Compose dev environment — all with tests.
 
@@ -39,7 +39,7 @@ Before starting, the engineer needs:
 - Create: `packages/shared/tsconfig.json`
 - Create: `packages/shared/src/types.ts`
 
-- [ ] **Step 1: Create root workspace package.json**
+- [x] **Step 1: Create root workspace package.json**
 
 ```json
 {
@@ -59,7 +59,7 @@ Before starting, the engineer needs:
 }
 ```
 
-- [ ] **Step 2: Create tsconfig.base.json**
+- [x] **Step 2: Create tsconfig.base.json**
 
 ```json
 {
@@ -79,7 +79,7 @@ Before starting, the engineer needs:
 }
 ```
 
-- [ ] **Step 3: Create .gitignore**
+- [x] **Step 3: Create .gitignore**
 
 ```
 node_modules/
@@ -88,7 +88,7 @@ dist/
 .DS_Store
 ```
 
-- [ ] **Step 4: Create .env.example**
+- [x] **Step 4: Create .env.example**
 
 ```bash
 # Aegis DMS Site Configuration
@@ -116,7 +116,7 @@ POSTMARK_FROM_EMAIL=noreply@aegisdms.life
 TELEGRAM_BOT_TOKEN=
 ```
 
-- [ ] **Step 5: Create packages/shared/package.json**
+- [x] **Step 5: Create packages/shared/package.json**
 
 ```json
 {
@@ -129,7 +129,7 @@ TELEGRAM_BOT_TOKEN=
 }
 ```
 
-- [ ] **Step 6: Create packages/shared/tsconfig.json**
+- [x] **Step 6: Create packages/shared/tsconfig.json**
 
 ```json
 {
@@ -141,7 +141,7 @@ TELEGRAM_BOT_TOKEN=
 }
 ```
 
-- [ ] **Step 7: Create packages/shared/src/types.ts**
+- [x] **Step 7: Create packages/shared/src/types.ts**
 
 ```typescript
 export type SubscriptionPlan = 'relay' | 'hosted';
@@ -205,7 +205,7 @@ export interface RelayConnection {
 }
 ```
 
-- [ ] **Step 8: Create server/package.json**
+- [x] **Step 8: Create server/package.json**
 
 ```json
 {
@@ -249,7 +249,7 @@ export interface RelayConnection {
 }
 ```
 
-- [ ] **Step 9: Create server/tsconfig.json**
+- [x] **Step 9: Create server/tsconfig.json**
 
 ```json
 {
@@ -263,7 +263,7 @@ export interface RelayConnection {
 }
 ```
 
-- [ ] **Step 10: Create web/package.json**
+- [x] **Step 10: Create web/package.json**
 
 ```json
 {
@@ -295,7 +295,7 @@ export interface RelayConnection {
 }
 ```
 
-- [ ] **Step 11: Create web/tsconfig.json**
+- [x] **Step 11: Create web/tsconfig.json**
 
 ```json
 {
@@ -310,12 +310,12 @@ export interface RelayConnection {
 }
 ```
 
-- [ ] **Step 12: Run npm install and verify workspace links**
+- [x] **Step 12: Run npm install and verify workspace links**
 
 Run: `npm install`
 Expected: Clean install with workspace symlinks for `@aegis-site/shared`
 
-- [ ] **Step 13: Commit**
+- [x] **Step 13: Commit**
 
 ```bash
 git init
@@ -359,7 +359,7 @@ git commit -m "chore: initialize saas project structure with workspaces"
 **Files:**
 - Create: `docker-compose.yml`
 
-- [ ] **Step 1: Create docker-compose.yml for local Postgres**
+- [x] **Step 1: Create docker-compose.yml for local Postgres**
 
 Create `docker-compose.yml`:
 
@@ -381,17 +381,17 @@ volumes:
   pgdata:
 ```
 
-- [ ] **Step 2: Start Postgres**
+- [x] **Step 2: Start Postgres**
 
 Run: `docker compose up -d`
 Expected: Postgres container running on port 5432
 
-- [ ] **Step 3: Verify connection**
+- [x] **Step 3: Verify connection**
 
 Run: `docker compose exec postgres psql -U aegis -d aegis_site -c "SELECT 1"`
 Expected: Returns `1`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docker-compose.yml
@@ -906,7 +906,7 @@ git commit -m "feat: drizzle schema and postgresql database setup"
 - Create: `server/src/auth/plugin.ts`
 - Test: `server/tests/auth.test.ts`
 
-- [ ] **Step 1: Write auth tests**
+- [x] **Step 1: Write auth tests**
 
 Create `server/tests/auth.test.ts`:
 
@@ -928,12 +928,12 @@ describe('password hashing', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd server && npx vitest run tests/auth.test.ts`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Implement password module**
+- [x] **Step 3: Implement password module**
 
 Create `server/src/auth/password.ts`:
 
@@ -958,12 +958,12 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd server && npx vitest run tests/auth.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Implement session management**
+- [x] **Step 5: Implement session management**
 
 Create `server/src/auth/session.ts`:
 
@@ -1013,7 +1013,7 @@ export async function cleanExpiredSessions(db: AegisDb): Promise<void> {
 }
 ```
 
-- [ ] **Step 6: Implement auth plugin for Fastify**
+- [x] **Step 6: Implement auth plugin for Fastify**
 
 Create `server/src/auth/plugin.ts`:
 
@@ -1049,7 +1049,7 @@ async function authPlugin(app: FastifyInstance) {
 export default fp(authPlugin, { name: 'aegis-auth' });
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add server/src/auth/ server/tests/auth.test.ts
@@ -1064,7 +1064,7 @@ git commit -m "feat: auth system with argon2 password hashing and session manage
 - Create: `server/src/services/email.ts`
 - Test: `server/tests/email.test.ts`
 
-- [ ] **Step 1: Write email service tests**
+- [x] **Step 1: Write email service tests**
 
 Create `server/tests/email.test.ts`:
 
@@ -1089,12 +1089,12 @@ describe('email templates', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd server && npx vitest run tests/email.test.ts`
 Expected: FAIL
 
-- [ ] **Step 3: Implement email service**
+- [x] **Step 3: Implement email service**
 
 Create `server/src/services/email.ts`:
 
@@ -1156,12 +1156,12 @@ export async function sendEmail(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd server && npx vitest run tests/email.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/services/email.ts server/tests/email.test.ts
@@ -1736,7 +1736,7 @@ git commit -m "feat: multi-user auth — register, login, verify email, password
 - Modify: `server/src/index.ts` (register billing routes)
 - Test: `server/tests/billing.test.ts`
 
-- [ ] **Step 1: Write billing tests**
+- [x] **Step 1: Write billing tests**
 
 Create `server/tests/billing.test.ts`:
 
@@ -1806,12 +1806,12 @@ describe('Billing routes', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd server && npx vitest run tests/billing.test.ts`
 Expected: FAIL
 
-- [ ] **Step 3: Implement Stripe service**
+- [x] **Step 3: Implement Stripe service**
 
 Create `server/src/services/stripe.ts`:
 
@@ -1867,7 +1867,7 @@ export async function createPortalSession(
 }
 ```
 
-- [ ] **Step 4: Implement billing routes**
+- [x] **Step 4: Implement billing routes**
 
 Create `server/src/routes/billing.ts`:
 
@@ -2070,7 +2070,7 @@ export async function billingRoutes(app: FastifyInstance) {
 }
 ```
 
-- [ ] **Step 5: Register billing routes in index.ts**
+- [x] **Step 5: Register billing routes in index.ts**
 
 Add to `server/src/index.ts` after `authRoutes` import:
 
@@ -2108,12 +2108,12 @@ declare module 'fastify' {
 }
 ```
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `cd server && npx vitest run`
 Expected: All tests PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add server/src/services/stripe.ts server/src/routes/billing.ts server/tests/billing.test.ts server/src/index.ts
@@ -2129,7 +2129,7 @@ git commit -m "feat: stripe billing — checkout, portal, webhook, subscription 
 - Modify: `server/src/index.ts` (register route)
 - Test: `server/tests/pricing.test.ts`
 
-- [ ] **Step 1: Write pricing tests**
+- [x] **Step 1: Write pricing tests**
 
 Create `server/tests/pricing.test.ts`:
 
@@ -2165,12 +2165,12 @@ describe('GET /api/pricing', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd server && npx vitest run tests/pricing.test.ts`
 Expected: FAIL
 
-- [ ] **Step 3: Implement pricing route**
+- [x] **Step 3: Implement pricing route**
 
 Create `server/src/routes/pricing.ts`:
 
@@ -2238,7 +2238,7 @@ export async function pricingRoutes(app: FastifyInstance) {
 }
 ```
 
-- [ ] **Step 4: Register pricing route in index.ts**
+- [x] **Step 4: Register pricing route in index.ts**
 
 Add import and registration in `server/src/index.ts`:
 
@@ -2248,12 +2248,12 @@ import { pricingRoutes } from './routes/pricing.js';
 await app.register(pricingRoutes);
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run: `cd server && npx vitest run`
 Expected: All tests PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/routes/pricing.ts server/tests/pricing.test.ts server/src/index.ts
@@ -2274,7 +2274,7 @@ git commit -m "feat: public pricing API endpoint consumed by OSS app"
 - Create: `web/src/index.css`
 - Create: `web/src/lib/api.ts`
 
-- [ ] **Step 1: Create Vite config**
+- [x] **Step 1: Create Vite config**
 
 Create `web/vite.config.ts`:
 
@@ -2298,7 +2298,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 2: Create Tailwind config**
+- [x] **Step 2: Create Tailwind config**
 
 Create `web/tailwind.config.ts`:
 
@@ -2332,7 +2332,7 @@ export default {
 } satisfies Config;
 ```
 
-- [ ] **Step 3: Create PostCSS config**
+- [x] **Step 3: Create PostCSS config**
 
 Create `web/postcss.config.js`:
 
@@ -2345,7 +2345,7 @@ export default {
 };
 ```
 
-- [ ] **Step 4: Create index.html**
+- [x] **Step 4: Create index.html**
 
 Create `web/index.html`:
 
@@ -2367,7 +2367,7 @@ Create `web/index.html`:
 </html>
 ```
 
-- [ ] **Step 5: Create CSS + main entry + API client**
+- [x] **Step 5: Create CSS + main entry + API client**
 
 Create `web/src/index.css`:
 
@@ -2434,7 +2434,7 @@ createRoot(document.getElementById('root')!).render(
 );
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add web/vite.config.ts web/tailwind.config.ts web/postcss.config.js web/index.html web/src/index.css web/src/lib/api.ts web/src/main.tsx
@@ -2452,7 +2452,7 @@ git commit -m "feat: react + vite + tailwind frontend scaffold"
 - Create: `web/src/pages/auth/ResetPassword.tsx`
 - Create: `web/src/pages/auth/RequestReset.tsx`
 
-- [ ] **Step 1: Create App.tsx with routing**
+- [x] **Step 1: Create App.tsx with routing**
 
 Create `web/src/App.tsx`:
 
@@ -2524,7 +2524,7 @@ function App() {
 export default App;
 ```
 
-- [ ] **Step 2: Create Register page**
+- [x] **Step 2: Create Register page**
 
 Create `web/src/pages/auth/Register.tsx`:
 
@@ -2592,7 +2592,7 @@ export default function Register() {
 }
 ```
 
-- [ ] **Step 3: Create Login page**
+- [x] **Step 3: Create Login page**
 
 Create `web/src/pages/auth/Login.tsx`:
 
@@ -2653,7 +2653,7 @@ export default function Login() {
 }
 ```
 
-- [ ] **Step 4: Create RequestReset page**
+- [x] **Step 4: Create RequestReset page**
 
 Create `web/src/pages/auth/RequestReset.tsx`:
 
@@ -2721,7 +2721,7 @@ export default function RequestReset() {
 }
 ```
 
-- [ ] **Step 5: Create ResetPassword page**
+- [x] **Step 5: Create ResetPassword page**
 
 Create `web/src/pages/auth/ResetPassword.tsx`:
 
@@ -2798,12 +2798,12 @@ export default function ResetPassword() {
 }
 ```
 
-- [ ] **Step 6: Verify frontend builds**
+- [x] **Step 6: Verify frontend builds**
 
 Run: `cd web && npm run build`
 Expected: Build output in `server/static/`
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add web/src/
@@ -2823,7 +2823,7 @@ git commit -m "feat: auth pages — register, login, request reset, reset passwo
 - Modify: `web/src/lib/api.ts` (fetch and include CSRF token)
 - Create: `server/tests/csrf.test.ts`
 
-- [ ] **Step 1: Write CSRF tests**
+- [x] **Step 1: Write CSRF tests**
 
 Create `server/tests/csrf.test.ts`:
 
@@ -2926,7 +2926,7 @@ describe('CSRF protection', () => {
 });
 ```
 
-- [ ] **Step 2: Implement CSRF module**
+- [x] **Step 2: Implement CSRF module**
 
 Create `server/src/auth/csrf.ts`:
 
@@ -2975,7 +2975,7 @@ export function validateCsrfToken(
 }
 ```
 
-- [ ] **Step 3: Create CSRF route**
+- [x] **Step 3: Create CSRF route**
 
 Create `server/src/routes/csrf.ts`:
 
@@ -2997,7 +2997,7 @@ export async function csrfRoutes(app: FastifyInstance) {
 }
 ```
 
-- [ ] **Step 4: Register CSRF preHandler hook in index.ts**
+- [x] **Step 4: Register CSRF preHandler hook in index.ts**
 
 Add a Fastify `onRequest` hook that validates CSRF tokens on all POST, PUT, PATCH, and DELETE requests to `/api/*`. Exempt paths that operate before a session exists:
 
@@ -3032,7 +3032,7 @@ app.addHook('onRequest', async (req, reply) => {
 });
 ```
 
-- [ ] **Step 5: Update frontend API client**
+- [x] **Step 5: Update frontend API client**
 
 Update `web/src/lib/api.ts` to fetch and include CSRF tokens on state-mutating requests. See OSS Phase 1 Task 13 Step 5 for reference pattern. Key requirements:
 - Store CSRF token in memory (not localStorage)
@@ -3040,12 +3040,12 @@ Update `web/src/lib/api.ts` to fetch and include CSRF tokens on state-mutating r
 - Include `X-CSRF-Token` header on POST/PUT/PATCH/DELETE
 - `clearCsrfToken()` export for use on logout
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `cd server && npx vitest run`
 Expected: All tests PASS including CSRF tests
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add server/src/auth/csrf.ts server/src/routes/csrf.ts server/tests/csrf.test.ts server/src/index.ts web/src/lib/api.ts
@@ -3058,22 +3058,22 @@ git commit -m "feat: CSRF protection with signed session-bound tokens"
 
 After completing all tasks:
 
-- [ ] `docker compose up -d` starts Postgres
-- [ ] `npm install` succeeds
-- [ ] `npm run db:migrate` applies migrations
-- [ ] `npm test` passes all tests (health, auth, auth-routes, billing, pricing, email, csrf)
-- [ ] `cd web && npm run build` builds frontend
-- [ ] Server starts: `cd server && npx tsx src/index.ts`
-- [ ] `GET /health` returns `200 ok`
-- [ ] `GET /api/pricing` returns plans (no auth required)
-- [ ] Registration flow works (creates user + session)
-- [ ] Login/logout works
-- [ ] Email verification flow works (with Postmark configured)
-- [ ] Password reset flow works
-- [ ] `POST /api/billing/checkout` creates Stripe checkout (with Stripe keys configured)
-- [ ] `GET /api/billing/subscription` returns null for new users
-- [ ] Stripe webhook handles checkout.session.completed, subscription updates, and deletions
-- [ ] CSRF: `GET /api/csrf` returns token, POST without token rejected, POST with valid token accepted
+- [x] `docker compose up -d` starts Postgres
+- [x] `npm install` succeeds
+- [x] `npm run db:migrate` applies migrations
+- [x] `npm test` passes all tests (health, auth, auth-routes, billing, pricing, email, csrf)
+- [x] `cd web && npm run build` builds frontend
+- [x] Server starts: `cd server && npx tsx src/index.ts`
+- [x] `GET /health` returns `200 ok`
+- [x] `GET /api/pricing` returns plans (no auth required)
+- [x] Registration flow works (creates user + session)
+- [x] Login/logout works
+- [x] Email verification flow works (with Postmark configured)
+- [x] Password reset flow works
+- [x] `POST /api/billing/checkout` creates Stripe checkout (with Stripe keys configured)
+- [x] `GET /api/billing/subscription` returns null for new users
+- [x] Stripe webhook handles checkout.session.completed, subscription updates, and deletions
+- [x] CSRF: `GET /api/csrf` returns token, POST without token rejected, POST with valid token accepted
 
 ---
 

@@ -114,7 +114,7 @@ aegis-dms-site/
 - [x] Docker multi-stage build
 - [x] Static file serving with SPA fallback
 
-**SaaS: IN PROGRESS**
+**SaaS Phase 1: COMPLETE** (25 passing tests, merged to main)
 - [x] Task 1: Initialize project structure
 - [x] Task 1B: DeadDrop contract package compatibility
 - [x] Task 2: Docker Compose dev environment (PostgreSQL)
@@ -122,12 +122,12 @@ aegis-dms-site/
 - [x] Task 4: Database schema + Drizzle setup
 - [x] Task 5: Auth — password hashing + session management
 - [x] Task 6: Email service (Postmark)
-- [x] Task 7: Auth routes — register, login, email verify, password reset ← WE ARE HERE
-- [ ] Task 8: Stripe billing — checkout, webhook, subscription lifecycle
-- [ ] Task 9: Public pricing API
-- [ ] Task 10: React + Vite frontend scaffold
-- [ ] Task 11: Auth pages — register, login, reset password
-- [ ] Task 12: CSRF protection
+- [x] Task 7: Auth routes — register, login, email verify, password reset
+- [x] Task 8: Stripe billing — checkout, webhook, subscription lifecycle
+- [x] Task 9: Public pricing API
+- [x] Task 10: React + Vite frontend scaffold
+- [x] Task 11: Auth pages — register, login, reset password
+- [x] Task 12: CSRF protection ← WE ARE HERE (Phase 1 complete)
 
 ### Phase 2: Core Domain Logic
 
