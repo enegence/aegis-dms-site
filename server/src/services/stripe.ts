@@ -5,7 +5,7 @@ let stripeInstance: Stripe | null = null;
 export function getStripe(secretKey: string): Stripe {
   if (!stripeInstance) {
     stripeInstance = new Stripe(secretKey, {
-      apiVersion: '2025-04-30.basil',
+      apiVersion: '2025-02-24.acacia',
     });
   }
   return stripeInstance;
