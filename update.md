@@ -114,10 +114,11 @@ aegis-dms-site/
 - [x] Docker multi-stage build
 - [x] Static file serving with SPA fallback
 
-**SaaS: NOT STARTED ← CURRENT TASK: Task 1 (see aegis-saas-phase1.md)**
-- [ ] Task 1: Initialize project structure
-- [ ] Task 1B: DeadDrop contract package compatibility
+**SaaS: IN PROGRESS**
+- [x] Task 1: Initialize project structure
+- [x] Task 1B: DeadDrop contract package compatibility ← WE ARE HERE
 - [ ] Task 2: Docker Compose dev environment (PostgreSQL)
+- [ ] Task 2: Docker Compose dev environment (PostgreSQL) ← NEXT
 - [ ] Task 3: Fastify server + health check
 - [ ] Task 4: Database schema + Drizzle setup
 - [ ] Task 5: Auth — password hashing + session management
