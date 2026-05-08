@@ -73,6 +73,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
       '/api/auth/forgot-password', '/api/auth/reset-password',
       '/api/auth/request-reset', '/api/auth/verify-email',
       '/api/billing/webhook',
+      '/api/relay/heartbeat',
     ];
     if (exemptPaths.some(p => url.startsWith(p))) return;
 

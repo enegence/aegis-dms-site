@@ -2,6 +2,9 @@ import type { FastifyInstance } from 'fastify';
 import { CreateRelayConnectionSchema, UpdateRelayConnectionSchema, RelayConnectionParamsSchema } from '../schemas/relay.js';
 import * as relayService from '../services/relay-connections.js';
 import { writeAuditEvent } from '../services/audit.js';
+import { authenticateRelayKey } from '../services/relay-auth.js';
+import { recordHeartbeat } from '../services/relay-heartbeats.js';
+import { HeartbeatSchema } from '@aegis-site/contracts';
 
 export async function relayRoutes(app: FastifyInstance) {
   // GET /api/relay/connections
@@ -85,6 +88,51 @@ export async function relayRoutes(app: FastifyInstance) {
     const auditEventType = result.action === 'revoked' ? 'relay_connection_revoked' : 'relay_connection_deleted';
     await writeAuditEvent(app.db, { userId: req.userId, eventType: auditEventType, actorType: 'user', metadata: { connectionId: params.data.id } });
     return reply.send({ ok: true });
+  });
+
+  // POST /api/relay/heartbeat — machine-to-machine, Bearer token auth, no CSRF
+  app.post('/api/relay/heartbeat', async (req, reply) => {
+    const authResult = await authenticateRelayKey(app.db, req.headers.authorization);
+    if (!authResult.ok) {
+      return reply.status(401).send({ error: authResult.reason });
+    }
+    const { connection } = authResult;
+
+    const body = HeartbeatSchema.safeParse(req.body);
+    if (!body.success) {
+      return reply.status(400).send({ error: 'Invalid heartbeat payload', details: body.error.flatten() });
+    }
+
+    await recordHeartbeat(app.db, connection.id, body.data);
+    await writeAuditEvent(app.db, {
+      userId: connection.userId,
+      eventType: 'relay_heartbeat_received',
+      actorType: 'relay',
+      metadata: {
+        connectionId: connection.id,
+        switchCount: body.data.switchCount,
+        mode: body.data.mode,
+      },
+    });
+
+    return reply.status(200).send({ accepted: true, serverTimestamp: new Date().toISOString() });
+  });
+
+  // GET /api/relay/status — machine-to-machine, Bearer token auth
+  app.get('/api/relay/status', async (req, reply) => {
+    const authResult = await authenticateRelayKey(app.db, req.headers.authorization);
+    if (!authResult.ok) {
+      return reply.status(401).send({ error: authResult.reason });
+    }
+    const { connection } = authResult;
+
+    return reply.status(200).send({
+      accepted: true,
+      serverTimestamp: new Date().toISOString(),
+      status: connection.status,
+      lastHeartbeatAt: connection.lastHeartbeatAt?.toISOString() ?? null,
+      nextExpectedAt: connection.lastExpectedHeartbeatAt?.toISOString() ?? null,
+    });
   });
 }
 
