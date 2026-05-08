@@ -30,3 +30,9 @@ export const UpdateSwitchSchema = z.object({
 export const SwitchParamsSchema = z.object({
   id: z.string().uuid(),
 });
+
+export const ArmSwitchSchema = z.object({});
+
+export const CheckInSchema = z.object({
+  note: z.string().max(500).optional(),
+});

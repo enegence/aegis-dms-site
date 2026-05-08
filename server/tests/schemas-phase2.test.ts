@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CreateSwitchSchema } from '../src/schemas/switches.js';
+import { CreateSwitchSchema, ArmSwitchSchema, CheckInSchema } from '../src/schemas/switches.js';
 import { CreateContactSchema } from '../src/schemas/contacts.js';
 import { ReorderContactsSchema } from '../src/schemas/contacts.js';
 import { CreateEstateItemSchema } from '../src/schemas/estate.js';
@@ -84,6 +84,30 @@ describe('CreateRelayConnectionSchema', () => {
       expect(result.data.label).toBe('Home Server');
       expect(result.data.mode).toBe('relay_monitoring');
     }
+  });
+});
+
+describe('ArmSwitchSchema', () => {
+  it('accepts empty object', () => {
+    const result = ArmSwitchSchema.safeParse({});
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('CheckInSchema', () => {
+  it('accepts empty object (note optional)', () => {
+    const result = CheckInSchema.safeParse({});
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts note within 500 chars', () => {
+    const result = CheckInSchema.safeParse({ note: 'Still alive!' });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects note exceeding 500 chars', () => {
+    const result = CheckInSchema.safeParse({ note: 'x'.repeat(501) });
+    expect(result.success).toBe(false);
   });
 });
 

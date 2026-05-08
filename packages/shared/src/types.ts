@@ -56,7 +56,7 @@ export interface RelayConnection {
   status: RelayConnectionStatus;
   lastHeartbeatAt: string | null;
   lastExpectedHeartbeatAt: string | null;
-  mode: string;
+  mode: 'relay_monitoring' | 'relay_escrow_future';
   createdAt: string;
 }
 
@@ -84,7 +84,7 @@ export interface Contact {
   email: string;
   phone: string | null;
   telegramHandle: string | null;
-  preferredChannels: string[];
+  preferredChannels: Array<'email' | 'telegram'>;
   confirmationWindowHours: number;
   backupNotes: string | null;
   createdAt: string;
