@@ -46,8 +46,12 @@ export const relayConnections = pgTable('relay_connections', {
   lastHeartbeatAt: timestamp('last_heartbeat_at'),
   lastHeartbeatData: jsonb('last_heartbeat_data'),
   offlineAlertSentAt: timestamp('offline_alert_sent_at'),
+  lastExpectedHeartbeatAt: timestamp('last_expected_heartbeat_at'),
+  mode: text('mode').notNull().default('relay_monitoring'),
   status: text('status').notNull().default('active'),
+  revokedAt: timestamp('revoked_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 export const stripeWebhookEvents = pgTable('stripe_webhook_events', {
@@ -104,6 +108,9 @@ export const switches = pgTable('switches', {
   warningWindowDays: integer('warning_window_days').notNull().default(3),
   lastCheckInAt: timestamp('last_check_in_at'),
   lastPacketSyncAt: timestamp('last_packet_sync_at'),
+  lastReminderSentAt: timestamp('last_reminder_sent_at'),
+  lastWarningSentAt: timestamp('last_warning_sent_at'),
+  lastEvaluatedAt: timestamp('last_evaluated_at'),
   selectedContactIds: jsonb('selected_contact_ids').default([]),
   selectedEstateItemIds: jsonb('selected_estate_item_ids').default([]),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -193,5 +200,20 @@ export const trustAcknowledgements = pgTable('trust_acknowledgements', {
   acceptedAt: timestamp('accepted_at').notNull().defaultNow(),
   ipHash: text('ip_hash'),
   userAgentHash: text('user_agent_hash'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const notificationEvents = pgTable('notification_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  relayConnectionId: uuid('relay_connection_id').references(() => relayConnections.id, { onDelete: 'set null' }),
+  switchId: uuid('switch_id').references(() => switches.id, { onDelete: 'set null' }),
+  contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'set null' }),
+  channel: text('channel').notNull(),
+  purpose: text('purpose').notNull(),
+  status: text('status').notNull(),
+  externalId: text('external_id'),
+  failureReason: text('failure_reason'),
+  sentAt: timestamp('sent_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
