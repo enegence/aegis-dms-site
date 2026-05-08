@@ -9,6 +9,10 @@ const checkoutSchema = z.object({
   plan: z.enum(['relay', 'hosted']),
 });
 
+const portalSchema = z.object({
+  returnUrl: z.string().url(),
+});
+
 export async function billingRoutes(app: FastifyInstance) {
   // Create checkout session
   app.post('/api/billing/checkout', {
@@ -65,19 +69,24 @@ export async function billingRoutes(app: FastifyInstance) {
   app.post('/api/billing/portal', {
     preHandler: [app.requireAuth],
   }, async (req, reply) => {
+    const body = portalSchema.safeParse(req.body);
+    if (!body.success) {
+      return reply.status(400).send({ error: 'Invalid request. returnUrl must be a valid URL.' });
+    }
+
     const [sub] = await app.db.select()
       .from(subscriptions)
       .where(eq(subscriptions.userId, req.userId!));
 
-    if (!sub) {
-      return reply.status(404).send({ error: 'No subscription found' });
+    if (!sub || !sub.stripeCustomerId) {
+      return reply.status(400).send({ error: 'No billing account found' });
     }
 
     const stripe = getStripe(app.config.stripe.secretKey);
     const url = await createPortalSession(
       stripe,
       sub.stripeCustomerId,
-      `${app.config.baseUrl}/billing`,
+      body.data.returnUrl,
     );
 
     return reply.send({ url });
