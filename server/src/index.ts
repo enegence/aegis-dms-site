@@ -15,6 +15,7 @@ import { estateItemRoutes } from './routes/estate-items.js';
 import { contactRoutes } from './routes/contacts.js';
 import { relayRoutes } from './routes/relay.js';
 import { switchRoutes } from './routes/switches.js';
+import { packetRoutes } from './routes/packets.js';
 import { dashboardRoutes } from './routes/dashboard.js';
 
 declare module 'fastify' {
@@ -65,6 +66,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(contactRoutes);
   await app.register(relayRoutes);
   await app.register(switchRoutes);
+  await app.register(packetRoutes);
   await app.register(dashboardRoutes);
 
   app.addHook('onRequest', async (req, reply) => {
