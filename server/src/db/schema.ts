@@ -14,6 +14,7 @@ export const users = pgTable('users', {
   totpEnabled: boolean('totp_enabled').notNull().default(false),
   timezone: text('timezone').notNull().default('UTC'),
   phone: text('phone'),
+  role: text('role').notNull().default('user'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -117,9 +118,16 @@ export const switches = pgTable('switches', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+// packets supports both hosted (aegis_hosted) and relay (aegis_core/partner) delivery.
+// switchId is nullable: relay escrow packets may not be tied to a local switch.
 export const packets = pgTable('packets', {
   id: uuid('id').primaryKey().defaultRandom(),
-  switchId: uuid('switch_id').notNull().references(() => switches.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  switchId: uuid('switch_id').references(() => switches.id, { onDelete: 'cascade' }),
+  relayConnectionId: uuid('relay_connection_id').references(() => relayConnections.id, { onDelete: 'set null' }),
+  sourceApp: text('source_app').notNull().default('aegis_hosted'),
+  schemaVersion: text('schema_version').notNull().default('1'),
+  storageVersionId: text('storage_version_id'),
   version: integer('version').notNull(),
   encryptionAlgorithm: text('encryption_algorithm').notNull().default('aes-256-gcm'),
   keyId: text('key_id').notNull(),
@@ -135,12 +143,15 @@ export const packets = pgTable('packets', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+// claimTokenHash stores only a hash of the claim token, never plaintext.
+// switchId is nullable: relay escrow claims may not have a local switch.
 export const contactClaims = pgTable('contact_claims', {
   id: uuid('id').primaryKey().defaultRandom(),
-  switchId: uuid('switch_id').notNull().references(() => switches.id),
+  switchId: uuid('switch_id').references(() => switches.id),
   packetId: uuid('packet_id').notNull().references(() => packets.id),
   contactId: uuid('contact_id').notNull().references(() => contacts.id),
-  claimToken: text('claim_token').notNull().unique(),
+  releaseRunId: uuid('release_run_id'), // FK added after release_runs is defined
+  claimTokenHash: text('claim_token_hash').notNull().unique(),
   status: text('status').notNull().default('pending'),
   notifiedAt: timestamp('notified_at'),
   openedAt: timestamp('opened_at'),
@@ -176,10 +187,14 @@ export const encryptionKeys = pgTable('encryption_keys', {
   rotatedAt: timestamp('rotated_at'),
 });
 
+// triggeringSwitchId is nullable for relay_escrow source (no local switch).
+// source distinguishes hosted cascade from relay escrow initiated releases.
 export const releaseRuns = pgTable('release_runs', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  triggeringSwitchId: uuid('triggering_switch_id').notNull().references(() => switches.id),
+  triggeringSwitchId: uuid('triggering_switch_id').references(() => switches.id),
+  relayConnectionId: uuid('relay_connection_id').references(() => relayConnections.id, { onDelete: 'set null' }),
+  source: text('source').notNull().default('hosted'),
   status: text('status').notNull().default('active'),
   activePacketId: uuid('active_packet_id').references(() => packets.id),
   currentContactClaimId: uuid('current_contact_claim_id').references(() => contactClaims.id),
@@ -203,16 +218,26 @@ export const trustAcknowledgements = pgTable('trust_acknowledgements', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+// notificationEvents: no plaintext recipient addresses stored.
+// recipientRef is a contactId or redacted reference only.
+// provider tracks the delivery service; providerMessageId for external correlation.
 export const notificationEvents = pgTable('notification_events', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   relayConnectionId: uuid('relay_connection_id').references(() => relayConnections.id, { onDelete: 'set null' }),
   switchId: uuid('switch_id').references(() => switches.id, { onDelete: 'set null' }),
   contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'set null' }),
+  releaseRunId: uuid('release_run_id').references(() => releaseRuns.id, { onDelete: 'set null' }),
+  contactClaimId: uuid('contact_claim_id').references(() => contactClaims.id, { onDelete: 'set null' }),
   channel: text('channel').notNull(),
   purpose: text('purpose').notNull(),
+  provider: text('provider'),
+  recipientRef: text('recipient_ref'),
   status: text('status').notNull(),
+  providerMessageId: text('provider_message_id'),
   externalId: text('external_id'),
+  errorCode: text('error_code'),
+  errorMessageRedacted: text('error_message_redacted'),
   failureReason: text('failure_reason'),
   sentAt: timestamp('sent_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -221,3 +246,20 @@ export const notificationEvents = pgTable('notification_events', {
   relayIdx: index('notification_events_relay_id_idx').on(table.relayConnectionId),
   switchIdx: index('notification_events_switch_id_idx').on(table.switchId),
 }));
+
+// relay_escrow_materials: stores encrypted release material for Relay Escrow.
+// materialEncrypted must always be set — unencrypted key material is never stored.
+// acceptedAcknowledgementId links to the trust_acknowledgements record for consent.
+export const relayEscrowMaterials = pgTable('relay_escrow_materials', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  relayConnectionId: uuid('relay_connection_id').notNull().references(() => relayConnections.id, { onDelete: 'cascade' }),
+  enabled: boolean('enabled').notNull().default(true),
+  materialType: text('material_type').notNull(),
+  materialEncrypted: text('material_encrypted').notNull(),
+  policyVersion: text('policy_version').notNull(),
+  acceptedAcknowledgementId: uuid('accepted_acknowledgement_id').notNull().references(() => trustAcknowledgements.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  revokedAt: timestamp('revoked_at'),
+});
