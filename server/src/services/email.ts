@@ -1,12 +1,15 @@
 import { ServerClient } from 'postmark';
 
-let client: ServerClient | null = null;
+// Per-token client cache. Each distinct apiToken gets its own instance.
+const clientCache = new Map<string, ServerClient>();
 
 export function getEmailClient(apiToken: string): ServerClient {
-  if (!client) {
-    client = new ServerClient(apiToken);
+  let c = clientCache.get(apiToken);
+  if (!c) {
+    c = new ServerClient(apiToken);
+    clientCache.set(apiToken, c);
   }
-  return client;
+  return c;
 }
 
 export function buildVerifyEmailHtml(baseUrl: string, token: string): string {
@@ -33,6 +36,8 @@ export function buildResetPasswordHtml(baseUrl: string, token: string): string {
   `;
 }
 
+// Legacy signature — used by auth routes and relay monitor.
+// Keep this intact for backward compatibility.
 export async function sendEmail(
   apiToken: string,
   fromEmail: string,
@@ -41,15 +46,54 @@ export async function sendEmail(
   htmlBody: string,
 ): Promise<void> {
   if (!apiToken) {
-    console.log(`[email-stub] To: ${to}, Subject: ${subject}`);
+    console.log(`[email-stub] Subject: ${subject}`);
     return;
   }
 
-  const client = getEmailClient(apiToken);
-  await client.sendEmail({
+  const c = getEmailClient(apiToken);
+  await c.sendEmail({
     From: fromEmail,
     To: to,
     Subject: subject,
     HtmlBody: htmlBody,
   });
+}
+
+// Structured send — used by hosted notification dispatch.
+// Returns {messageId, error} so callers can store results without re-throwing.
+// Errors are caught and returned as redacted strings; plaintext addresses/content
+// are never logged here.
+export async function sendEmailStructured(
+  apiToken: string,
+  params: {
+    from: string;
+    to: string;
+    subject: string;
+    htmlBody: string;
+    textBody: string;
+  },
+): Promise<{ messageId: string | null; error?: string }> {
+  if (!apiToken) {
+    // Stub mode — no token configured
+    return { messageId: null, error: 'no_api_token' };
+  }
+
+  try {
+    const c = getEmailClient(apiToken);
+    const result = await c.sendEmail({
+      From: params.from,
+      To: params.to,
+      Subject: params.subject,
+      HtmlBody: params.htmlBody,
+      TextBody: params.textBody,
+    });
+    return { messageId: result.MessageID ?? null };
+  } catch (err) {
+    // Redact: do not include addresses or message content in error strings
+    const code =
+      typeof err === 'object' && err !== null && 'code' in err
+        ? String((err as { code: unknown }).code)
+        : 'postmark_error';
+    return { messageId: null, error: code };
+  }
 }

@@ -21,6 +21,9 @@ export interface AppConfig {
     apiToken: string;
     fromEmail: string;
   };
+  telegram: {
+    botToken: string;
+  };
   storage: {
     endpoint: string;        // AEGIS_STORAGE_ENDPOINT (empty = AWS)
     region: string;          // AEGIS_STORAGE_REGION, default 'auto'
@@ -51,6 +54,9 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     postmark: {
       apiToken: process.env.POSTMARK_API_TOKEN || '',
       fromEmail: process.env.POSTMARK_FROM_EMAIL || 'noreply@aegisdms.life',
+    },
+    telegram: {
+      botToken: process.env.AEGIS_TELEGRAM_BOT_TOKEN || '',
     },
     storage: {
       endpoint: process.env.AEGIS_STORAGE_ENDPOINT || '',
