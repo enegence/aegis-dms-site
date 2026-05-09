@@ -60,6 +60,7 @@ export async function createPacket(
     })
     .returning();
 
+  if (!rows[0]) throw new Error('Failed to insert packet');
   return rows[0];
 }
 
