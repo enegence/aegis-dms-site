@@ -17,6 +17,7 @@ import { relayRoutes } from './routes/relay.js';
 import { switchRoutes } from './routes/switches.js';
 import { packetRoutes } from './routes/packets.js';
 import { dashboardRoutes } from './routes/dashboard.js';
+import { claimRoutes } from './routes/claim.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -68,6 +69,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(switchRoutes);
   await app.register(packetRoutes);
   await app.register(dashboardRoutes);
+  await app.register(claimRoutes);
 
   app.addHook('onRequest', async (req, reply) => {
     const method = req.method;
@@ -82,6 +84,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
       '/api/auth/request-reset', '/api/auth/verify-email',
       '/api/billing/webhook',
       '/api/relay/heartbeat',
+      '/api/claim/',
     ];
     if (exemptPaths.some(p => url.startsWith(p))) return;
 
