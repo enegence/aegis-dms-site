@@ -21,6 +21,15 @@ export interface AppConfig {
     apiToken: string;
     fromEmail: string;
   };
+  storage: {
+    endpoint: string;        // AEGIS_STORAGE_ENDPOINT (empty = AWS)
+    region: string;          // AEGIS_STORAGE_REGION, default 'auto'
+    bucket: string;          // AEGIS_STORAGE_BUCKET
+    accessKeyId: string;     // AEGIS_STORAGE_ACCESS_KEY_ID
+    secretAccessKey: string; // AEGIS_STORAGE_SECRET_ACCESS_KEY
+    prefix: string;          // AEGIS_STORAGE_PREFIX, default 'packets/'
+    forcePathStyle: boolean; // AEGIS_STORAGE_FORCE_PATH_STYLE, default false
+  };
   testing: boolean;
 }
 
@@ -42,6 +51,15 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     postmark: {
       apiToken: process.env.POSTMARK_API_TOKEN || '',
       fromEmail: process.env.POSTMARK_FROM_EMAIL || 'noreply@aegisdms.life',
+    },
+    storage: {
+      endpoint: process.env.AEGIS_STORAGE_ENDPOINT || '',
+      region: process.env.AEGIS_STORAGE_REGION || 'auto',
+      bucket: process.env.AEGIS_STORAGE_BUCKET || '',
+      accessKeyId: process.env.AEGIS_STORAGE_ACCESS_KEY_ID || '',
+      secretAccessKey: process.env.AEGIS_STORAGE_SECRET_ACCESS_KEY || '',
+      prefix: process.env.AEGIS_STORAGE_PREFIX || 'packets/',
+      forcePathStyle: process.env.AEGIS_STORAGE_FORCE_PATH_STYLE === 'true',
     },
     testing: false,
     ...overrides,
