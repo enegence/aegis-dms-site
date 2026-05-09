@@ -150,7 +150,7 @@ export const contactClaims = pgTable('contact_claims', {
   switchId: uuid('switch_id').references(() => switches.id),
   packetId: uuid('packet_id').notNull().references(() => packets.id),
   contactId: uuid('contact_id').notNull().references(() => contacts.id),
-  releaseRunId: uuid('release_run_id'), // FK added after release_runs is defined
+  releaseRunId: uuid('release_run_id').references(() => releaseRuns.id, { onDelete: 'set null' }),
   claimTokenHash: text('claim_token_hash').notNull().unique(),
   status: text('status').notNull().default('pending'),
   notifiedAt: timestamp('notified_at'),
