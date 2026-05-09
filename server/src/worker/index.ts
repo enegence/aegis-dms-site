@@ -1,5 +1,7 @@
 import type { AegisDb } from '../db/index.js';
+import type { AppConfig } from '../config.js';
 import { runRelayMonitorOnce } from '../services/relay-monitor.js';
+import { runHostedWorkerOnce } from './hosted-worker.js';
 
 export interface WorkerOptions {
   intervalSeconds?: number;
@@ -9,6 +11,7 @@ export interface WorkerOptions {
 
 export function startWorker(
   db: AegisDb,
+  config: AppConfig,
   options: WorkerOptions = {},
 ): { stop(): Promise<void> } {
   const intervalMs =
@@ -29,6 +32,11 @@ export function startWorker(
       await runRelayMonitorOnce(db, apiToken, from);
     } catch (err) {
       console.error('[worker] relay monitor error:', err);
+    }
+    try {
+      await runHostedWorkerOnce(db, config);
+    } catch (err) {
+      console.error('[worker] hosted worker error:', err);
     }
     if (!stopped) {
       timeout = setTimeout(tick, intervalMs);

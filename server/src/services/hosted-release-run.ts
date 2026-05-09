@@ -32,6 +32,48 @@ export async function startOrAttachHostedReleaseRun(
   const existingRun = await getActiveReleaseRunForUser(db, userId);
 
   if (existingRun) {
+    // Run was pre-created by evaluateSwitch (same triggering switch, no packet yet).
+    // Build the packet and attach it — this is a continuation, not a duplicate.
+    if (
+      existingRun.triggeringSwitchId === triggeringSwitchId &&
+      !existingRun.activePacketId
+    ) {
+      let packetId: string | null = null;
+      try {
+        const packetResult = await buildHostedPacket({
+          userId,
+          switchId: triggeringSwitchId,
+          releaseRunId: existingRun.id,
+          db,
+          config,
+        });
+        packetId = packetResult.packetId;
+        await updateReleaseRun(db, existingRun.id, {
+          activePacketId: packetId,
+          status: 'active',
+        });
+      } catch (err) {
+        console.error('[hosted-release-run] packet build failed (continuation):', err);
+      }
+
+      await writeAuditEvent(db, {
+        userId,
+        switchId: triggeringSwitchId,
+        releaseRunId: existingRun.id,
+        eventType: 'release_run_started',
+        actorType: 'system',
+        metadata: { releaseRunId: existingRun.id, switchId: triggeringSwitchId, reason, packetId },
+      });
+
+      return {
+        releaseRunId: existingRun.id,
+        packetId,
+        isNew: false,
+        suppressedSwitchIds: [],
+      };
+    }
+
+    // Genuine duplicate — different switch triggered while a run is active.
     await appendSuppressedSwitchId(db, existingRun.id, triggeringSwitchId);
 
     await writeAuditEvent(db, {
