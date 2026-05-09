@@ -119,4 +119,115 @@ describe('ClaimEvent contract', () => {
     });
     expect(result.success).toBe(true);
   });
+
+  it('validates a relay escrow claim event with no switchId and a releaseRunId', () => {
+    const result = ClaimEventSchema.safeParse({
+      version: 1,
+      claimId: '550e8400-e29b-41d4-a716-446655440000',
+      contactId: '550e8400-e29b-41d4-a716-446655440001',
+      releaseRunId: '550e8400-e29b-41d4-a716-446655440004',
+      packetId: '550e8400-e29b-41d4-a716-446655440003',
+      source: 'relay_escrow',
+      eventType: 'notified',
+      occurredAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('PacketEnvelope SaaS source extensions', () => {
+  it('validates a hosted packet envelope with sourceApp aegis_hosted', () => {
+    const result = PacketEnvelopeSchema.safeParse({
+      version: 1,
+      packetId: '550e8400-e29b-41d4-a716-446655440000',
+      switchId: '550e8400-e29b-41d4-a716-446655440001',
+      userId: '550e8400-e29b-41d4-a716-446655440002',
+      sourceApp: 'aegis_hosted',
+      encryptionAlgorithm: 'aes-256-gcm',
+      keyId: 'key-001',
+      contentHash: 'abc123def456',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('validates a relay escrow packet envelope with sourceApp aegis_core and no switchId', () => {
+    const result = PacketEnvelopeSchema.safeParse({
+      version: 1,
+      packetId: '550e8400-e29b-41d4-a716-446655440000',
+      userId: '550e8400-e29b-41d4-a716-446655440002',
+      sourceApp: 'aegis_core',
+      encryptionAlgorithm: 'aes-256-gcm',
+      keyId: 'key-001',
+      contentHash: 'abc123def456',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('validates a partner sourceApp packet envelope', () => {
+    const result = PacketEnvelopeSchema.safeParse({
+      version: 1,
+      packetId: '550e8400-e29b-41d4-a716-446655440000',
+      userId: '550e8400-e29b-41d4-a716-446655440002',
+      sourceApp: 'partner',
+      encryptionAlgorithm: 'aes-256-gcm',
+      keyId: 'key-001',
+      contentHash: 'abc123def456',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects an invalid sourceApp value', () => {
+    const result = PacketEnvelopeSchema.safeParse({
+      version: 1,
+      packetId: '550e8400-e29b-41d4-a716-446655440000',
+      userId: '550e8400-e29b-41d4-a716-446655440002',
+      sourceApp: 'unknown',
+      encryptionAlgorithm: 'aes-256-gcm',
+      keyId: 'key-001',
+      contentHash: 'abc123def456',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('ReleaseRun Phase 3 extensions', () => {
+  it('validates a relay escrow release run with no triggeringSwitchId', () => {
+    const result = ReleaseRunSchema.safeParse({
+      version: 1,
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      userId: '550e8400-e29b-41d4-a716-446655440001',
+      relayConnectionId: '550e8400-e29b-41d4-a716-446655440005',
+      source: 'relay_escrow',
+      status: 'active',
+      activePacketId: null,
+      currentContactClaimId: null,
+      suppressedSwitchIds: [],
+      startedAt: '2026-01-01T00:00:00.000Z',
+      completedAt: null,
+      cancelledAt: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('validates cascade_active status', () => {
+    const result = ReleaseRunSchema.safeParse({
+      version: 1,
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      userId: '550e8400-e29b-41d4-a716-446655440001',
+      triggeringSwitchId: '550e8400-e29b-41d4-a716-446655440002',
+      source: 'hosted',
+      status: 'cascade_active',
+      activePacketId: null,
+      currentContactClaimId: null,
+      suppressedSwitchIds: [],
+      startedAt: '2026-01-01T00:00:00.000Z',
+      completedAt: null,
+      cancelledAt: null,
+    });
+    expect(result.success).toBe(true);
+  });
 });

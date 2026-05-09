@@ -19,6 +19,12 @@ export type EstateCategory =
 
 export type NotificationChannel = 'email' | 'sms' | 'telegram';
 
+export type PacketSourceApp = 'aegis_core' | 'aegis_hosted' | 'partner';
+export type ReleaseRunSource = 'hosted' | 'relay_escrow';
+export type ReleaseRunStatus = 'active' | 'cascade_active' | 'completed' | 'cancelled' | 'failed';
+
+export type RelayEscrowStatus = 'disabled' | 'pending_acknowledgement' | 'enabled' | 'revoked';
+
 export interface PricingPlan {
   id: SubscriptionPlan;
   name: string;
@@ -57,7 +63,39 @@ export interface RelayConnection {
   lastHeartbeatAt: string | null;
   lastExpectedHeartbeatAt: string | null;
   mode: 'relay_monitoring' | 'relay_escrow_future';
+  escrowStatus: RelayEscrowStatus;
   createdAt: string;
+}
+
+export interface RelayEscrowSummary {
+  relayConnectionId: string;
+  status: RelayEscrowStatus;
+  policyVersion: string | null;
+  acceptedAt: string | null;
+  revokedAt: string | null;
+}
+
+export interface PacketSummary {
+  packetId: string;
+  switchId: string | null;
+  sourceApp: PacketSourceApp;
+  keyId: string;
+  contentHash: string;
+  createdAt: string;
+  expiresAt: string | null;
+}
+
+export interface ReleaseRunSummary {
+  id: string;
+  source: ReleaseRunSource;
+  status: ReleaseRunStatus;
+  triggeringSwitchId: string | null;
+  relayConnectionId: string | null;
+  activePacketId: string | null;
+  currentContactClaimId: string | null;
+  startedAt: string;
+  completedAt: string | null;
+  cancelledAt: string | null;
 }
 
 export interface EstateItem {
@@ -138,4 +176,16 @@ export interface HostedDashboardSummary {
   offlineRelayConnectionCount: number;
   nextSwitch: Switch | null;
   nextActionAt: string | null;
+}
+
+export interface AdminMetricsSummary {
+  userCount: number;
+  verifiedUserCount: number;
+  activeSubscriptions: number;
+  relayConnections: number;
+  offlineRelayConnections: number;
+  hostedSwitchesArmed: number;
+  activeReleaseRuns: number;
+  packetsStored: number;
+  notificationFailuresLast24h: number;
 }

@@ -1,14 +1,16 @@
 import { z } from 'zod';
 
 export const ReleaseRunStatusSchema = z.enum([
-  'active', 'completed', 'cancelled', 'failed'
+  'active', 'cascade_active', 'completed', 'cancelled', 'failed'
 ]);
 
 export const ReleaseRunSchema = z.object({
   version: z.literal(1),
   id: z.string().uuid(),
   userId: z.string().uuid(),
-  triggeringSwitchId: z.string().uuid(),
+  triggeringSwitchId: z.string().uuid().optional(),
+  relayConnectionId: z.string().uuid().optional(),
+  source: z.enum(['hosted', 'relay_escrow']).default('hosted'),
   status: ReleaseRunStatusSchema,
   activePacketId: z.string().uuid().nullable(),
   currentContactClaimId: z.string().uuid().nullable(),
