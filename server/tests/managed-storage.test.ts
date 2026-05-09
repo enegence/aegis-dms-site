@@ -86,10 +86,16 @@ function makeConfig(overrides: Partial<AppConfig['storage']> = {}): AppConfig['s
   };
 }
 
+// Real UUIDs are required because buildObjectKey now validates all ID segments.
+const USER_ID        = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+const RELEASE_RUN_ID = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
+const PACKET_ID      = 'c3d4e5f6-a7b8-9012-cdef-123456789012';
+const RELAY_CONN_ID  = 'd4e5f6a7-b8c9-0123-defa-234567890123';
+
 const BASE_INPUT = {
-  userId: 'user-abc',
-  releaseRunId: 'run-123',
-  packetId: 'pkt-456',
+  userId: USER_ID,
+  releaseRunId: RELEASE_RUN_ID,
+  packetId: PACKET_ID,
   version: 1,
   encryptedData: Buffer.from('encrypted-bytes'),
   encryptedObjectHash: 'sha256-abc123',
@@ -101,45 +107,82 @@ describe('buildObjectKey', () => {
   it('hosted packet key uses /release-runs/ path (no relayConnectionId)', () => {
     const key = buildObjectKey({
       prefix: 'packets/',
-      userId: 'user-abc',
-      releaseRunId: 'run-123',
-      packetId: 'pkt-456',
+      userId: USER_ID,
+      releaseRunId: RELEASE_RUN_ID,
+      packetId: PACKET_ID,
       version: 2,
     });
 
-    expect(key).toContain('/users/user-abc/');
-    expect(key).toContain('/release-runs/run-123/');
-    expect(key).toContain('/packets/pkt-456-v2.aegis.enc');
+    expect(key).toContain(`/users/${USER_ID}/`);
+    expect(key).toContain(`/release-runs/${RELEASE_RUN_ID}/`);
+    expect(key).toContain(`/packets/${PACKET_ID}-v2.aegis.enc`);
     expect(key).not.toContain('/relay/');
   });
 
   it('relay escrow packet key includes /relay/<relayConnectionId>/', () => {
     const key = buildObjectKey({
       prefix: 'packets/',
-      userId: 'user-abc',
-      releaseRunId: 'run-123',
-      packetId: 'pkt-456',
+      userId: USER_ID,
+      releaseRunId: RELEASE_RUN_ID,
+      packetId: PACKET_ID,
       version: 1,
-      relayConnectionId: 'relay-conn-789',
+      relayConnectionId: RELAY_CONN_ID,
     });
 
-    expect(key).toContain('/users/user-abc/');
-    expect(key).toContain('/relay/relay-conn-789/');
-    expect(key).toContain('/release-runs/run-123/');
-    expect(key).toContain('/packets/pkt-456-v1.aegis.enc');
+    expect(key).toContain(`/users/${USER_ID}/`);
+    expect(key).toContain(`/relay/${RELAY_CONN_ID}/`);
+    expect(key).toContain(`/release-runs/${RELEASE_RUN_ID}/`);
+    expect(key).toContain(`/packets/${PACKET_ID}-v1.aegis.enc`);
   });
 
   it('trailing slash on prefix is normalised (no double slash)', () => {
     const key = buildObjectKey({
       prefix: 'packets/',
-      userId: 'u1',
-      releaseRunId: 'r1',
-      packetId: 'p1',
+      userId: USER_ID,
+      releaseRunId: RELEASE_RUN_ID,
+      packetId: PACKET_ID,
       version: 1,
     });
 
     expect(key).not.toContain('//');
     expect(key.startsWith('packets/')).toBe(true);
+  });
+
+  it('throws when userId is not a UUID (path-traversal guard)', () => {
+    expect(() =>
+      buildObjectKey({
+        prefix: 'packets/',
+        userId: '../../../admin',
+        releaseRunId: RELEASE_RUN_ID,
+        packetId: PACKET_ID,
+        version: 1,
+      }),
+    ).toThrow('Invalid userId: must be a UUID');
+  });
+
+  it('throws when packetId is not a UUID (path-traversal guard)', () => {
+    expect(() =>
+      buildObjectKey({
+        prefix: 'packets/',
+        userId: USER_ID,
+        releaseRunId: RELEASE_RUN_ID,
+        packetId: 'not-a-uuid',
+        version: 1,
+      }),
+    ).toThrow('Invalid packetId: must be a UUID');
+  });
+
+  it('throws when relayConnectionId is present but not a UUID', () => {
+    expect(() =>
+      buildObjectKey({
+        prefix: 'packets/',
+        userId: USER_ID,
+        releaseRunId: RELEASE_RUN_ID,
+        packetId: PACKET_ID,
+        version: 1,
+        relayConnectionId: 'relay-conn-789',
+      }),
+    ).toThrow('Invalid relayConnectionId: must be a UUID');
   });
 });
 
@@ -162,7 +205,7 @@ describe('uploadManagedPacket', () => {
       config: makeConfig(),
     });
 
-    expect(result.storageObjectKey).toContain('/users/user-abc/release-runs/run-123/packets/pkt-456-v1.aegis.enc');
+    expect(result.storageObjectKey).toContain(`/users/${USER_ID}/release-runs/${RELEASE_RUN_ID}/packets/${PACKET_ID}-v1.aegis.enc`);
     expect(result.storageObjectKey).not.toContain('/relay/');
     expect(result.storageBucket).toBe('aegis-test-bucket');
     expect(result.storageRegion).toBe('auto');
@@ -173,12 +216,12 @@ describe('uploadManagedPacket', () => {
   it('relay escrow packet (with relayConnectionId) key includes /relay/<id>/', async () => {
     const result = await uploadManagedPacket({
       ...BASE_INPUT,
-      relayConnectionId: 'relay-conn-789',
+      relayConnectionId: RELAY_CONN_ID,
       config: makeConfig(),
     });
 
-    expect(result.storageObjectKey).toContain('/users/user-abc/relay/relay-conn-789/release-runs/run-123/');
-    expect(result.storageObjectKey).toContain('/packets/pkt-456-v1.aegis.enc');
+    expect(result.storageObjectKey).toContain(`/users/${USER_ID}/relay/${RELAY_CONN_ID}/release-runs/${RELEASE_RUN_ID}/`);
+    expect(result.storageObjectKey).toContain(`/packets/${PACKET_ID}-v1.aegis.enc`);
   });
 
   it('returns storageProvider label for R2 endpoints', async () => {
@@ -315,6 +358,32 @@ describe('downloadManagedPacket', () => {
 
     expect(Buffer.isBuffer(result)).toBe(true);
     expect(result).toEqual(expectedBytes);
+  });
+
+  it('throws PACKET_NOT_FOUND sentinel when object does not exist', async () => {
+    const { NotFound } = await import('@aws-sdk/client-s3');
+    s3SendMock.mockRejectedValue(new NotFound());
+
+    await expect(
+      downloadManagedPacket({
+        storageObjectKey: 'packets/users/u1/release-runs/r1/packets/missing-v1.aegis.enc',
+        config: makeConfig(),
+      }),
+    ).rejects.toThrow('PACKET_NOT_FOUND');
+  });
+
+  it('throws PACKET_NOT_FOUND sentinel for duck-typed 404', async () => {
+    const notFoundErr = Object.assign(new Error('Not Found'), {
+      $metadata: { httpStatusCode: 404 },
+    });
+    s3SendMock.mockRejectedValue(notFoundErr);
+
+    await expect(
+      downloadManagedPacket({
+        storageObjectKey: 'packets/users/u1/release-runs/r1/packets/missing-v1.aegis.enc',
+        config: makeConfig(),
+      }),
+    ).rejects.toThrow('PACKET_NOT_FOUND');
   });
 
   it('throws on download failure — message never contains credentials', async () => {

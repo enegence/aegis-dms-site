@@ -46,7 +46,7 @@ export interface UploadPacketResult {
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
 /** Build an S3Client from storage config. Never log credentials. */
-function buildClient(config: AppConfig['storage']): S3Client {
+function createS3Client(config: AppConfig['storage']): S3Client {
   const clientConfig: ConstructorParameters<typeof S3Client>[0] = {
     region: config.region,
     credentials: {
@@ -61,6 +61,36 @@ function buildClient(config: AppConfig['storage']): S3Client {
   }
 
   return new S3Client(clientConfig);
+}
+
+/**
+ * Module-level S3Client cache keyed by endpoint|region|bucket.
+ * Avoids creating a new client (and leaking its internal socket pool) on
+ * every operation call.
+ */
+const clientCache = new Map<string, S3Client>();
+
+function getS3Client(config: AppConfig['storage']): S3Client {
+  const key = `${config.endpoint}|${config.region}|${config.bucket}`;
+  if (!clientCache.has(key)) {
+    clientCache.set(key, createS3Client(config));
+  }
+  return clientCache.get(key)!;
+}
+
+// ── UUID validation ───────────────────────────────────────────────────────────
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Assert that `value` is a well-formed UUID.
+ * Prevents path-traversal characters (e.g. `../`) from reaching object keys.
+ */
+function assertUuid(value: string, name: string): void {
+  if (!UUID_RE.test(value)) {
+    throw new Error(`Invalid ${name}: must be a UUID`);
+  }
 }
 
 /**
@@ -80,6 +110,14 @@ export function buildObjectKey(input: {
   version: number;
   relayConnectionId?: string;
 }): string {
+  // Guard: all ID segments must be UUIDs to prevent path-traversal injection.
+  assertUuid(input.userId, 'userId');
+  assertUuid(input.releaseRunId, 'releaseRunId');
+  assertUuid(input.packetId, 'packetId');
+  if (input.relayConnectionId !== undefined) {
+    assertUuid(input.relayConnectionId, 'relayConnectionId');
+  }
+
   // Normalise prefix: strip trailing slash so we control the separator
   const prefix = input.prefix.replace(/\/+$/, '');
   const filename = `${input.packetId}-v${input.version}.aegis.enc`;
@@ -122,7 +160,7 @@ export async function uploadManagedPacket(
   const { userId, releaseRunId, packetId, version, encryptedData, encryptedObjectHash, relayConnectionId, config } = input;
 
   const key = buildObjectKey({ prefix: config.prefix, userId, releaseRunId, packetId, version, relayConnectionId });
-  const client = buildClient(config);
+  const client = getS3Client(config);
   const provider = resolveProvider(config);
 
   try {
@@ -176,7 +214,7 @@ export async function verifyManagedPacket(input: {
   config: AppConfig['storage'];
 }): Promise<{ exists: boolean; versionId: string | null }> {
   const { storageObjectKey, config } = input;
-  const client = buildClient(config);
+  const client = getS3Client(config);
 
   try {
     const result = await client.send(
@@ -203,7 +241,7 @@ export async function downloadManagedPacket(input: {
   config: AppConfig['storage'];
 }): Promise<Buffer> {
   const { storageObjectKey, config } = input;
-  const client = buildClient(config);
+  const client = getS3Client(config);
 
   try {
     const result = await client.send(
@@ -221,6 +259,11 @@ export async function downloadManagedPacket(input: {
     }
     return Buffer.concat(chunks);
   } catch (err) {
+    // Distinguish a missing object from other failures so callers can branch on
+    // the sentinel 'PACKET_NOT_FOUND' without inspecting raw S3 error details.
+    if (isNotFoundError(err)) {
+      throw new Error('PACKET_NOT_FOUND');
+    }
     throw new Error(`Storage download failed for key ${storageObjectKey}: ${sanitizeError(err)}`);
   }
 }
@@ -236,7 +279,7 @@ export async function deleteManagedPacket(input: {
   config: AppConfig['storage'];
 }): Promise<void> {
   const { storageObjectKey, config } = input;
-  const client = buildClient(config);
+  const client = getS3Client(config);
 
   try {
     await client.send(
