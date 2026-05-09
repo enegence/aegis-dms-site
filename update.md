@@ -172,21 +172,32 @@ aegis-dms-site/
 
 ### Phase 3: Encryption, Packets, Cascade
 
-**OSS:**
-- Packet builder: assemble estate items → encrypt → store
-- S3-compatible storage: upload, verify, delete
-- Dead drop sync in worker
-- Contact cascade: notify → verify → accept → download → acknowledge
-- Claim portal UI
-- Escalation + timeout handling
-- Audit log
+**OSS Phase 2: NOT STARTED** (plan: `2026-05-08-aegis-oss-phase2.md`)
+- Switch state machine, CRUD, check-in, worker, notifications, dashboard, UI
 
-**SaaS:**
-- Managed storage (R2/S3)
-- Hosted notification dispatch
-- Hosted switch engine + cascade
-- Relay-assisted cascade (offline fallback)
-- Admin dashboard
+**OSS Phase 3: NOT STARTED** (plan: `2026-05-08-aegis-oss-phase3.md`)
+- Packet builder, S3 dead-drop, contact cascade, claim portal, audit log
+
+**SaaS Phase 3: IN PROGRESS** (312 passing tests, plan: `2026-05-08-aegis-dms-site-phase3.md`)
+- [x] Task 1: Schema verification and extension
+- [x] Task 2: Shared types and contract usage
+- [x] Task 3: Managed storage service
+- [x] Task 4: Hosted packet crypto and builder
+- [x] Task 5: Packet API routes
+- [x] Task 6: Hosted notification dispatch
+- [x] Task 7: Hosted release run service
+- [x] Task 8: Hosted contact cascade
+- [x] Task 9: Extend hosted worker
+- [x] Task 10: Hosted public claim API ← WE ARE HERE
+- [ ] Task 11: Claim portal UI
+- [ ] Task 12: Relay escrow material model
+- [ ] Task 13: Relay-assisted cascade
+- [ ] Task 14: Admin API
+- [ ] Task 15: Admin dashboard UI
+- [ ] Task 16: Hosted release and packet UI
+- [ ] Task 17: Audit coverage and redaction tests
+- [ ] Task 18: Documentation updates
+- [ ] Task 19: End-to-end verification
 
 ### Phase 4: Polish + Deploy
 

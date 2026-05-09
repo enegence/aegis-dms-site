@@ -12,7 +12,7 @@ Read these before implementation work. Priority order:
 | Priority | File | Purpose |
 |----------|------|---------|
 | 1 | `docs/superpowers/plans/2026-05-06-aegis-master-plan.md` | Architecture source of truth. Schemas, security baseline, integration points, key management model. |
-| 2 | `docs/superpowers/plans/2026-05-06-aegis-saas-phase1.md` | SaaS implementation plan. Task-by-task TDD steps with exact code. **This is your execution target.** |
+| 2 | `docs/superpowers/plans/2026-05-08-aegis-dms-site-phase3.md` | SaaS Phase 3 plan (Tasks 1-10 done, 11-19 pending). **This is your execution target.** |
 | 3 | `update.md` | Current progress overview. Update the `CURRENT TASK` marker as you complete work. |
 | 4 | `docs/superpowers/plans/2026-05-06-aegis-oss-phase1.md` | OSS Phase 1 plan (COMPLETE). Reference for contract compatibility and shared patterns. |
 | 5 | `project-aegis-rebuilt-prd.md` | Original PRD. Read if you need product-level "why" context. |
@@ -26,7 +26,10 @@ Historical/applied patch docs (already baked into plans, read only if referenced
 ## Current State
 
 - **OSS Phase 1:** COMPLETE (separate `aegis/` repo, 21 passing tests)
-- **SaaS Phase 1:** NOT STARTED — begin at Task 1
+- **OSS Phase 2:** NOT STARTED — plan at `docs/superpowers/plans/2026-05-08-aegis-oss-phase2.md`
+- **SaaS Phase 1:** COMPLETE (25 tests)
+- **SaaS Phase 2:** COMPLETE (175 tests at completion)
+- **SaaS Phase 3:** IN PROGRESS — Tasks 1-10 done, Tasks 11-19 remaining. 312 tests passing.
 
 ## Completion Tracking Protocol
 
@@ -49,10 +52,11 @@ After completing each numbered Task (not each step), update `update.md`:
 
 At the END of every session (or when context is getting long), update this section:
 
-**Last completed:** Task 21 — SaaS Phase 2 fully complete
-**Next up:** Phase 3 — Packet builder, managed storage, hosted cascade, relay escrow, admin dashboard
-**Blockers/notes:** None. All Phase 2 tasks complete. 175 tests passing.
-**Tests passing:** 175 (21 test files)
+**Last completed:** SaaS Phase 3 Task 10 — Hosted public claim API
+**Next up:** SaaS Phase 3 Task 11 — Claim portal UI (React). Then Tasks 12-19 in order.
+**OSS status:** Phase 1 complete (21 tests). Phase 2 NOT STARTED (plan: `2026-05-08-aegis-oss-phase2.md`).
+**Blockers/notes:** None. Plan doc tracking was not maintained this session — plan file checkboxes and update.md were corrected in a fix commit after Task 10.
+**Tests passing:** 312 (31 test files)
 
 ## Non-Negotiable Constraints
 
