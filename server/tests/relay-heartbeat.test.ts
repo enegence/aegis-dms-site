@@ -135,6 +135,21 @@ describe('Relay Heartbeat API', () => {
       expect(res.statusCode).toBe(400);
     });
 
+    it('rejects heartbeat payload whose connection id does not match the bearer key', async () => {
+      const { apiKey } = await createConnection(app, cookies, 'Mismatch Key');
+      const other = await createConnection(app, cookies, 'Mismatch Payload');
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/relay/heartbeat',
+        headers: { authorization: `Bearer ${apiKey}` },
+        payload: validHeartbeat(other.id),
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(JSON.parse(res.payload).error).toBe('Heartbeat connection mismatch');
+    });
+
     it('updates lastHeartbeatAt after a successful heartbeat', async () => {
       const { id, apiKey } = await createConnection(app, cookies, 'Heartbeat Update');
 

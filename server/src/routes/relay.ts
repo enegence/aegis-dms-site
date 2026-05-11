@@ -102,6 +102,9 @@ export async function relayRoutes(app: FastifyInstance) {
     if (!body.success) {
       return reply.status(400).send({ error: 'Invalid heartbeat payload', details: body.error.flatten() });
     }
+    if (body.data.relayConnectionId !== connection.id) {
+      return reply.status(400).send({ error: 'Heartbeat connection mismatch' });
+    }
 
     await recordHeartbeat(app.db, connection.id, body.data);
     await writeAuditEvent(app.db, {

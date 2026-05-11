@@ -45,6 +45,7 @@ import {
 import { encryptEstateItem } from '../src/services/estate-mapper.js';
 import { encryptContact } from '../src/services/contact-mapper.js';
 import { buildHostedPacket } from '../src/services/hosted-packet-builder.js';
+import { decryptField } from '../src/services/field-encrypt.js';
 import { PacketEnvelopeSchema } from '@aegis-site/contracts';
 import { uploadManagedPacket } from '../src/services/storage/index.js';
 
@@ -288,11 +289,14 @@ describe('buildHostedPacket', () => {
     const row = rows[0];
     expect(row.userId).toBe(userId);
     expect(row.switchId).toBe(switchId);
+    expect(row.releaseRunId).toBe(releaseRunId);
     expect(row.sourceApp).toBe('aegis_hosted');
     expect(row.schemaVersion).toBe('1');
     expect(row.version).toBe(1);
     expect(row.encryptionAlgorithm).toBe('aes-256-gcm');
     expect(row.keyId).toMatch(/^hosted-v1-/);
+    expect(row.packetKeyEncrypted).toBeTruthy();
+    expect(decryptField(row.packetKeyEncrypted!, FIELD_KEY)).toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
     expect(row.contentHash).toMatch(/^[0-9a-f]{64}$/);
     expect(row.encryptedObjectHash).toMatch(/^[0-9a-f]{64}$/);
   });

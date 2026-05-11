@@ -41,6 +41,22 @@ describe('Schema Phase 3', () => {
     expect(rows.length).toBe(1);
   });
 
+  it('packets has release_run_id field', async () => {
+    const rows = await app.db.execute(
+      sql`SELECT column_name FROM information_schema.columns
+          WHERE table_name = 'packets' AND column_name = 'release_run_id'`
+    );
+    expect(rows.length).toBe(1);
+  });
+
+  it('packets has packet_key_encrypted field for hosted release material', async () => {
+    const rows = await app.db.execute(
+      sql`SELECT column_name FROM information_schema.columns
+          WHERE table_name = 'packets' AND column_name = 'packet_key_encrypted'`
+    );
+    expect(rows.length).toBe(1);
+  });
+
   it('packets has source_app field', async () => {
     const rows = await app.db.execute(
       sql`SELECT column_name FROM information_schema.columns

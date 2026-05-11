@@ -19,7 +19,8 @@
  */
 
 import { createHash } from 'crypto';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply } from 'fastify';
+import { eq } from 'drizzle-orm';
 import {
   getContactClaimByTokenHash,
   updateContactClaim,
@@ -27,6 +28,8 @@ import {
 import { acknowledgeClaim } from '../services/hosted-cascade.js';
 import { downloadManagedPacket } from '../services/storage/index.js';
 import { writeAuditEvent } from '../services/audit.js';
+import { decryptField } from '../services/field-encrypt.js';
+import { contacts, packets } from '../db/schema.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -74,26 +77,63 @@ function claimPublicView(claim: {
 }
 
 // Generic not-found / expired response — no information leakage
-function genericNotFound(reply: Parameters<Parameters<FastifyInstance['get']>[1]>[1]) {
+function genericNotFound(reply: FastifyReply) {
   return reply.status(404).send({ error: 'claim_not_found' });
+}
+
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const RATE_LIMIT_MAX_ATTEMPTS = 20;
+const claimRateLimit = new Map<string, { count: number; resetAt: number }>();
+
+function rateLimitKey(req: { ip?: string }, tokenHash: string, action: string): string {
+  return `${req.ip ?? 'unknown'}:${action}:${tokenHash}`;
+}
+
+function isRateLimited(req: { ip?: string }, tokenHash: string, action: string): boolean {
+  const now = Date.now();
+  const key = rateLimitKey(req, tokenHash, action);
+  const current = claimRateLimit.get(key);
+
+  if (!current || current.resetAt <= now) {
+    claimRateLimit.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  current.count += 1;
+  return current.count > RATE_LIMIT_MAX_ATTEMPTS;
+}
+
+function rateLimited(reply: FastifyReply) {
+  return reply.status(429).send({ error: 'too_many_attempts' });
 }
 
 // ── Route plugin ──────────────────────────────────────────────────────────────
 
 export async function claimRoutes(app: FastifyInstance) {
-  // ── GET /api/claim/:token ─────────────────────────────────────────────────
-  app.get<{ Params: { token: string } }>('/api/claim/:token', async (req, reply) => {
-    const { token } = req.params;
-    const claim = await getContactClaimByTokenHash(app.db, hashToken(token));
+  async function getClaimStatus(token: string, reply: FastifyReply) {
+    const tokenHash = hashToken(token);
+    const claim = await getContactClaimByTokenHash(app.db, tokenHash);
     if (!claim || isExpired(claim)) return genericNotFound(reply);
 
     return reply.send(claimPublicView(claim));
+  }
+
+  app.get<{ Params: { token: string } }>('/claim/:token', async (req, reply) => {
+    return getClaimStatus(req.params.token, reply);
+  });
+
+  // ── GET /api/claim/:token ─────────────────────────────────────────────────
+  app.get<{ Params: { token: string } }>('/api/claim/:token', async (req, reply) => {
+    return getClaimStatus(req.params.token, reply);
   });
 
   // ── POST /api/claim/:token/open ───────────────────────────────────────────
   app.post<{ Params: { token: string } }>('/api/claim/:token/open', async (req, reply) => {
     const { token } = req.params;
-    const claim = await getContactClaimByTokenHash(app.db, hashToken(token));
+    const tokenHash = hashToken(token);
+    if (isRateLimited(req, tokenHash, 'open')) return rateLimited(reply);
+
+    const claim = await getContactClaimByTokenHash(app.db, tokenHash);
     if (!claim || isExpired(claim)) return genericNotFound(reply);
     if (!CLAIMABLE_STATES.has(claim.status)) return genericNotFound(reply);
 
@@ -118,14 +158,13 @@ export async function claimRoutes(app: FastifyInstance) {
     '/api/claim/:token/verify',
     async (req, reply) => {
       const { token } = req.params;
-      const claim = await getContactClaimByTokenHash(app.db, hashToken(token));
+      const tokenHash = hashToken(token);
+      if (isRateLimited(req, tokenHash, 'verify')) return rateLimited(reply);
+
+      const claim = await getContactClaimByTokenHash(app.db, tokenHash);
       if (!claim || isExpired(claim)) return genericNotFound(reply);
       if (!CLAIMABLE_STATES.has(claim.status)) return genericNotFound(reply);
 
-      // PIN verification: if contact has a claimPinHash, validate it
-      // Load contact to check pin — do not leak pin hash in response
-      const { contacts } = await import('../db/schema.js');
-      const { eq } = await import('drizzle-orm');
       const contactRows = await app.db
         .select({ claimPinHash: contacts.claimPinHash })
         .from(contacts)
@@ -160,9 +199,12 @@ export async function claimRoutes(app: FastifyInstance) {
   // ── POST /api/claim/:token/accept ─────────────────────────────────────────
   app.post<{ Params: { token: string } }>('/api/claim/:token/accept', async (req, reply) => {
     const { token } = req.params;
-    const claim = await getContactClaimByTokenHash(app.db, hashToken(token));
+    const tokenHash = hashToken(token);
+    if (isRateLimited(req, tokenHash, 'accept')) return rateLimited(reply);
+
+    const claim = await getContactClaimByTokenHash(app.db, tokenHash);
     if (!claim || isExpired(claim)) return genericNotFound(reply);
-    if (!['opened', 'verified'].includes(claim.status)) {
+    if (claim.status !== 'verified') {
       return reply.status(400).send({ error: 'invalid_state' });
     }
 
@@ -185,7 +227,10 @@ export async function claimRoutes(app: FastifyInstance) {
   // ── GET /api/claim/:token/packet ──────────────────────────────────────────
   app.get<{ Params: { token: string } }>('/api/claim/:token/packet', async (req, reply) => {
     const { token } = req.params;
-    const claim = await getContactClaimByTokenHash(app.db, hashToken(token));
+    const tokenHash = hashToken(token);
+    if (isRateLimited(req, tokenHash, 'packet')) return rateLimited(reply);
+
+    const claim = await getContactClaimByTokenHash(app.db, tokenHash);
     if (!claim || isExpired(claim)) return genericNotFound(reply);
 
     const allowedForDownload = new Set(['accepted', 'packet_downloaded', 'key_viewed']);
@@ -193,9 +238,6 @@ export async function claimRoutes(app: FastifyInstance) {
       return reply.status(403).send({ error: 'not_yet_accepted' });
     }
 
-    // Load packet storage details
-    const { packets } = await import('../db/schema.js');
-    const { eq } = await import('drizzle-orm');
     const packetRows = await app.db
       .select()
       .from(packets)
@@ -237,12 +279,32 @@ export async function claimRoutes(app: FastifyInstance) {
   // ── POST /api/claim/:token/key-view ───────────────────────────────────────
   app.post<{ Params: { token: string } }>('/api/claim/:token/key-view', async (req, reply) => {
     const { token } = req.params;
-    const claim = await getContactClaimByTokenHash(app.db, hashToken(token));
+    const tokenHash = hashToken(token);
+    if (isRateLimited(req, tokenHash, 'key-view')) return rateLimited(reply);
+
+    const claim = await getContactClaimByTokenHash(app.db, tokenHash);
     if (!claim || isExpired(claim)) return genericNotFound(reply);
 
-    if (!['accepted', 'packet_downloaded'].includes(claim.status)) {
+    if (claim.status !== 'packet_downloaded') {
       return reply.status(400).send({ error: 'invalid_state' });
     }
+
+    const packetRows = await app.db
+      .select({
+        id: packets.id,
+        keyId: packets.keyId,
+        encryptionAlgorithm: packets.encryptionAlgorithm,
+        packetKeyEncrypted: packets.packetKeyEncrypted,
+      })
+      .from(packets)
+      .where(eq(packets.id, claim.packetId));
+
+    const packet = packetRows[0];
+    if (!packet?.packetKeyEncrypted) {
+      return reply.status(503).send({ error: 'release_material_unavailable' });
+    }
+
+    const packetKey = decryptField(packet.packetKeyEncrypted, app.config.fieldEncryptionKey);
 
     const now = new Date();
     const updated = await updateContactClaim(app.db, claim.id, {
@@ -258,7 +320,15 @@ export async function claimRoutes(app: FastifyInstance) {
       metadata: { claimId: claim.id },
     });
 
-    return reply.send(claimPublicView(updated!));
+    return reply.send({
+      ...claimPublicView(updated!),
+      releaseMaterial: {
+        keyId: packet.keyId,
+        encryptionAlgorithm: packet.encryptionAlgorithm,
+        packetKey,
+        encoding: 'base64',
+      },
+    });
   });
 
   // ── POST /api/claim/:token/acknowledge ────────────────────────────────────
@@ -266,7 +336,10 @@ export async function claimRoutes(app: FastifyInstance) {
     '/api/claim/:token/acknowledge',
     async (req, reply) => {
       const { token } = req.params;
-      const claim = await getContactClaimByTokenHash(app.db, hashToken(token));
+      const tokenHash = hashToken(token);
+      if (isRateLimited(req, tokenHash, 'acknowledge')) return rateLimited(reply);
+
+      const claim = await getContactClaimByTokenHash(app.db, tokenHash);
       if (!claim || isExpired(claim)) return genericNotFound(reply);
 
       try {
@@ -277,7 +350,7 @@ export async function claimRoutes(app: FastifyInstance) {
       }
 
       // Re-fetch to return final state
-      const final = await getContactClaimByTokenHash(app.db, hashToken(token));
+      const final = await getContactClaimByTokenHash(app.db, tokenHash);
       return reply.send(claimPublicView(final!));
     },
   );

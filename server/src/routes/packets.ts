@@ -45,6 +45,7 @@ function toPacketMetadata(row: PacketRow) {
     id: row.id,
     userId: row.userId,
     switchId: row.switchId,
+    releaseRunId: row.releaseRunId,
     sourceApp: row.sourceApp,
     schemaVersion: row.schemaVersion,
     version: row.version,

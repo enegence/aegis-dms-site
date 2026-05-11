@@ -372,13 +372,15 @@ describe('Hosted contact cascade', () => {
       baseUrl: 'https://aegisdms.life',
     });
 
-    // Manually advance claim to accepted state so ack is valid
+    // Manually advance claim through the required access steps so ack is valid
     const { updateContactClaim } = await import(
       '../src/repositories/contact-claim-repository.js'
     );
     await updateContactClaim(app.db, cascadeResult.claimId, {
-      status: 'accepted',
+      status: 'key_viewed',
       acceptedAt: new Date(),
+      packetDownloadedAt: new Date(),
+      keyViewedAt: new Date(),
     });
 
     await acknowledgeClaim(app.db, cascadeResult.claimId);
@@ -398,5 +400,11 @@ describe('Hosted contact cascade', () => {
       .where(eq(releaseRuns.id, runResult.releaseRunId));
     expect(runs[0].status).toBe('completed');
     expect(runs[0].completedAt).not.toBeNull();
+
+    const switchRows = await app.db
+      .select()
+      .from(switches)
+      .where(eq(switches.id, switchId));
+    expect(switchRows[0].status).toBe('completed');
   });
 });

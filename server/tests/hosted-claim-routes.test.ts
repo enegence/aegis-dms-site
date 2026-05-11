@@ -214,6 +214,19 @@ describe('Hosted claim API routes', () => {
     expect(body.claimTokenHash).toBeUndefined();
   });
 
+  it('GET /claim/:token — public claim alias returns claim status', async () => {
+    const { claimToken, claimId } = await seedClaim(app);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/claim/${claimToken}`,
+    });
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.payload);
+    expect(body.id).toBe(claimId);
+    expect(body.status).toBe('notified');
+  });
+
   it('POST /api/claim/:token/open — updates openedAt', async () => {
     const { claimToken } = await seedClaim(app);
 
@@ -267,12 +280,13 @@ describe('Hosted claim API routes', () => {
     expect(res.headers['content-type']).toContain('application/octet-stream');
   });
 
-  it('POST /api/claim/:token/key-view — records keyViewedAt without material in response', async () => {
+  it('POST /api/claim/:token/key-view — records keyViewedAt and returns release material after packet download', async () => {
     const { claimToken } = await seedClaim(app);
 
     await app.inject({ method: 'POST', url: `/api/claim/${claimToken}/open` });
     await app.inject({ method: 'POST', url: `/api/claim/${claimToken}/verify` });
     await app.inject({ method: 'POST', url: `/api/claim/${claimToken}/accept` });
+    await app.inject({ method: 'GET', url: `/api/claim/${claimToken}/packet` });
 
     const res = await app.inject({
       method: 'POST',
@@ -282,17 +296,20 @@ describe('Hosted claim API routes', () => {
     const body = JSON.parse(res.payload);
     expect(body.status).toBe('key_viewed');
     expect(body.keyViewedAt).toBeTruthy();
-    // No key material in response
-    expect(res.payload).not.toContain('packetKey');
-    expect(res.payload).not.toContain('keyMaterial');
+    expect(body.releaseMaterial.keyId).toMatch(/^hosted-v1-/);
+    expect(body.releaseMaterial.encryptionAlgorithm).toBe('aes-256-gcm');
+    expect(body.releaseMaterial.packetKey).toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
+    expect(body.releaseMaterial.encoding).toBe('base64');
   });
 
   it('POST /api/claim/:token/acknowledge — completes release run', async () => {
-    const { claimToken, releaseRunId } = await seedClaim(app);
+    const { claimToken, releaseRunId, switchId } = await seedClaim(app);
 
     await app.inject({ method: 'POST', url: `/api/claim/${claimToken}/open` });
     await app.inject({ method: 'POST', url: `/api/claim/${claimToken}/verify` });
     await app.inject({ method: 'POST', url: `/api/claim/${claimToken}/accept` });
+    await app.inject({ method: 'GET', url: `/api/claim/${claimToken}/packet` });
+    await app.inject({ method: 'POST', url: `/api/claim/${claimToken}/key-view` });
 
     const res = await app.inject({
       method: 'POST',
@@ -309,6 +326,47 @@ describe('Hosted claim API routes', () => {
       .where(eq(releaseRuns.id, releaseRunId));
     expect(runs[0].status).toBe('completed');
     expect(runs[0].completedAt).toBeTruthy();
+
+    const switchRows = await app.db
+      .select()
+      .from(switches)
+      .where(eq(switches.id, switchId));
+    expect(switchRows[0].status).toBe('completed');
+  });
+
+  it('POST /api/claim/:token/acknowledge — fails before packet and key access', async () => {
+    const { claimToken } = await seedClaim(app);
+
+    await app.inject({ method: 'POST', url: `/api/claim/${claimToken}/open` });
+    await app.inject({ method: 'POST', url: `/api/claim/${claimToken}/verify` });
+    await app.inject({ method: 'POST', url: `/api/claim/${claimToken}/accept` });
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/claim/${claimToken}/acknowledge`,
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('POST /api/claim/:token/verify — rate limits repeated invalid PIN attempts', async () => {
+    const { claimToken, contactId } = await seedClaim(app);
+
+    await app.db
+      .update(contacts)
+      .set({ claimPinHash: createHash('sha256').update('123456').digest('hex') })
+      .where(eq(contacts.id, contactId));
+
+    let lastStatus = 0;
+    for (let i = 0; i < 25; i++) {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/claim/${claimToken}/verify`,
+        payload: { pin: '000000' },
+      });
+      lastStatus = res.statusCode;
+    }
+
+    expect(lastStatus).toBe(429);
   });
 
   it('POST /api/claim/:token/acknowledge — fails if not accepted yet', async () => {

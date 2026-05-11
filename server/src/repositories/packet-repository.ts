@@ -15,13 +15,14 @@ export type PacketRow = typeof packets.$inferSelect;
 export interface CreatePacketData {
   userId: string;
   switchId?: string | null;
+  releaseRunId?: string | null;
   relayConnectionId?: string | null;
-  // Note: packets table does not have a releaseRunId column; the FK lives on contact_claims.
   sourceApp: string;
   schemaVersion: string;
   version: number;
   encryptionAlgorithm: string;
   keyId: string;
+  packetKeyEncrypted?: string | null;
   contentHash: string;
   encryptedObjectHash: string | null;
   storageProvider: string | null;
@@ -42,12 +43,14 @@ export async function createPacket(
     .values({
       userId: data.userId,
       switchId: data.switchId ?? null,
+      releaseRunId: data.releaseRunId ?? null,
       relayConnectionId: data.relayConnectionId ?? null,
       sourceApp: data.sourceApp,
       schemaVersion: data.schemaVersion,
       version: data.version,
       encryptionAlgorithm: data.encryptionAlgorithm,
       keyId: data.keyId,
+      packetKeyEncrypted: data.packetKeyEncrypted ?? null,
       contentHash: data.contentHash,
       encryptedObjectHash: data.encryptedObjectHash,
       storageProvider: data.storageProvider,

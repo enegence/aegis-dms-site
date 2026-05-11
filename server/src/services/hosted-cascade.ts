@@ -152,7 +152,7 @@ export async function acknowledgeClaim(
 
   const claim = await getContactClaimById(db, claimId);
   if (!claim) throw new Error('claim_not_found');
-  if (!['accepted', 'packet_downloaded', 'key_viewed'].includes(claim.status)) {
+  if (claim.status !== 'key_viewed') {
     throw new Error(`invalid_state_for_ack:${claim.status}`);
   }
 
@@ -164,13 +164,23 @@ export async function acknowledgeClaim(
   });
 
   if (claim.releaseRunId) {
+    const run = await getReleaseRunById(db, claim.releaseRunId);
+
     await updateReleaseRun(db, claim.releaseRunId, {
       status: 'completed',
       completedAt: now,
     });
 
+    if (run?.triggeringSwitchId) {
+      await db
+        .update(switches)
+        .set({ status: 'completed', updatedAt: now })
+        .where(eq(switches.id, run.triggeringSwitchId));
+    }
+
     await writeAuditEvent(db, {
-      userId: null,
+      userId: run?.userId ?? null,
+      switchId: run?.triggeringSwitchId ?? null,
       releaseRunId: claim.releaseRunId,
       eventType: 'cascade_completed',
       actorType: 'contact',
