@@ -121,6 +121,7 @@ TypeScript, Fastify, Drizzle ORM, PostgreSQL, React 18, Vite, Tailwind CSS, Vite
 ## Execution Style
 
 - Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` skill
+- Do not use superpowers:using-git-worktrees
 - TDD: write test first, verify red, implement, verify green, commit
 - One task at a time, sequential order unless plan says otherwise
 - Commit after each task passes tests

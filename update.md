@@ -172,8 +172,25 @@ aegis-dms-site/
 
 ### Phase 3: Encryption, Packets, Cascade
 
-**OSS Phase 2: NOT STARTED** (plan: `2026-05-08-aegis-oss-phase2.md`)
-- Switch state machine, CRUD, check-in, worker, notifications, dashboard, UI
+**OSS Phase 2: IN PROGRESS** (plan: `2026-05-08-aegis-oss-phase2.md`)
+- [x] Task 1: Schema extensions
+- [x] Task 2: Shared types + Zod schemas
+- [x] Task 3: Audit service
+- [x] Task 4: Switch repository
+- [x] Task 5: Switch state machine
+- [x] Task 6: Readiness service
+- [x] Task 7: Switch API routes
+- [x] Task 8: Notification providers
+- [x] Task 9: Settings API
+- [x] Task 10: Reminder scheduler
+- [x] Task 11: Worker polling loop
+- [x] Task 12: Dashboard API
+- [x] Task 13: Frontend API client ← WE ARE HERE
+- [ ] Task 14: Switch management UI
+- [ ] Task 15: Dashboard UI
+- [ ] Task 16: Notification settings UI
+- [ ] Task 17: Documentation
+- [ ] Task 18: Verification
 
 **OSS Phase 3: NOT STARTED** (plan: `2026-05-08-aegis-oss-phase3.md`)
 - Packet builder, S3 dead-drop, contact cascade, claim portal, audit log
