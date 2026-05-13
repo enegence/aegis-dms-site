@@ -11,6 +11,7 @@ import Contacts from './pages/app/Contacts';
 import Trigger from './pages/app/Trigger';
 import Relay from './pages/app/Relay';
 import Release from './pages/app/Release';
+import Onboarding from './pages/app/Onboarding';
 import Landing from './pages/marketing/Landing';
 import Pricing from './pages/marketing/Pricing';
 import ClaimLanding from './pages/claim/ClaimLanding';
@@ -77,6 +78,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* App (protected) */}
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/estate" element={<ProtectedRoute><Estate /></ProtectedRoute>} />
         <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />

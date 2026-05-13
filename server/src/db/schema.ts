@@ -249,6 +249,18 @@ export const notificationEvents = pgTable('notification_events', {
   switchIdx: index('notification_events_switch_id_idx').on(table.switchId),
 }));
 
+// user_onboarding: tracks per-user onboarding progress and preferred product path.
+// metadata is JSON but must NOT store plaintext PII.
+export const userOnboarding = pgTable('user_onboarding', {
+  userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  preferredProduct: text('preferred_product').notNull().default('undecided'),
+  currentStep: text('current_step').notNull().default('start'),
+  completedAt: timestamp('completed_at'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 // relay_escrow_materials: stores encrypted release material for Relay Escrow.
 // materialEncrypted must always be set — unencrypted key material is never stored.
 // acceptedAcknowledgementId links to the trust_acknowledgements record for consent.

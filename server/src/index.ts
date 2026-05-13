@@ -21,6 +21,7 @@ import { claimRoutes } from './routes/claim.js';
 import { relayEscrowRoutes } from './routes/relay-escrow.js';
 import { adminRoutes } from './routes/admin.js';
 import { releaseRunRoutes } from './routes/release-runs.js';
+import { onboardingRoutes } from './routes/onboarding.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -76,6 +77,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(relayEscrowRoutes);
   await app.register(adminRoutes);
   await app.register(releaseRunRoutes);
+  await app.register(onboardingRoutes);
 
   app.addHook('onRequest', async (req, reply) => {
     const method = req.method;
