@@ -52,11 +52,11 @@ After completing each numbered Task (not each step), update `update.md`:
 
 At the END of every session (or when context is getting long), update this section:
 
-**Last completed:** SaaS Phase 3 Task 10 — Hosted public claim API
-**Next up:** SaaS Phase 3 Task 11 — Claim portal UI (React). Then Tasks 12-19 in order.
+**Last completed:** SaaS Phase 3 Task 11 — Claim portal UI (5 pages: Landing, Verify, Accept, Download, Acknowledge)
+**Next up:** SaaS Phase 3 Task 12 — Relay escrow material model. Then Tasks 13-19 in order.
 **OSS status:** Phase 1 complete (21 tests). Phase 2 NOT STARTED (plan: `2026-05-08-aegis-oss-phase2.md`).
-**Blockers/notes:** None. Plan doc tracking was not maintained this session — plan file checkboxes and update.md were corrected in a fix commit after Task 10.
-**Tests passing:** 312 (31 test files)
+**Blockers/notes:** None.
+**Tests passing:** 318 (31 test files)
 
 ## Non-Negotiable Constraints
 
