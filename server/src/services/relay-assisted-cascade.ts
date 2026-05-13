@@ -11,11 +11,11 @@
  *  - Audit event written for every cascade start.
  */
 
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { AegisDb } from '../db/index.js';
 import type { AppConfig } from '../config.js';
-import { relayConnections, relayEscrowMaterials } from '../db/schema.js';
-import { isEscrowEnabled } from './relay-escrow.js';
+import { relayConnections } from '../db/schema.js';
+import { getActiveEscrowMaterial } from './relay-escrow.js';
 import { getActiveReleaseRunForUser, createReleaseRun } from '../repositories/release-run-repository.js';
 import { canUseRelay } from './subscription-gate.js';
 import { writeAuditEvent } from './audit.js';
@@ -59,9 +59,9 @@ export async function runRelayEscrowCascadeOnce(
 
   for (const conn of offlineConnections) {
     try {
-      // Gate 1: escrow must be enabled (non-revoked, acknowledged)
-      const escrowEnabled = await isEscrowEnabled(db, conn.userId, conn.id);
-      if (!escrowEnabled) {
+      // Gate 1: escrow must be enabled (non-revoked, acknowledged, with contact set + packet)
+      const escrowMaterial = await getActiveEscrowMaterial(db, conn.userId, conn.id);
+      if (!escrowMaterial || !escrowMaterial.escrowPacketId) {
         result.skippedNoEscrow++;
         continue;
       }
@@ -80,12 +80,13 @@ export async function runRelayEscrowCascadeOnce(
         continue;
       }
 
-      // All gates passed — create relay_escrow release run
+      // All gates passed — create relay_escrow release run with escrow packet
       const run = await createReleaseRun(db, {
         userId: conn.userId,
         relayConnectionId: conn.id,
         source: 'relay_escrow',
         status: 'active',
+        activePacketId: escrowMaterial.escrowPacketId,
       });
 
       await writeAuditEvent(db, {

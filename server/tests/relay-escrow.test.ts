@@ -16,7 +16,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { randomUUID } from 'crypto';
 import { buildApp } from '../src/index.js';
 import { isEscrowEnabled } from '../src/services/relay-escrow.js';
-import { relayEscrowMaterials, trustAcknowledgements } from '../src/db/schema.js';
+import { relayEscrowMaterials, trustAcknowledgements, packets } from '../src/db/schema.js';
 import { eq } from 'drizzle-orm';
 
 async function getCsrf(app: Awaited<ReturnType<typeof buildApp>>, cookies: string): Promise<string> {
@@ -59,6 +59,8 @@ describe('Relay Escrow material model', () => {
   let cookies: string;
   let otherCookies: string;
   let connectionId: string;
+  let escrowContactId: string;
+  let escrowPacketId: string;
 
   beforeAll(async () => {
     app = await buildApp({ testing: true });
@@ -67,6 +69,25 @@ describe('Relay Escrow material model', () => {
     const other = await registerAndLogin(app, 'other');
     otherCookies = other.cookies;
     connectionId = await createRelayConnection(app, cookies);
+
+    // Create a contact for escrow registration
+    const csrfToken = await getCsrf(app, cookies);
+    const contactRes = await app.inject({
+      method: 'POST',
+      url: '/api/contacts',
+      headers: { cookie: cookies, 'x-csrf-token': csrfToken },
+      payload: { fullName: 'Escrow Contact', email: 'escrow-c@example.com', preferredChannels: ['email'], confirmationWindowHours: 48 },
+    });
+    escrowContactId = JSON.parse(contactRes.payload).contact.id;
+
+    // Insert a packet directly (no public create endpoint)
+    const meRes = await app.inject({ method: 'GET', url: '/api/auth/me', headers: { cookie: cookies } });
+    const userId = JSON.parse(meRes.payload).id as string;
+    const [packetRow] = await app.db
+      .insert(packets)
+      .values({ userId, version: 1, contentHash: 'testhash', keyId: 'test-key-id' })
+      .returning();
+    escrowPacketId = packetRow.id;
   });
 
   afterAll(async () => {
@@ -123,11 +144,27 @@ describe('Relay Escrow material model', () => {
       method: 'POST',
       url: `/api/relay/${connectionId}/escrow/enable`,
       headers: { cookie: cookies, 'x-csrf-token': csrfToken },
-      payload: { material: 'my-secret-release-key', materialType: 'release_key' },
+      payload: {
+        material: 'my-secret-release-key',
+        materialType: 'release_key',
+        contactIds: [escrowContactId],
+        packetId: escrowPacketId,
+      },
     });
     expect(res.statusCode).toBe(409);
     const body = JSON.parse(res.payload);
     expect(body.error).toBe('acknowledgement_required');
+  });
+
+  it('enable without contactIds rejected (400)', async () => {
+    const csrfToken = await getCsrf(app, cookies);
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/relay/${connectionId}/escrow/enable`,
+      headers: { cookie: cookies, 'x-csrf-token': csrfToken },
+      payload: { material: 'my-secret-release-key', materialType: 'release_key', packetId: escrowPacketId },
+    });
+    expect(res.statusCode).toBe(400);
   });
 
   // ── Acknowledge ───────────────────────────────────────────────────────────
@@ -167,20 +204,25 @@ describe('Relay Escrow material model', () => {
 
   // ── Enable with acknowledgement ───────────────────────────────────────────
 
-  it('enable stores encrypted material (not plaintext)', async () => {
+  it('enable stores encrypted material (not plaintext) with contact+packet IDs', async () => {
     const csrfToken = await getCsrf(app, cookies);
     const res = await app.inject({
       method: 'POST',
       url: `/api/relay/${connectionId}/escrow/enable`,
       headers: { cookie: cookies, 'x-csrf-token': csrfToken },
-      payload: { material: 'my-secret-release-key-plaintext', materialType: 'release_key' },
+      payload: {
+        material: 'my-secret-release-key-plaintext',
+        materialType: 'release_key',
+        contactIds: [escrowContactId],
+        packetId: escrowPacketId,
+      },
     });
     expect(res.statusCode).toBe(201);
     const body = JSON.parse(res.payload);
     expect(body.escrowId).toBeDefined();
     expect(body.enabled).toBe(true);
 
-    // Verify DB row has encrypted material, NOT plaintext
+    // Verify DB row has encrypted material (not plaintext) and stored IDs
     const rows = await app.db
       .select()
       .from(relayEscrowMaterials)
@@ -190,6 +232,8 @@ describe('Relay Escrow material model', () => {
     expect(rows[0].materialEncrypted.length).toBeGreaterThan(0);
     expect(rows[0].revokedAt).toBeNull();
     expect(rows[0].enabled).toBe(true);
+    expect(rows[0].escrowContactIds).toEqual([escrowContactId]);
+    expect(rows[0].escrowPacketId).toBe(escrowPacketId);
   });
 
   it('GET status after enable shows acknowledged and enabled', async () => {

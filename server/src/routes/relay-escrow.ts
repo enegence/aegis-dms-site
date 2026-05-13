@@ -14,6 +14,7 @@
  */
 
 import { z } from 'zod';
+import { eq, and } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { writeAuditEvent } from '../services/audit.js';
 import {
@@ -22,12 +23,15 @@ import {
   enableEscrow,
   revokeEscrow,
 } from '../services/relay-escrow.js';
+import { contacts, packets } from '../db/schema.js';
 
 const ParamsSchema = z.object({ id: z.string().uuid() });
 
 const EnableEscrowBodySchema = z.object({
   material: z.string().min(1),
   materialType: z.string().min(1).default('release_key'),
+  contactIds: z.array(z.string().uuid()).min(1),
+  packetId: z.string().uuid(),
 });
 
 export async function relayEscrowRoutes(app: FastifyInstance) {
@@ -81,6 +85,22 @@ export async function relayEscrowRoutes(app: FastifyInstance) {
     if (!body.success) return reply.status(400).send({ error: 'Invalid input', details: body.error.flatten() });
 
     try {
+      // Verify all contactIds belong to this user
+      const contactRows = await app.db
+        .select({ id: contacts.id })
+        .from(contacts)
+        .where(and(eq(contacts.userId, req.userId!)));
+      const ownedContactIds = new Set(contactRows.map(c => c.id));
+      const invalidContact = body.data.contactIds.find(id => !ownedContactIds.has(id));
+      if (invalidContact) return reply.status(400).send({ error: 'Invalid contactIds', message: 'One or more contacts do not belong to this account.' });
+
+      // Verify packetId belongs to this user
+      const [packetRow] = await app.db
+        .select({ id: packets.id })
+        .from(packets)
+        .where(and(eq(packets.id, body.data.packetId), eq(packets.userId, req.userId!)));
+      if (!packetRow) return reply.status(400).send({ error: 'Invalid packetId', message: 'Packet does not belong to this account.' });
+
       const result = await enableEscrow(
         app.db,
         req.userId!,
@@ -88,6 +108,8 @@ export async function relayEscrowRoutes(app: FastifyInstance) {
         body.data.material,
         body.data.materialType,
         app.config.fieldEncryptionKey,
+        body.data.contactIds,
+        body.data.packetId,
       );
       await writeAuditEvent(app.db, {
         userId: req.userId,

@@ -51,7 +51,7 @@ async function getCurrentAcknowledgement(db: AegisDb, userId: string) {
   return rows[0] ?? null;
 }
 
-async function getActiveEscrowMaterial(db: AegisDb, userId: string, relayConnectionId: string) {
+export async function getActiveEscrowMaterial(db: AegisDb, userId: string, relayConnectionId: string) {
   const rows = await db
     .select()
     .from(relayEscrowMaterials)
@@ -149,6 +149,8 @@ export async function enableEscrow(
   materialPlaintext: string,
   materialType: string,
   fieldEncryptionKey: string,
+  contactIds: string[],
+  packetId: string,
 ): Promise<{ escrowId: string }> {
   const conn = await getOwnerConnection(db, userId, relayConnectionId);
   if (!conn) throw new Error('relay_connection_not_found');
@@ -168,6 +170,8 @@ export async function enableEscrow(
       materialEncrypted,
       policyVersion: RELAY_ESCROW_POLICY_VERSION,
       acceptedAcknowledgementId: ack.id,
+      escrowContactIds: contactIds,
+      escrowPacketId: packetId,
     })
     .returning();
 
@@ -216,9 +220,19 @@ export async function getDecryptedEscrowMaterial(
   userId: string,
   relayConnectionId: string,
   fieldEncryptionKey: string,
-): Promise<{ materialType: string; materialPlaintext: string } | null> {
+): Promise<{
+  materialType: string;
+  materialPlaintext: string;
+  escrowContactIds: string[];
+  escrowPacketId: string | null;
+} | null> {
   const material = await getActiveEscrowMaterial(db, userId, relayConnectionId);
   if (!material) return null;
   const materialPlaintext = decryptField(material.materialEncrypted, fieldEncryptionKey);
-  return { materialType: material.materialType, materialPlaintext };
+  return {
+    materialType: material.materialType,
+    materialPlaintext,
+    escrowContactIds: Array.isArray(material.escrowContactIds) ? (material.escrowContactIds as string[]) : [],
+    escrowPacketId: material.escrowPacketId ?? null,
+  };
 }

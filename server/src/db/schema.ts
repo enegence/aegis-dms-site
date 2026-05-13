@@ -261,6 +261,8 @@ export const relayEscrowMaterials = pgTable('relay_escrow_materials', {
   materialEncrypted: text('material_encrypted').notNull(),
   policyVersion: text('policy_version').notNull(),
   acceptedAcknowledgementId: uuid('accepted_acknowledgement_id').notNull().references(() => trustAcknowledgements.id),
+  escrowContactIds: jsonb('escrow_contact_ids').notNull().default([]),
+  escrowPacketId: uuid('escrow_packet_id').references(() => packets.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   revokedAt: timestamp('revoked_at'),

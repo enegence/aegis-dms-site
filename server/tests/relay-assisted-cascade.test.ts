@@ -20,6 +20,7 @@ import {
   releaseRuns,
   trustAcknowledgements,
   relayEscrowMaterials,
+  packets,
 } from '../src/db/schema.js';
 import { runRelayEscrowCascadeOnce } from '../src/services/relay-assisted-cascade.js';
 import type { AegisDb } from '../src/db/index.js';
@@ -71,8 +72,24 @@ async function enableEscrowViaApi(
   app: Awaited<ReturnType<typeof buildApp>>,
   cookies: string,
   connectionId: string,
+  userId: string,
 ): Promise<void> {
   const csrf = await getCsrf(app, cookies);
+
+  // Create a contact for the escrow contact set
+  const contactRes = await app.inject({
+    method: 'POST', url: '/api/contacts',
+    headers: { cookie: cookies, 'x-csrf-token': csrf },
+    payload: { fullName: 'Escrow Contact', email: `esc-${randomUUID()}@example.com`, preferredChannels: ['email'], confirmationWindowHours: 48 },
+  });
+  const contactId = JSON.parse(contactRes.payload).contact.id as string;
+
+  // Insert a packet directly (no public create endpoint)
+  const [packetRow] = await app.db
+    .insert(packets)
+    .values({ userId, version: 1, contentHash: 'testhash', keyId: 'test-key-id' })
+    .returning();
+
   await app.inject({
     method: 'POST', url: `/api/relay/${connectionId}/escrow/acknowledge`,
     headers: { cookie: cookies, 'x-csrf-token': csrf },
@@ -81,7 +98,12 @@ async function enableEscrowViaApi(
   await app.inject({
     method: 'POST', url: `/api/relay/${connectionId}/escrow/enable`,
     headers: { cookie: cookies, 'x-csrf-token': csrf },
-    payload: { material: 'test-release-key-abc123', materialType: 'release_key' },
+    payload: {
+      material: 'test-release-key-abc123',
+      materialType: 'release_key',
+      contactIds: [contactId],
+      packetId: packetRow.id,
+    },
   });
 }
 
@@ -121,7 +143,7 @@ describe('Relay-assisted cascade', () => {
   it('eligible escrow offline connection creates release run with source=relay_escrow', async () => {
     const { cookies, userId } = await registerAndLogin(app, 'escrow');
     const connId = await createConnection(app, cookies);
-    await enableEscrowViaApi(app, cookies, connId);
+    await enableEscrowViaApi(app, cookies, connId, userId);
     await markOffline(app.db, connId);
 
     const result = await runRelayEscrowCascadeOnce(app.db, app.config);
@@ -130,13 +152,14 @@ describe('Relay-assisted cascade', () => {
     expect(runs).toHaveLength(1);
     expect(runs[0]!.source).toBe('relay_escrow');
     expect(runs[0]!.relayConnectionId).toBe(connId);
+    expect(runs[0]!.activePacketId).toBeTruthy();
     expect(result.escrowCascadesStarted).toBeGreaterThanOrEqual(1);
   });
 
   it('revoked escrow blocks release', async () => {
     const { cookies, userId } = await registerAndLogin(app, 'revoked');
     const connId = await createConnection(app, cookies);
-    await enableEscrowViaApi(app, cookies, connId);
+    await enableEscrowViaApi(app, cookies, connId, userId);
     // Revoke
     const csrf = await getCsrf(app, cookies);
     await app.inject({
@@ -155,7 +178,7 @@ describe('Relay-assisted cascade', () => {
   it('inactive subscription blocks relay escrow release', async () => {
     const { cookies, userId } = await registerAndLogin(app, 'inactive-sub');
     const connId = await createConnection(app, cookies);
-    await enableEscrowViaApi(app, cookies, connId);
+    await enableEscrowViaApi(app, cookies, connId, userId);
     await markOffline(app.db, connId);
 
     // Insert a cancelled subscription to override alpha fallback
@@ -175,7 +198,7 @@ describe('Relay-assisted cascade', () => {
   it('existing active release run prevents duplicate relay release', async () => {
     const { cookies, userId } = await registerAndLogin(app, 'dup');
     const connId = await createConnection(app, cookies);
-    await enableEscrowViaApi(app, cookies, connId);
+    await enableEscrowViaApi(app, cookies, connId, userId);
     await markOffline(app.db, connId);
 
     // Pre-create a release run
@@ -194,7 +217,7 @@ describe('Relay-assisted cascade', () => {
   it('writes audit event for escrow cascade start', async () => {
     const { cookies, userId } = await registerAndLogin(app, 'audit');
     const connId = await createConnection(app, cookies);
-    await enableEscrowViaApi(app, cookies, connId);
+    await enableEscrowViaApi(app, cookies, connId, userId);
     await markOffline(app.db, connId);
 
     await runRelayEscrowCascadeOnce(app.db, app.config);

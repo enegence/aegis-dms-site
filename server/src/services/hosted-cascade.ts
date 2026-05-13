@@ -11,10 +11,10 @@
  *  - Decrypted contact PII is used only for notification transport.
  */
 
-import { and, eq, inArray, asc } from 'drizzle-orm';
+import { and, eq, inArray, asc, isNull } from 'drizzle-orm';
 import type { AegisDb } from '../db/index.js';
 import type { AppConfig } from '../config.js';
-import { contacts, switches } from '../db/schema.js';
+import { contacts, switches, relayEscrowMaterials } from '../db/schema.js';
 import { decryptContact } from './contact-mapper.js';
 import {
   generateClaimToken,
@@ -205,7 +205,7 @@ async function getOrderedContactsForRun(
 ) {
   if (!run) return [];
 
-  // Get contact IDs from the triggering switch
+  // Get contact IDs from the triggering switch, or fall back to escrow contact set
   let contactIds: string[] = [];
   if (run.triggeringSwitchId) {
     const switchRows = await db
@@ -217,6 +217,24 @@ async function getOrderedContactsForRun(
       contactIds = (Array.isArray(switchRows[0].selectedContactIds)
         ? switchRows[0].selectedContactIds
         : []) as string[];
+    }
+  } else if (run.relayConnectionId) {
+    // relay_escrow run: use the pre-registered escrow contact set
+    const [escrow] = await db
+      .select({ escrowContactIds: relayEscrowMaterials.escrowContactIds })
+      .from(relayEscrowMaterials)
+      .where(
+        and(
+          eq(relayEscrowMaterials.userId, run.userId),
+          eq(relayEscrowMaterials.relayConnectionId, run.relayConnectionId),
+          eq(relayEscrowMaterials.enabled, true),
+          isNull(relayEscrowMaterials.revokedAt),
+        ),
+      )
+      .orderBy(asc(relayEscrowMaterials.createdAt))
+      .limit(1);
+    if (escrow) {
+      contactIds = (Array.isArray(escrow.escrowContactIds) ? escrow.escrowContactIds : []) as string[];
     }
   }
 

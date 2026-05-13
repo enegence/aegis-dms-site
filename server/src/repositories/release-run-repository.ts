@@ -37,6 +37,7 @@ export interface CreateReleaseRunInput {
   userId: string;
   triggeringSwitchId?: string | null;
   relayConnectionId?: string | null;
+  activePacketId?: string | null;
   source: 'hosted' | 'relay_escrow';
   status?: string;
 }
@@ -51,6 +52,7 @@ export async function createReleaseRun(
       userId: input.userId,
       triggeringSwitchId: input.triggeringSwitchId ?? null,
       relayConnectionId: input.relayConnectionId ?? null,
+      activePacketId: input.activePacketId ?? null,
       source: input.source,
       status: input.status ?? 'active',
     })
