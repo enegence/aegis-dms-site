@@ -331,7 +331,7 @@ export default function Onboarding() {
     setSaving(true);
     try {
       await post('/api/onboarding/complete-step', { step: step.key });
-      const nextIdx = localStepIdx + 1;
+      const nextIdx = Math.min(localStepIdx + 1, steps.length - 1);
       setLocalStepIdx(nextIdx);
       setState(prev => prev ? { ...prev, currentStep: step.key } : prev);
     } catch (e: unknown) {

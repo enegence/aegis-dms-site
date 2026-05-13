@@ -43,19 +43,17 @@ async function getOrCreateOnboarding(
   db: FastifyInstance['db'],
   userId: string,
 ) {
-  const [existing] = await db
+  await db
+    .insert(userOnboarding)
+    .values({ userId })
+    .onConflictDoNothing();
+
+  const [row] = await db
     .select()
     .from(userOnboarding)
     .where(eq(userOnboarding.userId, userId));
 
-  if (existing) return existing;
-
-  const [created] = await db
-    .insert(userOnboarding)
-    .values({ userId })
-    .returning();
-
-  return created;
+  return row;
 }
 
 export async function onboardingRoutes(app: FastifyInstance) {

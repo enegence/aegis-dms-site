@@ -300,5 +300,38 @@ describe('Onboarding routes', () => {
       expect(body.subscription.plan).toBe('hosted');
       expect(body.nextRoute).toBe('/dashboard');
     });
+
+    it('both relay and hosted subscriptions active → nextRoute = /dashboard', async () => {
+      const bothCookies = await registerAndLogin(app, 'onboarding-both@example.com');
+
+      const meRes = await app.inject({
+        method: 'GET',
+        url: '/api/auth/me',
+        headers: { cookie: bothCookies },
+      });
+      const { id: userId } = JSON.parse(meRes.payload);
+
+      await app.db.insert(subscriptions).values({
+        userId,
+        stripeCustomerId: 'cus_test_both_relay',
+        plan: 'relay',
+        status: 'active',
+      });
+      await app.db.insert(subscriptions).values({
+        userId,
+        stripeCustomerId: 'cus_test_both_hosted',
+        plan: 'hosted',
+        status: 'active',
+      });
+
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/onboarding',
+        headers: { cookie: bothCookies },
+      });
+      expect(res.statusCode).toBe(200);
+      const body = JSON.parse(res.payload);
+      expect(body.nextRoute).toBe('/dashboard');
+    });
   });
 });
