@@ -68,6 +68,22 @@ async function getActiveEscrowMaterial(db: AegisDb, userId: string, relayConnect
   return rows[0] ?? null;
 }
 
+// Returns the most recent material row regardless of revocation state, for status reporting.
+async function getMostRecentEscrowMaterial(db: AegisDb, userId: string, relayConnectionId: string) {
+  const rows = await db
+    .select()
+    .from(relayEscrowMaterials)
+    .where(
+      and(
+        eq(relayEscrowMaterials.userId, userId),
+        eq(relayEscrowMaterials.relayConnectionId, relayConnectionId),
+      ),
+    )
+    .orderBy(desc(relayEscrowMaterials.createdAt))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function getEscrowStatus(
@@ -88,13 +104,15 @@ export async function getEscrowStatus(
   }
 
   const ack = await getCurrentAcknowledgement(db, userId);
-  const material = await getActiveEscrowMaterial(db, userId, relayConnectionId);
+  // Use getMostRecentEscrowMaterial so revokedAt is visible even after revocation.
+  // getActiveEscrowMaterial (isNull filter) is reserved for eligibility checks.
+  const material = await getMostRecentEscrowMaterial(db, userId, relayConnectionId);
 
   return {
     connectionExists: true,
     acknowledged: ack != null,
     acknowledgementId: ack?.id ?? null,
-    enabled: material != null,
+    enabled: material != null && material.enabled && material.revokedAt == null,
     revokedAt: material?.revokedAt?.toISOString() ?? null,
     policyVersion: RELAY_ESCROW_POLICY_VERSION,
   };

@@ -254,6 +254,8 @@ describe('Relay Escrow material model', () => {
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.payload);
     expect(body.enabled).toBe(false);
+    expect(body.revokedAt).not.toBeNull();
+    expect(typeof body.revokedAt).toBe('string'); // ISO date string
   });
 
   it('revoke again returns revoked false (idempotent — nothing to revoke)', async () => {

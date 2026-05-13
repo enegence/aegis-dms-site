@@ -97,20 +97,41 @@ export default function ClaimLanding() {
 
   const expiresAt = claim.expiresAt ? new Date(claim.expiresAt) : null;
 
+  const STATUS_LABELS: Record<string, string> = {
+    pending: 'Pending',
+    notified: 'Notified',
+    opened: 'Opened',
+    verified: 'Verified',
+    accepted: 'Accepted',
+    packet_downloaded: 'Packet Downloaded',
+    key_viewed: 'Key Viewed',
+  };
+
   return (
     <ClaimCard>
       <h1 className="font-hand text-3xl font-bold text-brand-ink mb-2">You Have a Claim</h1>
+      {claim.ownerDisplayName && (
+        <p className="font-sans text-sm text-brand-muted mb-1">
+          From: <span className="font-semibold text-brand-ink">{claim.ownerDisplayName}</span>
+        </p>
+      )}
       <p className="font-sans text-sm text-brand-muted mb-6">
         Someone you know has designated you to receive important information through Aegis.
         You will be guided through a short verification and acceptance process before gaining access.
       </p>
 
-      {expiresAt && (
-        <div className="mb-4 p-3 bg-brand-bg border border-brand-border rounded font-sans text-sm text-brand-muted">
-          <span className="font-semibold text-brand-ink">Expires: </span>
-          {expiresAt.toLocaleString()}
-        </div>
-      )}
+      <div className="mb-4 flex gap-4 flex-wrap font-sans text-xs text-brand-muted">
+        <span>
+          <span className="font-semibold text-brand-ink">Status: </span>
+          {STATUS_LABELS[claim.status] ?? claim.status}
+        </span>
+        {expiresAt && (
+          <span>
+            <span className="font-semibold text-brand-ink">Expires: </span>
+            {expiresAt.toLocaleString()}
+          </span>
+        )}
+      </div>
 
       <div className="mb-6 p-4 bg-brand-bg border border-brand-border rounded font-sans text-sm text-brand-ink space-y-2">
         <p>

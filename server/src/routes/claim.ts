@@ -29,7 +29,7 @@ import { acknowledgeClaim } from '../services/hosted-cascade.js';
 import { downloadManagedPacket } from '../services/storage/index.js';
 import { writeAuditEvent } from '../services/audit.js';
 import { decryptField } from '../services/field-encrypt.js';
-import { contacts, packets } from '../db/schema.js';
+import { contacts, packets, releaseRuns, users } from '../db/schema.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -115,7 +115,23 @@ export async function claimRoutes(app: FastifyInstance) {
     const claim = await getContactClaimByTokenHash(app.db, tokenHash);
     if (!claim || isExpired(claim)) return genericNotFound(reply);
 
-    return reply.send(claimPublicView(claim));
+    let ownerDisplayName: string | null = null;
+    if (claim.releaseRunId) {
+      const runRows = await app.db
+        .select({ userId: releaseRuns.userId })
+        .from(releaseRuns)
+        .where(eq(releaseRuns.id, claim.releaseRunId));
+      const ownerId = runRows[0]?.userId;
+      if (ownerId) {
+        const userRows = await app.db
+          .select({ displayName: users.displayName })
+          .from(users)
+          .where(eq(users.id, ownerId));
+        ownerDisplayName = userRows[0]?.displayName ?? null;
+      }
+    }
+
+    return reply.send({ ...claimPublicView(claim), ownerDisplayName });
   }
 
   app.get<{ Params: { token: string } }>('/claim/:token', async (req, reply) => {
@@ -137,10 +153,15 @@ export async function claimRoutes(app: FastifyInstance) {
     if (!claim || isExpired(claim)) return genericNotFound(reply);
     if (!CLAIMABLE_STATES.has(claim.status)) return genericNotFound(reply);
 
+    // Idempotent: already opened or past this step — do not downgrade
+    if (claim.status !== 'pending' && claim.status !== 'notified') {
+      return reply.send(claimPublicView(claim));
+    }
+
     const now = new Date();
     const updated = await updateContactClaim(app.db, claim.id, {
       status: 'opened',
-      openedAt: claim.openedAt ?? now,
+      openedAt: now,
     });
 
     await writeAuditEvent(app.db, {
@@ -164,6 +185,11 @@ export async function claimRoutes(app: FastifyInstance) {
       const claim = await getContactClaimByTokenHash(app.db, tokenHash);
       if (!claim || isExpired(claim)) return genericNotFound(reply);
       if (!CLAIMABLE_STATES.has(claim.status)) return genericNotFound(reply);
+
+      // Idempotent: already verified or past this step — do not downgrade
+      if (claim.status !== 'opened') {
+        return reply.send(claimPublicView(claim));
+      }
 
       const contactRows = await app.db
         .select({ claimPinHash: contacts.claimPinHash })

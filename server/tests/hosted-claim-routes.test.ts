@@ -54,6 +54,7 @@ import {
   releaseRuns,
   switches,
   estateItems,
+  auditEvents,
 } from '../src/db/schema.js';
 import { encryptContact } from '../src/services/contact-mapper.js';
 import { encryptEstateItem } from '../src/services/estate-mapper.js';
@@ -300,6 +301,20 @@ describe('Hosted claim API routes', () => {
     expect(body.releaseMaterial.encryptionAlgorithm).toBe('aes-256-gcm');
     expect(body.releaseMaterial.packetKey).toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
     expect(body.releaseMaterial.encoding).toBe('base64');
+
+    // Verify audit log does NOT contain plaintext key material
+    const packetKey = body.releaseMaterial.packetKey;
+    const auditRows = await app.db
+      .select()
+      .from(auditEvents)
+      .where(eq(auditEvents.eventType, 'release_material_viewed'));
+    expect(auditRows.length).toBeGreaterThan(0);
+    const latestAudit = auditRows[auditRows.length - 1];
+    const metadataJson = JSON.stringify(latestAudit.metadata ?? {});
+    expect(metadataJson).not.toContain(packetKey);
+    // Metadata should only contain safe fields (claimId, releaseRunId)
+    expect(metadataJson).not.toContain('packetKey');
+    expect(metadataJson).not.toContain('keyMaterial');
   });
 
   it('POST /api/claim/:token/acknowledge — completes release run', async () => {

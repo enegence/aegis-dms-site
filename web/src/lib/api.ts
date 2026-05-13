@@ -13,6 +13,7 @@ export type ClaimStatus = {
   packetDownloadedAt: string | null;
   keyViewedAt: string | null;
   acknowledgedAt: string | null;
+  ownerDisplayName: string | null;
 };
 
 export type ReleaseMaterial = {
