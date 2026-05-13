@@ -17,6 +17,10 @@ import ClaimVerify from './pages/claim/ClaimVerify';
 import ClaimAccept from './pages/claim/ClaimAccept';
 import ClaimDownload from './pages/claim/ClaimDownload';
 import ClaimAcknowledge from './pages/claim/ClaimAcknowledge';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminRelay from './pages/admin/AdminRelay';
+import AdminReleaseRuns from './pages/admin/AdminReleaseRuns';
 
 interface AuthUser {
   id: string;
@@ -77,6 +81,12 @@ function App() {
         <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
         <Route path="/switches" element={<ProtectedRoute><Trigger /></ProtectedRoute>} />
         <Route path="/relay" element={<ProtectedRoute><Relay /></ProtectedRoute>} />
+
+        {/* Admin (protected — role checked server-side) */}
+        <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
+        <Route path="/admin/relay" element={<ProtectedRoute><AdminRelay /></ProtectedRoute>} />
+        <Route path="/admin/release-runs" element={<ProtectedRoute><AdminReleaseRuns /></ProtectedRoute>} />
 
         {/* Claim portal (public — no auth required) */}
         <Route path="/claim/:token" element={<ClaimLanding />} />

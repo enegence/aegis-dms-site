@@ -1,5 +1,20 @@
 const BASE = '';
 
+// ── Admin types ────────────────────────────────────────────────────────────────
+
+export type AdminMetrics = {
+  totalUsers: number;
+  verifiedUsers: number;
+  activeSubscriptions: number;
+  relayConnectionsActive: number;
+  relayConnectionsOffline: number;
+  activeReleaseRuns: number;
+  packetsStored: number;
+  notificationFailuresLast24h: number;
+};
+
+export const getAdminMetrics = () => get<AdminMetrics>('/api/admin/metrics');
+
 // ── Claim portal types ─────────────────────────────────────────────────────────
 
 export type ClaimStatus = {
