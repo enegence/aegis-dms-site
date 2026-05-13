@@ -18,6 +18,7 @@ import { switchRoutes } from './routes/switches.js';
 import { packetRoutes } from './routes/packets.js';
 import { dashboardRoutes } from './routes/dashboard.js';
 import { claimRoutes } from './routes/claim.js';
+import { relayEscrowRoutes } from './routes/relay-escrow.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -70,6 +71,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(packetRoutes);
   await app.register(dashboardRoutes);
   await app.register(claimRoutes);
+  await app.register(relayEscrowRoutes);
 
   app.addHook('onRequest', async (req, reply) => {
     const method = req.method;

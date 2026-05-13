@@ -989,7 +989,7 @@ git commit -m "feat: add hosted claim portal ui"
 - Update: `server/src/index.ts`
 - Test: `server/tests/relay-escrow.test.ts`
 
-- [ ] **Step 1: Require acknowledgement**
+- [x] **Step 1: Require acknowledgement**
 
 Relay Escrow cannot be enabled unless a current `trust_acknowledgements` row exists for:
 
@@ -998,13 +998,13 @@ mode = relay_escrow
 version = current policy version
 ```
 
-- [ ] **Step 2: Store encrypted material only**
+- [x] **Step 2: Store encrypted material only**
 
 Store escrow material in `relay_escrow_materials.materialEncrypted`.
 
 Do not store plaintext key/release material.
 
-- [ ] **Step 3: Add routes**
+- [x] **Step 3: Add routes**
 
 Implement authenticated routes:
 
@@ -1017,7 +1017,7 @@ POST /api/relay/:id/escrow/revoke
 
 All require auth + CSRF.
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -1029,7 +1029,7 @@ revoke marks revokedAt
 Relay Monitoring connection cannot execute release without escrow enabled
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/services/relay-escrow.ts server/src/routes/relay-escrow.ts server/src/index.ts server/tests/relay-escrow.test.ts

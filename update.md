@@ -206,8 +206,8 @@ aegis-dms-site/
 - [x] Task 8: Hosted contact cascade
 - [x] Task 9: Extend hosted worker
 - [x] Task 10: Hosted public claim API
-- [x] Task 11: Claim portal UI ← WE ARE HERE
-- [ ] Task 12: Relay escrow material model
+- [x] Task 11: Claim portal UI
+- [x] Task 12: Relay escrow material model ← WE ARE HERE
 - [ ] Task 13: Relay-assisted cascade
 - [ ] Task 14: Admin API
 - [ ] Task 15: Admin dashboard UI
