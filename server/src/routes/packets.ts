@@ -116,7 +116,7 @@ export async function packetRoutes(app: FastifyInstance) {
         throw err;
       }
 
-      // Write audit event
+      // Write audit events — generated (logical) + uploaded (storage confirmed)
       await writeAuditEvent(app.db, {
         userId: req.userId,
         switchId,
@@ -124,6 +124,14 @@ export async function packetRoutes(app: FastifyInstance) {
         actorType: 'user',
         actorId: req.userId,
         metadata: { packetId: result.packetId, version: result.version },
+      });
+      await writeAuditEvent(app.db, {
+        userId: req.userId,
+        switchId,
+        eventType: 'packet_uploaded',
+        actorType: 'user',
+        actorId: req.userId,
+        metadata: { packetId: result.packetId },
       });
 
       // Fetch the full packet row to return metadata

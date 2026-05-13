@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
 import { eq } from 'drizzle-orm';
 import { getAdminMetrics } from '../services/admin-metrics.js';
+import { writeAuditEvent } from '../services/audit.js';
 import {
   users,
   relayConnections,
@@ -25,8 +26,15 @@ async function requireAdmin(req: FastifyRequest, reply: FastifyReply): Promise<v
 }
 
 async function adminPlugin(app: FastifyInstance) {
-  app.get('/api/admin/metrics', { preHandler: requireAdmin }, async (_req, reply) => {
+  app.get('/api/admin/metrics', { preHandler: requireAdmin }, async (req, reply) => {
     const metrics = await getAdminMetrics(app.db);
+    await writeAuditEvent(app.db, {
+      userId: req.userId,
+      eventType: 'admin_viewed_metrics',
+      actorType: 'user',
+      actorId: req.userId,
+      metadata: {},
+    });
     return reply.send(metrics);
   });
 
