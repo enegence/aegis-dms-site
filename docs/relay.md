@@ -1,4 +1,4 @@
-# Aegis Relay — Phase 2 Behavior
+# Aegis Relay — Phase 3 Behavior
 
 ## What Relay Monitoring Does
 
@@ -90,7 +90,52 @@ The default grace window is 10 minutes (`AEGIS_RELAY_OFFLINE_GRACE_MINUTES=10`).
 | Executes release if host offline | No | Yes |
 | Trust required | Low (awareness only) | High (holds material) |
 
-Relay Monitoring is the Phase 2 feature. Relay Escrow, which holds and can execute release material when the self-hosted host is offline, is a Phase 3 feature. Do not conflate the two.
+Relay Monitoring is now complete. Relay Escrow is implemented in Phase 3. Do not conflate the two.
+
+## Relay Escrow (Phase 3)
+
+Relay Escrow is an explicit trust layer that allows Aegis SaaS to execute the configured release policy when the user's self-hosted instance remains offline.
+
+### Enabling Escrow
+
+Escrow is enabled per connection via a two-step process:
+
+1. **Acknowledge** — `POST /api/relay/:id/escrow/acknowledge` — records a versioned trust acknowledgement confirming the user understands the trust model.
+2. **Enable** — `POST /api/relay/:id/escrow/enable` — uploads encrypted release material (`materialEncrypted`) and the material type (`release_key`). The material is encrypted before transmission and stored in `relay_escrow_materials`. The plaintext is never stored server-side.
+
+Both steps require CSRF. Escrow cannot be enabled without a prior acknowledgement for the current policy version.
+
+### What Escrow Can Do
+
+When a connection remains offline and escrow is enabled:
+- The Aegis SaaS worker detects the offline state.
+- It checks eligibility: escrow enabled, not revoked, active subscription, no existing active release run for the user.
+- If eligible, a release run is created with `source = relay_escrow`.
+- The stored release material is decrypted server-side and used to execute the configured release policy.
+- An audit event `relay_escrow_cascade_started` is written with no PII in metadata.
+
+### Revocation
+
+`POST /api/relay/:id/escrow/revoke` immediately revokes escrow. The `relay_escrow_materials` record is marked revoked (`revokedAt` set). A revoked escrow will not trigger a relay-assisted release even if the connection goes offline.
+
+### Trust Model
+
+Relay Escrow requires explicit trust in Aegis SaaS:
+- The SaaS server holds encrypted release material.
+- The SaaS server holds the decryption key.
+- A compromised Aegis SaaS instance could decrypt the stored material.
+- There is no zero-knowledge claim for Relay Escrow in the alpha.
+
+Users must accept a versioned trust acknowledgement before escrow can be enabled. The acknowledgement records the policy version, timestamp, and hashed IP/user-agent.
+
+### Escrow Routes
+
+```
+POST /api/relay/:id/escrow/acknowledge
+POST /api/relay/:id/escrow/enable
+POST /api/relay/:id/escrow/revoke
+GET  /api/relay/:id/escrow/status
+```
 
 ## Connection Management Routes
 

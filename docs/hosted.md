@@ -1,15 +1,19 @@
-# Aegis Hosted — Phase 2 Behavior
+# Aegis Hosted — Phase 3 Behavior
 
 ## What Hosted Provides
 
 Aegis Hosted is the fully managed version of Aegis DMS. Users manage their estate information, trusted contacts, and dead man's switch configuration through the Aegis SaaS web interface — no Docker, no self-hosted server, no technical setup required.
 
-Phase 2 implements:
+Phase 3 implements (in addition to Phase 2):
 - Estate item CRUD with field-level encryption
 - Contact CRUD with field-level encryption and priority ordering
 - Switch CRUD, state machine, readiness checks, and arm/pause/cancel/check-in actions
-- Hosted dashboard summary
-- Billing portal access
+- Hosted dashboard summary and billing portal
+- Managed R2/S3 packet generation and storage
+- Hosted notification dispatch (Postmark + Telegram)
+- Hosted contact cascade on trigger
+- Claim portal for contacts to receive released packets
+- Relay Escrow material model (explicit trust layer)
 
 ## Data Management
 
@@ -99,22 +103,43 @@ The following conditions must all be true before a switch can be armed (`GET /ap
 
 The readiness response enumerates which checks passed and failed, allowing the UI to show a checklist.
 
-## Phase 2 Limitations
+## Phase 3: Packet Generation and Cascade
 
-Phase 2 supports hosted data management and switch scheduling. The following are explicitly **not implemented in Phase 2** and will be added in Phase 3:
+### Managed Storage
 
-- Managed packet generation (assembling estate items into an encrypted release packet)
-- Managed R2/S3 packet storage
-- Hosted packet download by contacts
-- Full contact cascade (notify → verify → accept → download → acknowledge)
-- Relay Escrow release execution
-- Claim portal release flow
+Hosted packets are encrypted with AES-256-GCM using a per-packet key. The packet key itself is encrypted with the user's master key (HKDF-derived). Encrypted packets are uploaded to R2/S3-compatible managed storage. Only the packet metadata (hash, storage key, version) is retained in PostgreSQL; the plaintext estate data is never written to the database.
 
-When a hosted switch reaches `triggered` in Phase 2, a release run record is created but no packets are generated and no contacts are notified. The state is a clean handoff point for Phase 3.
+Users can generate packets manually via the Release page or from a switch detail view. The worker also generates packets automatically when a release run starts.
 
-The UI shows a disclosure where relevant:
+### Hosted Contact Cascade
 
-> Phase 2 supports switch scheduling, reminders, and trigger-state tracking. Managed packet release and contact cascade are added in the next phase.
+When a switch is triggered, the hosted worker creates a release run and starts the contact cascade:
+
+1. The first-priority contact receives a notification (email and/or Telegram).
+2. The contact follows a claim portal link to verify identity, accept the release, and download the packet.
+3. If the contact does not respond within the configured window, the next contact is escalated to.
+4. The cascade continues until a contact acknowledges or all contacts are exhausted.
+
+Each step is tracked in `contact_claims`. The release run completes when a claim is acknowledged.
+
+### Claim Portal
+
+The claim portal is a public web flow (no account required). Contacts access it via a one-time token link. The flow:
+
+1. **Landing** — acknowledges the claim and prompts the contact to open it.
+2. **Verify** — optional PIN verification if configured.
+3. **Accept** — explicit acceptance before packet access is granted.
+4. **Download** — downloads the encrypted packet from managed storage.
+5. **Acknowledge** — final confirmation that the contact received the packet.
+
+The claim token is hashed before storage (`claimTokenHash`). The plaintext token is never stored server-side.
+
+### Release Page
+
+Users can view their packet history, active release runs, and cascade status at `/release`. Available actions:
+
+- **Verify packet** — confirms the packet still exists in managed storage.
+- **Cancel release run** — stops an active cascade (for testing or error recovery).
 
 ## Trust Model
 
@@ -132,7 +157,7 @@ This is disclosed to users during onboarding and on the estate/contacts screens:
 
 Shamir Secret Sharing and multi-party key management are not implemented in the alpha. These may be explored in future versions.
 
-## API Routes
+## Phase 3 API Routes
 
 All hosted CRUD routes require browser auth + CSRF on state-changing requests:
 
@@ -162,4 +187,21 @@ POST   /api/switches/:id/cancel
 POST   /api/switches/:id/check-in
 
 GET    /api/dashboard
+
+GET    /api/app/packets
+GET    /api/app/packets/:id
+POST   /api/app/switches/:id/packets/generate
+POST   /api/app/packets/:id/verify
+DELETE /api/app/packets/:id
+
+GET    /api/app/release-runs
+POST   /api/app/release-runs/:id/cancel
+
+GET    /api/claim/:token
+POST   /api/claim/:token/open
+POST   /api/claim/:token/verify
+POST   /api/claim/:token/accept
+GET    /api/claim/:token/packet
+POST   /api/claim/:token/key-view
+POST   /api/claim/:token/acknowledge
 ```
