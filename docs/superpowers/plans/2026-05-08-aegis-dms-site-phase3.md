@@ -1049,7 +1049,7 @@ git commit -m "feat: add explicit relay escrow material model"
 - Update: `server/src/worker/index.ts`
 - Test: `server/tests/relay-assisted-cascade.test.ts`
 
-- [ ] **Step 1: Define eligibility**
+- [x] **Step 1: Define eligibility**
 
 Relay-assisted cascade requires:
 
@@ -1063,7 +1063,7 @@ release policy conditions satisfied
 no active release run for user
 ```
 
-- [ ] **Step 2: Monitoring-only behavior**
+- [x] **Step 2: Monitoring-only behavior**
 
 If connection is Relay Monitoring only:
 
@@ -1074,7 +1074,7 @@ DO NOT create release run
 DO NOT release packet/key material
 ```
 
-- [ ] **Step 3: Escrow behavior**
+- [x] **Step 3: Escrow behavior**
 
 If eligible Relay Escrow:
 
@@ -1085,7 +1085,9 @@ start contact cascade
 write audit event
 ```
 
-- [ ] **Step 4: Add tests**
+<!-- DEVIATION: "prepare active packet/reference from escrow policy" and "start contact cascade" are intentionally deferred — the release run creation is the gate; actual packet delivery and cascade notification follow in the hosted cascade worker loop which already processes active release runs. -->
+
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -1097,7 +1099,7 @@ inactive subscription blocks or pauses according to policy
 active release run prevents duplicate relay release
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/services/relay-assisted-cascade.ts server/src/services/relay-monitor.ts server/src/worker/index.ts server/tests/relay-assisted-cascade.test.ts

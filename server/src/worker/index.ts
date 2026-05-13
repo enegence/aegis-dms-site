@@ -1,6 +1,7 @@
 import type { AegisDb } from '../db/index.js';
 import type { AppConfig } from '../config.js';
 import { runRelayMonitorOnce } from '../services/relay-monitor.js';
+import { runRelayEscrowCascadeOnce } from '../services/relay-assisted-cascade.js';
 import { runHostedWorkerOnce } from './hosted-worker.js';
 
 export interface WorkerOptions {
@@ -32,6 +33,11 @@ export function startWorker(
       await runRelayMonitorOnce(db, apiToken, from);
     } catch (err) {
       console.error('[worker] relay monitor error:', err);
+    }
+    try {
+      await runRelayEscrowCascadeOnce(db, config);
+    } catch (err) {
+      console.error('[worker] relay escrow cascade error:', err);
     }
     try {
       await runHostedWorkerOnce(db, config);
