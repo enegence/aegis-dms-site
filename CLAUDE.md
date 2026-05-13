@@ -148,3 +148,9 @@ TypeScript, Fastify, Drizzle ORM, PostgreSQL, React 18, Vite, Tailwind CSS, Vite
 **UX promises must be backed by API:** If the UI says "leave blank to keep existing" for a secret field, the API schema must allow optional/empty and the route must skip-on-empty. Verify both before writing the UI copy.
 
 **Completion requires runtime correctness, not just build+test-pass:** Build success and server unit tests passing do not prove UI flows work. A task is not complete until the frontend can actually call its API endpoints with the correct payload and receive the expected response. If a manual smoke test cannot be run in the current environment, say so explicitly — do not mark tasks done.
+
+**Cross-service gating:** When service A creates a record consumed by service B or a worker, read B's entry condition before finishing A. If B gates on a field (e.g. `activePacketId`, `status`, a FK), A must populate that field or the record is silently orphaned. Unit tests for A pass; B skips the record. Trace the full path: create → consume → assert progress.
+
+**Audit emitters vs. registry:** A string list of event type names in a test or constant is NOT proof those events fire. For every audit event type in the spec, grep for an actual `writeAuditEvent(... eventType: 'the-event' ...)` call. Missing = unimplemented. Tests that only check the string registry catch typos, not missing emitters.
+
+**Docs accuracy:** After implementing a route or service, re-read any doc that describes its behavior (status codes, what is stored, what is executed, error responses). Docs that overstate or misstate behavior are bugs — a doc saying "returns 410" when the code returns 404, or "executes the release policy" when it only creates a DB row, will mislead future implementers. Fix the doc or the code, not just one of them.
