@@ -126,3 +126,35 @@ TypeScript, Fastify, Drizzle ORM, PostgreSQL, React 18, Vite, Tailwind CSS, Vite
 - One task at a time, sequential order unless plan says otherwise
 - Commit after each task passes tests
 - Do not skip security, contracts, or schema correctness to move faster
+
+## Pre-Commit Self-Review (required before every task commit)
+
+Run these checks mentally before marking a step `[x]` and committing:
+
+### 1. State machine monotonicity
+Any handler that advances an ordered lifecycle (claim status, release run status, switch state) MUST:
+- Check that the current state is exactly the expected predecessor state, not just "any valid state"
+- Return current state unchanged (idempotent) if already at or past this step
+- Never overwrite a later state with an earlier one
+- Wrong: `if CLAIMABLE_STATES.has(status) → set status = 'opened'` (allows downgrade from 'accepted')
+- Right: `if status !== 'pending' && status !== 'notified' → return current state unchanged`
+
+### 2. Plan-to-code fidelity
+Before marking a step `[x]`, verify every named deliverable in that step is literally present:
+- If the plan says "Show: X, Y, Z" — all three must appear in the API response AND the UI render
+- If a requirement cannot be met (e.g., data not available in the schema), add `<!-- DEVIATION: [reason] -->` and do not silently skip it
+- Do not mark a step complete because the feature "works" — verify each stated sub-requirement
+
+### 3. DB query purpose discipline
+DB helper functions have a purpose encoded in their semantics (e.g., eligibility vs. status reporting):
+- Eligibility queries filter to active/non-revoked rows — correct for "can this proceed?"
+- Status queries must include ALL rows including revoked — correct for "what is the current state?"
+- Never reuse an eligibility query for status reporting. Write a separate function with the correct filter.
+- Name functions to encode their purpose: `getActiveEscrowMaterial` vs. `getMostRecentEscrowMaterial`
+
+### 4. Test plan coverage
+When the plan's test list says "Test: X" — write a test that actually verifies X, not just a test that exercises the code path:
+- "key-view audited without material in logs" → query `audit_events` table, assert key value absent from metadata JSON
+- "revoke marks revokedAt" → query `relay_escrow_materials` table, assert `revokedAt` is non-null
+- "enable stores encrypted material" → query DB row, assert stored value ≠ plaintext input
+- Response payload assertions are necessary but not sufficient for server-side invariant tests
