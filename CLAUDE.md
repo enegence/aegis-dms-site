@@ -129,32 +129,16 @@ TypeScript, Fastify, Drizzle ORM, PostgreSQL, React 18, Vite, Tailwind CSS, Vite
 
 ## Pre-Commit Self-Review (required before every task commit)
 
-Run these checks mentally before marking a step `[x]` and committing:
+**State machines:** Handlers for ordered lifecycles check the exact predecessor state, not "any valid state." Return current state unchanged if already past this step. Final-stage ops (e.g. acknowledge) must assert all prior required stages completed.
 
-### 1. State machine monotonicity
-Any handler that advances an ordered lifecycle (claim status, release run status, switch state) MUST:
-- Check that the current state is exactly the expected predecessor state, not just "any valid state"
-- Return current state unchanged (idempotent) if already at or past this step
-- Never overwrite a later state with an earlier one
-- Wrong: `if CLAIMABLE_STATES.has(status) → set status = 'opened'` (allows downgrade from 'accepted')
-- Right: `if status !== 'pending' && status !== 'notified' → return current state unchanged`
+**Crypto:** Every encrypt call must have a stored, retrievable key path. Verify the decrypt flow works end-to-end before marking done. Encrypted-data-without-surviving-key = silent data loss.
 
-### 2. Plan-to-code fidelity
-Before marking a step `[x]`, verify every named deliverable in that step is literally present:
-- If the plan says "Show: X, Y, Z" — all three must appear in the API response AND the UI render
-- If a requirement cannot be met (e.g., data not available in the schema), add `<!-- DEVIATION: [reason] -->` and do not silently skip it
-- Do not mark a step complete because the feature "works" — verify each stated sub-requirement
+**Plan fidelity:** Every named deliverable in a step must exist in code. If it can't be met, add `<!-- DEVIATION: [reason] -->` in plan AND code — never silently omit.
 
-### 3. DB query purpose discipline
-DB helper functions have a purpose encoded in their semantics (e.g., eligibility vs. status reporting):
-- Eligibility queries filter to active/non-revoked rows — correct for "can this proceed?"
-- Status queries must include ALL rows including revoked — correct for "what is the current state?"
-- Never reuse an eligibility query for status reporting. Write a separate function with the correct filter.
-- Name functions to encode their purpose: `getActiveEscrowMaterial` vs. `getMostRecentEscrowMaterial`
+**Security non-negotiables:** Before marking a task done, verify each item in the plan's Security Non-Negotiables section is actually implemented — not deferred, not partial.
 
-### 4. Test plan coverage
-When the plan's test list says "Test: X" — write a test that actually verifies X, not just a test that exercises the code path:
-- "key-view audited without material in logs" → query `audit_events` table, assert key value absent from metadata JSON
-- "revoke marks revokedAt" → query `relay_escrow_materials` table, assert `revokedAt` is non-null
-- "enable stores encrypted material" → query DB row, assert stored value ≠ plaintext input
-- Response payload assertions are necessary but not sufficient for server-side invariant tests
+**Query semantics:** Eligibility queries (active/non-revoked) ≠ status queries (all rows). Write separate functions with purpose-encoded names. Never reuse.
+
+**Test depth:** Tests must verify server-side invariants (query DB, audit log, schema), not just response shapes. "X is not stored" means assert it in the DB, not just check the response.
+
+**Schema/contract alignment:** If code comments a deviation from the plan spec, add `<!-- DEVIATION: -->` in the plan doc too. Undocumented divergence is a hidden bug.
