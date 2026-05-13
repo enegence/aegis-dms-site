@@ -94,6 +94,16 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Release link */}
+        <div className="mb-6">
+          <Link
+            to="/release"
+            className="inline-block px-4 py-2 border border-brand-border rounded font-sans text-sm text-brand-muted hover:text-brand-ink hover:border-brand-accent transition-colors"
+          >
+            View release status &rarr;
+          </Link>
+        </div>
+
         {/* Empty state prompts */}
         {data.estateItemCount === 0 && (
           <EmptyPrompt to="/estate" text="Add your first estate item to get started." />

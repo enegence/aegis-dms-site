@@ -10,6 +10,7 @@ import Estate from './pages/app/Estate';
 import Contacts from './pages/app/Contacts';
 import Trigger from './pages/app/Trigger';
 import Relay from './pages/app/Relay';
+import Release from './pages/app/Release';
 import Landing from './pages/marketing/Landing';
 import Pricing from './pages/marketing/Pricing';
 import ClaimLanding from './pages/claim/ClaimLanding';
@@ -81,6 +82,7 @@ function App() {
         <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
         <Route path="/switches" element={<ProtectedRoute><Trigger /></ProtectedRoute>} />
         <Route path="/relay" element={<ProtectedRoute><Relay /></ProtectedRoute>} />
+        <Route path="/release" element={<ProtectedRoute><Release /></ProtectedRoute>} />
 
         {/* Admin (protected — role checked server-side) */}
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
