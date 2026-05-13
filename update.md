@@ -208,7 +208,8 @@ aegis-dms-site/
 - [x] Task 10: Hosted public claim API
 - [x] Task 11: Claim portal UI
 - [x] Task 12: Relay escrow material model
-- [ ] Task 13: Relay-assisted cascade ← NEXT
+- [x] Task 13: Relay-assisted cascade
+- [ ] Task 14: Admin API ← WE ARE HERE
 - [ ] Task 14: Admin API
 - [ ] Task 15: Admin dashboard UI
 - [ ] Task 16: Hosted release and packet UI
