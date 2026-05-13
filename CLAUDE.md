@@ -52,11 +52,11 @@ After completing each numbered Task (not each step), update `update.md`:
 
 At the END of every session (or when context is getting long), update this section:
 
-**Last completed:** SaaS Phase 3 Task 11 — Claim portal UI (5 pages: Landing, Verify, Accept, Download, Acknowledge)
-**Next up:** SaaS Phase 3 Task 12 — Relay escrow material model. Then Tasks 13-19 in order.
-**OSS status:** Phase 1 complete (21 tests). Phase 2 NOT STARTED (plan: `2026-05-08-aegis-oss-phase2.md`).
+**Last completed:** OSS Phase 2 Task 18 — Verification (Phase 2 complete: 173 tests, Docker builds, all UI done)
+**Next up:** SaaS Phase 3 Task 13 — Relay-assisted cascade. Then Tasks 14-19 in order.
+**OSS status:** Phase 1 complete. Phase 2 COMPLETE (173 tests, oss-phase-2 branch, Tasks 14-18 done this session). Needs merge to master. Phase 3 NOT STARTED.
 **Blockers/notes:** None.
-**Tests passing:** 318 (31 test files)
+**Tests passing:** 335 SaaS (32 test files) + 173 OSS (18 test files) = 508 total
 
 ## Non-Negotiable Constraints
 

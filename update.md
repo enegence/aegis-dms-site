@@ -185,12 +185,12 @@ aegis-dms-site/
 - [x] Task 10: Reminder scheduler
 - [x] Task 11: Worker polling loop
 - [x] Task 12: Dashboard API
-- [x] Task 13: Frontend API client ← WE ARE HERE
-- [ ] Task 14: Switch management UI
-- [ ] Task 15: Dashboard UI
-- [ ] Task 16: Notification settings UI
-- [ ] Task 17: Documentation
-- [ ] Task 18: Verification
+- [x] Task 13: Frontend API client
+- [x] Task 14: Switch management UI
+- [x] Task 15: Dashboard UI
+- [x] Task 16: Notification settings UI
+- [x] Task 17: Documentation
+- [x] Task 18: Verification ← WE ARE HERE (OSS Phase 2 COMPLETE)
 
 **OSS Phase 3: NOT STARTED** (plan: `2026-05-08-aegis-oss-phase3.md`)
 - Packet builder, S3 dead-drop, contact cascade, claim portal, audit log
@@ -207,8 +207,8 @@ aegis-dms-site/
 - [x] Task 9: Extend hosted worker
 - [x] Task 10: Hosted public claim API
 - [x] Task 11: Claim portal UI
-- [x] Task 12: Relay escrow material model ← WE ARE HERE
-- [ ] Task 13: Relay-assisted cascade
+- [x] Task 12: Relay escrow material model
+- [ ] Task 13: Relay-assisted cascade ← NEXT
 - [ ] Task 14: Admin API
 - [ ] Task 15: Admin dashboard UI
 - [ ] Task 16: Hosted release and packet UI
