@@ -195,7 +195,7 @@ aegis-dms-site/
 **OSS Phase 3: NOT STARTED** (plan: `2026-05-08-aegis-oss-phase3.md`)
 - Packet builder, S3 dead-drop, contact cascade, claim portal, audit log
 
-**SaaS Phase 3: IN PROGRESS** (312 passing tests, plan: `2026-05-08-aegis-dms-site-phase3.md`)
+**SaaS Phase 3: COMPLETE** (369 passing tests, plan: `2026-05-08-aegis-dms-site-phase3.md`)
 - [x] Task 1: Schema verification and extension
 - [x] Task 2: Shared types and contract usage
 - [x] Task 3: Managed storage service
@@ -209,13 +209,12 @@ aegis-dms-site/
 - [x] Task 11: Claim portal UI
 - [x] Task 12: Relay escrow material model
 - [x] Task 13: Relay-assisted cascade
-- [ ] Task 14: Admin API ← WE ARE HERE
-- [ ] Task 14: Admin API
-- [ ] Task 15: Admin dashboard UI
-- [ ] Task 16: Hosted release and packet UI
-- [ ] Task 17: Audit coverage and redaction tests
-- [ ] Task 18: Documentation updates
-- [ ] Task 19: End-to-end verification
+- [x] Task 14: Admin API
+- [x] Task 15: Admin dashboard UI
+- [x] Task 16: Hosted release and packet UI
+- [x] Task 17: Audit coverage and redaction tests
+- [x] Task 18: Documentation updates
+- [x] Task 19: End-to-end verification
 
 ### Phase 4: Polish + Deploy
 

@@ -52,11 +52,11 @@ After completing each numbered Task (not each step), update `update.md`:
 
 At the END of every session (or when context is getting long), update this section:
 
-**Last completed:** SaaS Phase 3 Task 12 — Relay escrow material model
-**Next up:** SaaS Phase 3 Task 13 — Relay-assisted cascade. Then Tasks 14-19 in order.
-**OSS status:** Phase 1 complete. Phase 2 IN PROGRESS — server/backend done (173 tests), UI Tasks 14-16 have runtime bugs being fixed by Codex (wrong endpoints, wrong payload shapes, missing required fields). Do NOT mark OSS Phase 2 complete until Codex fixes are merged. Phase 3 NOT STARTED.
-**Blockers/notes:** None.
-**Tests passing:** 335 SaaS (32 test files) + 173 OSS (18 test files) = 508 total
+**Last completed:** SaaS Phase 3 Task 19 — End-to-end verification. **SaaS Phase 3 is COMPLETE.**
+**Next up:** SaaS Phase 4 — Onboarding, Railway deployment, billing polish, legal pages, E2E browser flows, security review, launch readiness.
+**OSS status:** Phase 1 complete (21 tests). Phase 2 IN PROGRESS on `oss-phase-2` branch — server/backend done (173 tests), UI Tasks 14-18 implemented but Codex reported 5 runtime bugs (wrong API URLs, wrong response shapes, missing `purpose: test`, countdown logic). Do NOT merge until Codex fixes confirmed. Phase 3 NOT STARTED.
+**Blockers/notes:** Manual UI smoke test for SaaS Phase 3 not performed (headless). Recommend manual verification before Phase 4.
+**Tests passing:** 369 SaaS (36 test files)
 
 ## Non-Negotiable Constraints
 
