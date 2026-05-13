@@ -8,6 +8,9 @@ interface AdminMetrics {
   activeSubscriptions: number;
   relayConnectionsActive: number;
   relayConnectionsOffline: number;
+  switchesArmed: number;
+  switchesWarning: number;
+  switchesTriggered: number;
   activeReleaseRuns: number;
   packetsStored: number;
   notificationFailuresLast24h: number;
@@ -57,6 +60,9 @@ export default function AdminDashboard() {
           <MetricCard label="Packets Stored" value={metrics.packetsStored} />
           <MetricCard label="Relay Active" value={metrics.relayConnectionsActive} />
           <MetricCard label="Relay Offline" value={metrics.relayConnectionsOffline} warn />
+          <MetricCard label="Switches Armed" value={metrics.switchesArmed} />
+          <MetricCard label="Switches Warning" value={metrics.switchesWarning} warn />
+          <MetricCard label="Switches Triggered" value={metrics.switchesTriggered} warn />
           <MetricCard label="Active Release Runs" value={metrics.activeReleaseRuns} warn />
           <MetricCard label="Notification Failures (24h)" value={metrics.notificationFailuresLast24h} warn />
         </div>

@@ -136,10 +136,10 @@ describe('Audit redaction — writeAuditEvent persists no plaintext PII', () => 
     expect(meta.version).toBe(1);
   });
 
-  it('relay_escrow_cascade_started event stored without sensitive data', async () => {
+  it('relay_assisted_release_started event stored without sensitive data', async () => {
     await writeAuditEvent(app.db, {
       userId: null,
-      eventType: 'relay_escrow_cascade_started',
+      eventType: 'relay_assisted_release_started',
       actorType: 'system',
       metadata: {
         relayConnectionId: 'conn-uuid',
@@ -152,7 +152,7 @@ describe('Audit redaction — writeAuditEvent persists no plaintext PII', () => 
     const rows = await app.db
       .select()
       .from(auditEvents)
-      .where(eq(auditEvents.eventType, 'relay_escrow_cascade_started'));
+      .where(eq(auditEvents.eventType, 'relay_assisted_release_started'));
 
     const found = rows.find(r => (r.metadata as Record<string, unknown>)?.relayConnectionId === 'conn-uuid');
     expect(found).toBeDefined();
@@ -212,7 +212,7 @@ describe('Phase 3 audit event type coverage', () => {
     'cascade_failed',
     'relay_escrow_enabled',
     'relay_escrow_revoked',
-    'relay_escrow_cascade_started',
+    'relay_assisted_release_started',
     'release_run_cancelled',
   ];
 

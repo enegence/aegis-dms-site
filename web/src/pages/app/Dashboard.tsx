@@ -1,13 +1,29 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getDashboard, type DashboardSummary } from '../../lib/dashboard';
+import { get } from '../../lib/api';
+
+interface ReleaseOverview {
+  packetCount: number;
+  activeRunCount: number;
+}
 
 export default function Dashboard() {
   const [data, setData] = useState<DashboardSummary | null>(null);
+  const [release, setRelease] = useState<ReleaseOverview | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     getDashboard().then(setData).catch((e: Error) => setError(e.message));
+    Promise.all([
+      get<{ packets: unknown[] }>('/api/app/packets'),
+      get<{ releaseRuns: { status: string }[] }>('/api/app/release-runs'),
+    ]).then(([pd, rd]) => {
+      const activeRuns = rd.releaseRuns.filter(
+        r => !['completed', 'cancelled', 'failed'].includes(r.status),
+      );
+      setRelease({ packetCount: pd.packets.length, activeRunCount: activeRuns.length });
+    }).catch(() => {}); // non-critical
   }, []);
 
   if (error) return <div className="p-8 text-brand-danger font-sans">{error}</div>;
@@ -94,15 +110,29 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Release link */}
-        <div className="mb-6">
-          <Link
-            to="/release"
-            className="inline-block px-4 py-2 border border-brand-border rounded font-sans text-sm text-brand-muted hover:text-brand-ink hover:border-brand-accent transition-colors"
-          >
-            View release status &rarr;
-          </Link>
-        </div>
+        {/* Release health cards */}
+        {release !== null && (
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <Link
+              to="/release"
+              className="p-4 bg-brand-surface border border-brand-border rounded-lg hover:border-brand-accent transition-colors"
+            >
+              <p className="font-hand text-3xl font-bold text-brand-ink">{release.packetCount}</p>
+              <p className="font-sans text-xs text-brand-muted">Packets stored</p>
+            </Link>
+            <Link
+              to="/release"
+              className={`p-4 bg-brand-surface border rounded-lg hover:border-brand-accent transition-colors ${
+                release.activeRunCount > 0 ? 'border-brand-danger' : 'border-brand-border'
+              }`}
+            >
+              <p className={`font-hand text-3xl font-bold ${release.activeRunCount > 0 ? 'text-brand-danger' : 'text-brand-ink'}`}>
+                {release.activeRunCount}
+              </p>
+              <p className="font-sans text-xs text-brand-muted">Active release runs</p>
+            </Link>
+          </div>
+        )}
 
         {/* Empty state prompts */}
         {data.estateItemCount === 0 && (

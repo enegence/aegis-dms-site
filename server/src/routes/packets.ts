@@ -159,6 +159,15 @@ export async function packetRoutes(app: FastifyInstance) {
       const now = new Date();
       await updatePacketStorage(app.db, row.id, { lastVerifiedAt: now });
 
+      await writeAuditEvent(app.db, {
+        userId: req.userId,
+        switchId: row.switchId,
+        eventType: 'packet_verified',
+        actorType: 'user',
+        actorId: req.userId,
+        metadata: { packetId: row.id, storageExists: verification.exists },
+      });
+
       // Fetch updated row
       const updated = await getPacketById(app.db, row.id, req.userId!);
 

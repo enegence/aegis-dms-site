@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { get, post } from '../../lib/api';
 
@@ -25,6 +25,25 @@ interface ReleaseRun {
   cancelledAt: string | null;
 }
 
+interface CascadeClaim {
+  id: string;
+  contactId: string;
+  status: string;
+  notifiedAt: string | null;
+  openedAt: string | null;
+  acceptedAt: string | null;
+  acknowledgedAt: string | null;
+  escalatedAt: string | null;
+  expiresAt: string;
+}
+
+interface CascadeStatus {
+  runId: string;
+  runStatus: string;
+  currentClaimId: string | null;
+  claims: CascadeClaim[];
+}
+
 function statusColor(status: string) {
   if (status === 'active') return 'text-brand-accent';
   if (status === 'completed') return 'text-green-600';
@@ -35,24 +54,38 @@ function statusColor(status: string) {
 export default function Release() {
   const [packets, setPackets] = useState<PacketMeta[]>([]);
   const [runs, setRuns] = useState<ReleaseRun[]>([]);
+  const [cascadeStatuses, setCascadeStatuses] = useState<Record<string, CascadeStatus>>({});
   const [error, setError] = useState('');
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState('');
 
-  function load() {
+  const load = useCallback(() => {
     Promise.all([
       get<{ packets: PacketMeta[] }>('/api/app/packets'),
       get<{ releaseRuns: ReleaseRun[] }>('/api/app/release-runs'),
     ])
-      .then(([pd, rd]) => {
+      .then(async ([pd, rd]) => {
         setPackets(pd.packets);
         setRuns(rd.releaseRuns);
+        // Load cascade status for active runs
+        const active = rd.releaseRuns.filter(
+          r => !['completed', 'cancelled', 'failed'].includes(r.status),
+        );
+        const cascadeMap: Record<string, CascadeStatus> = {};
+        await Promise.all(
+          active.map(r =>
+            get<CascadeStatus>(`/api/app/release-runs/${r.id}/cascade`)
+              .then(cs => { cascadeMap[r.id] = cs; })
+              .catch(() => {}),
+          ),
+        );
+        setCascadeStatuses(cascadeMap);
       })
       .catch((e: Error) => setError(e.message));
-  }
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   async function verifyPacket(id: string) {
     setVerifyingId(id);
@@ -111,32 +144,63 @@ export default function Release() {
             </div>
           ) : (
             <div className="space-y-3">
-              {activeRuns.map(r => (
-                <div key={r.id} className="p-4 bg-brand-surface border border-brand-border rounded-lg">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className={`font-sans font-semibold text-sm ${statusColor(r.status)}`}>
-                        {r.status.toUpperCase()}
+              {activeRuns.map(r => {
+                const cascade = cascadeStatuses[r.id];
+                return (
+                  <div key={r.id} className="p-4 bg-brand-surface border border-brand-border rounded-lg">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className={`font-sans font-semibold text-sm ${statusColor(r.status)}`}>
+                          {r.status.toUpperCase()}
+                        </div>
+                        <div className="font-sans text-xs text-brand-muted mt-1">
+                          Source: {r.source}
+                          {r.triggeringSwitchId && ` · switch ${r.triggeringSwitchId.slice(0, 8)}`}
+                          {r.relayConnectionId && ` · relay ${r.relayConnectionId.slice(0, 8)}`}
+                        </div>
+                        <div className="font-sans text-xs text-brand-muted">
+                          Started: {new Date(r.startedAt).toLocaleString()}
+                        </div>
+                        {cascade && cascade.claims.length > 0 && (
+                          <div className="mt-3">
+                            <p className="font-sans text-xs font-semibold text-brand-muted mb-1">
+                              Cascade ({cascade.claims.length} contact{cascade.claims.length !== 1 ? 's' : ''})
+                            </p>
+                            <div className="space-y-1">
+                              {cascade.claims.map((c, i) => (
+                                <div key={c.id} className="flex items-center gap-2 font-sans text-xs">
+                                  <span className="text-brand-muted">Contact {i + 1}:</span>
+                                  <span className={
+                                    c.acknowledgedAt ? 'text-green-600' :
+                                    c.escalatedAt ? 'text-brand-muted line-through' :
+                                    c.status === 'notified' ? 'text-brand-accent' :
+                                    'text-brand-muted'
+                                  }>
+                                    {c.status}
+                                  </span>
+                                  {c.acknowledgedAt && <span className="text-green-600">✓</span>}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {cascade && cascade.claims.length === 0 && r.status === 'active' && (
+                          <p className="font-sans text-xs text-brand-muted mt-2 italic">
+                            Cascade pending — waiting for first tick
+                          </p>
+                        )}
                       </div>
-                      <div className="font-sans text-xs text-brand-muted mt-1">
-                        Source: {r.source}
-                        {r.triggeringSwitchId && ` · switch ${r.triggeringSwitchId.slice(0, 8)}`}
-                        {r.relayConnectionId && ` · relay ${r.relayConnectionId.slice(0, 8)}`}
-                      </div>
-                      <div className="font-sans text-xs text-brand-muted">
-                        Started: {new Date(r.startedAt).toLocaleString()}
-                      </div>
+                      <button
+                        onClick={() => cancelRun(r.id)}
+                        disabled={cancellingId === r.id}
+                        className="px-3 py-1 border border-brand-danger text-brand-danger rounded font-sans text-xs hover:bg-brand-danger/10 disabled:opacity-50"
+                      >
+                        {cancellingId === r.id ? 'Cancelling...' : 'Cancel'}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => cancelRun(r.id)}
-                      disabled={cancellingId === r.id}
-                      className="px-3 py-1 border border-brand-danger text-brand-danger rounded font-sans text-xs hover:bg-brand-danger/10 disabled:opacity-50"
-                    >
-                      {cancellingId === r.id ? 'Cancelling...' : 'Cancel'}
-                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>

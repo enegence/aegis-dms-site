@@ -92,7 +92,7 @@ export async function runRelayEscrowCascadeOnce(
         userId: conn.userId,
         releaseRunId: run.id,
         relayConnectionId: conn.id,
-        eventType: 'relay_escrow_cascade_started',
+        eventType: 'relay_assisted_release_started',
         actorType: 'system',
         metadata: { connectionId: conn.id, releaseRunId: run.id },
       });

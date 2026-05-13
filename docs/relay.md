@@ -105,14 +105,15 @@ Escrow is enabled per connection via a two-step process:
 
 Both steps require CSRF. Escrow cannot be enabled without a prior acknowledgement for the current policy version.
 
-### What Escrow Can Do
+### What Escrow Does in Alpha
 
 When a connection remains offline and escrow is enabled:
 - The Aegis SaaS worker detects the offline state.
 - It checks eligibility: escrow enabled, not revoked, active subscription, no existing active release run for the user.
-- If eligible, a release run is created with `source = relay_escrow`.
-- The stored release material is decrypted server-side and used to execute the configured release policy.
-- An audit event `relay_escrow_cascade_started` is written with no PII in metadata.
+- If eligible, a release run is created with `source = relay_escrow` and `status = active`.
+- An audit event `relay_assisted_release_started` is written with no PII in metadata.
+
+**Alpha limitation:** Creating the release run is the extent of the automated action in the current release. Contact notification using the stored escrow material is not yet implemented. The release run record correctly occupies the "one active run" slot and is visible in the admin dashboard. Full relay-escrow contact cascade (delivering the decryption key to contacts) is targeted for Phase 4.
 
 ### Revocation
 

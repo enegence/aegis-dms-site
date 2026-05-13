@@ -92,6 +92,9 @@ describe('Admin API', () => {
     expect(typeof body.activeSubscriptions).toBe('number');
     expect(typeof body.relayConnectionsActive).toBe('number');
     expect(typeof body.relayConnectionsOffline).toBe('number');
+    expect(typeof body.switchesArmed).toBe('number');
+    expect(typeof body.switchesWarning).toBe('number');
+    expect(typeof body.switchesTriggered).toBe('number');
     expect(typeof body.activeReleaseRuns).toBe('number');
     expect(typeof body.packetsStored).toBe('number');
     expect(typeof body.notificationFailuresLast24h).toBe('number');

@@ -77,4 +77,4 @@ If all contacts are exhausted without acknowledgement, the release run transitio
 - The claim portal is public but gated by the token hash lookup.
 - CSRF is not required on claim endpoints (no browser session; token is the authenticator).
 - Rate limiting applies to claim endpoints to prevent token enumeration.
-- Expired claims are rejected with a 410 Gone response.
+- Expired or unknown claims return a generic 404 response to prevent token enumeration.
