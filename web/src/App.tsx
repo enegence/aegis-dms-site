@@ -12,6 +12,11 @@ import Trigger from './pages/app/Trigger';
 import Relay from './pages/app/Relay';
 import Landing from './pages/marketing/Landing';
 import Pricing from './pages/marketing/Pricing';
+import ClaimLanding from './pages/claim/ClaimLanding';
+import ClaimVerify from './pages/claim/ClaimVerify';
+import ClaimAccept from './pages/claim/ClaimAccept';
+import ClaimDownload from './pages/claim/ClaimDownload';
+import ClaimAcknowledge from './pages/claim/ClaimAcknowledge';
 
 interface AuthUser {
   id: string;
@@ -72,6 +77,13 @@ function App() {
         <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
         <Route path="/switches" element={<ProtectedRoute><Trigger /></ProtectedRoute>} />
         <Route path="/relay" element={<ProtectedRoute><Relay /></ProtectedRoute>} />
+
+        {/* Claim portal (public — no auth required) */}
+        <Route path="/claim/:token" element={<ClaimLanding />} />
+        <Route path="/claim/:token/verify" element={<ClaimVerify />} />
+        <Route path="/claim/:token/accept" element={<ClaimAccept />} />
+        <Route path="/claim/:token/download" element={<ClaimDownload />} />
+        <Route path="/claim/:token/acknowledge" element={<ClaimAcknowledge />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to={user ? '/dashboard' : '/'} />} />

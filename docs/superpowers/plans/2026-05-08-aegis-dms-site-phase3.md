@@ -928,7 +928,7 @@ git commit -m "feat: add hosted public claim api"
 - Update: `web/src/App.tsx`
 - Update: `web/src/lib/api.ts`
 
-- [ ] **Step 1: Add public routes**
+- [x] **Step 1: Add public routes**
 
 ```text
 /claim/:token
@@ -938,7 +938,7 @@ git commit -m "feat: add hosted public claim api"
 /claim/:token/acknowledge
 ```
 
-- [ ] **Step 2: Landing page**
+- [x] **Step 2: Landing page**
 
 Show:
 
@@ -949,27 +949,27 @@ plain-language explanation
 status
 ```
 
-- [ ] **Step 3: Verify page**
+- [x] **Step 3: Verify page**
 
 Handle PIN or explicit verification confirmation.
 
-- [ ] **Step 4: Accept page**
+- [x] **Step 4: Accept page**
 
 Require explicit responsibility acknowledgement.
 
-- [ ] **Step 5: Download/key page**
+- [x] **Step 5: Download/key page**
 
 Show packet download/release material actions only if API allows.
 
-- [ ] **Step 6: Acknowledge page**
+- [x] **Step 6: Acknowledge page**
 
 Final receipt acknowledgement.
 
-- [ ] **Step 7: Error states**
+- [x] **Step 7: Error states**
 
 Handle invalid, expired, escalated, already completed, and unavailable states.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add web/src/pages/claim web/src/App.tsx web/src/lib/api.ts
