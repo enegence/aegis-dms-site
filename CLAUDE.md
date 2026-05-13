@@ -52,9 +52,9 @@ After completing each numbered Task (not each step), update `update.md`:
 
 At the END of every session (or when context is getting long), update this section:
 
-**Last completed:** OSS Phase 2 Task 18 — Verification (Phase 2 complete: 173 tests, Docker builds, all UI done)
+**Last completed:** SaaS Phase 3 Task 12 — Relay escrow material model
 **Next up:** SaaS Phase 3 Task 13 — Relay-assisted cascade. Then Tasks 14-19 in order.
-**OSS status:** Phase 1 complete. Phase 2 COMPLETE (173 tests, oss-phase-2 branch, Tasks 14-18 done this session). Needs merge to master. Phase 3 NOT STARTED.
+**OSS status:** Phase 1 complete. Phase 2 IN PROGRESS — server/backend done (173 tests), UI Tasks 14-16 have runtime bugs being fixed by Codex (wrong endpoints, wrong payload shapes, missing required fields). Do NOT mark OSS Phase 2 complete until Codex fixes are merged. Phase 3 NOT STARTED.
 **Blockers/notes:** None.
 **Tests passing:** 335 SaaS (32 test files) + 173 OSS (18 test files) = 508 total
 
@@ -142,3 +142,9 @@ TypeScript, Fastify, Drizzle ORM, PostgreSQL, React 18, Vite, Tailwind CSS, Vite
 **Test depth:** Tests must verify server-side invariants (query DB, audit log, schema), not just response shapes. "X is not stored" means assert it in the DB, not just check the response.
 
 **Schema/contract alignment:** If code comments a deviation from the plan spec, add `<!-- DEVIATION: -->` in the plan doc too. Undocumented divergence is a hidden bug.
+
+**Frontend API contract verification (UI tasks):** Before writing any fetch call, read the actual route handler to confirm: (1) the exact URL path including any prefix the plugin is registered under (check index.ts registration), (2) the exact response shape (bare array vs `{ field }` wrapper), (3) the exact request payload shape against the Zod schema. Never infer shapes from variable names or analogous routes.
+
+**UX promises must be backed by API:** If the UI says "leave blank to keep existing" for a secret field, the API schema must allow optional/empty and the route must skip-on-empty. Verify both before writing the UI copy.
+
+**Completion requires runtime correctness, not just build+test-pass:** Build success and server unit tests passing do not prove UI flows work. A task is not complete until the frontend can actually call its API endpoints with the correct payload and receive the expected response. If a manual smoke test cannot be run in the current environment, say so explicitly — do not mark tasks done.
