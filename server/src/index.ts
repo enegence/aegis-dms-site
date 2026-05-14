@@ -22,6 +22,7 @@ import { relayEscrowRoutes } from './routes/relay-escrow.js';
 import { adminRoutes } from './routes/admin.js';
 import { releaseRunRoutes } from './routes/release-runs.js';
 import { onboardingRoutes } from './routes/onboarding.js';
+import { relayLinkRoutes } from './routes/relay-link.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -78,6 +79,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(adminRoutes);
   await app.register(releaseRunRoutes);
   await app.register(onboardingRoutes);
+  await app.register(relayLinkRoutes);
 
   app.addHook('onRequest', async (req, reply) => {
     const method = req.method;
@@ -92,6 +94,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
       '/api/auth/request-reset', '/api/auth/verify-email',
       '/api/billing/webhook',
       '/api/relay/heartbeat',
+      '/api/relay/link/exchange',
       '/api/claim/',
     ];
     if (exemptPaths.some(p => url.startsWith(p))) return;

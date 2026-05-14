@@ -1,4 +1,4 @@
-import { get, post, del } from './api';
+import { get, post, del, api } from './api';
 
 export interface RelayConnection {
   id: string;
@@ -24,3 +24,9 @@ export const revokeRelayConnection = (id: string) =>
 
 export const deleteRelayConnection = (id: string) =>
   del<{ ok: boolean }>(`/api/relay/connections/${id}`);
+
+export const renameRelayConnection = (id: string, label: string) =>
+  api<{ connection: RelayConnection }>(`/api/relay/connections/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  });

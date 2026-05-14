@@ -249,6 +249,24 @@ export const notificationEvents = pgTable('notification_events', {
   switchIdx: index('notification_events_switch_id_idx').on(table.switchId),
 }));
 
+// relay_link_codes: short-lived one-time codes used to securely link an OSS instance to Relay.
+// codeHash stores SHA-256 of the plaintext code — plaintext is never persisted.
+// callbackUrl is informational (where the OSS instance lives); not used server-side.
+// state echoes the value the user's browser set, validated on exchange to prevent CSRF.
+// usedAt is null until the code is consumed; expired or used codes are rejected.
+export const relayLinkCodes = pgTable('relay_link_codes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  codeHash: text('code_hash').notNull(),
+  callbackUrl: text('callback_url').notNull(),
+  state: text('state').notNull(),
+  nonce: text('nonce').notNull(),
+  label: text('label'),
+  expiresAt: timestamp('expires_at').notNull(),
+  usedAt: timestamp('used_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 // user_onboarding: tracks per-user onboarding progress and preferred product path.
 // metadata is JSON but must NOT store plaintext PII.
 export const userOnboarding = pgTable('user_onboarding', {

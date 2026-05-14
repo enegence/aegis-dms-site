@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import {
   listRelayConnections,
-  createRelayConnection,
   rotateRelayKey,
   revokeRelayConnection,
   deleteRelayConnection,
+  renameRelayConnection,
   type RelayConnection,
 } from '../../lib/relay';
+import { RelayConnectionList } from '../../components/relay/RelayConnectionList';
+import { RelayConnectCard } from '../../components/relay/RelayConnectCard';
 
 interface NewKeyReveal {
   connectionId: string;
@@ -16,47 +18,25 @@ interface NewKeyReveal {
 export default function Relay() {
   const [connections, setConnections] = useState<RelayConnection[]>([]);
   const [error, setError] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [label, setLabel] = useState('');
-  const [mode, setMode] = useState('relay_monitoring');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
+  const [showConnect, setShowConnect] = useState(false);
   const [newKey, setNewKey] = useState<NewKeyReveal | null>(null);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
+  function loadConnections() {
     listRelayConnections()
       .then((r) => setConnections(r.connections))
       .catch((e: Error) => setError(e.message));
-  }, []);
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    setSubmitError('');
-    setSubmitting(true);
-    try {
-      const result = await createRelayConnection({
-        label: label || undefined,
-        mode,
-      });
-      setConnections((prev) => [...prev, result.connection]);
-      setNewKey({ connectionId: result.connection.id, apiKey: result.apiKey });
-      setShowForm(false);
-      setLabel('');
-    } catch (e: unknown) {
-      setSubmitError(e instanceof Error ? e.message : 'Failed to create connection');
-    } finally {
-      setSubmitting(false);
-    }
   }
+
+  useEffect(() => {
+    loadConnections();
+  }, []);
 
   async function handleRotate(id: string) {
     if (!confirm('Rotate this API key? The existing key will stop working immediately.')) return;
     try {
       const result = await rotateRelayKey(id);
-      setConnections((prev) =>
-        prev.map((c) => (c.id === id ? result.connection : c)),
-      );
+      setConnections((prev) => prev.map((c) => (c.id === id ? result.connection : c)));
       setNewKey({ connectionId: id, apiKey: result.apiKey });
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Rotate failed');
@@ -68,9 +48,7 @@ export default function Relay() {
     try {
       await revokeRelayConnection(id);
       setConnections((prev) =>
-        prev.map((c) =>
-          c.id === id ? { ...c, status: 'revoked' } : c,
-        ),
+        prev.map((c) => (c.id === id ? { ...c, status: 'disconnected' } : c)),
       );
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Revoke failed');
@@ -88,40 +66,48 @@ export default function Relay() {
     }
   }
 
+  async function handleRename(id: string, currentLabel: string | null) {
+    const next = prompt('Enter new label:', currentLabel ?? '');
+    if (next === null) return; // cancelled
+    try {
+      const result = await renameRelayConnection(id, next);
+      setConnections((prev) => prev.map((c) => (c.id === id ? result.connection : c)));
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Rename failed');
+    }
+  }
+
   async function copyKey(key: string) {
     await navigator.clipboard.writeText(key);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
-  function statusColor(status: string) {
-    if (status === 'active') return 'text-brand-success';
-    if (status === 'offline') return 'text-brand-danger';
-    if (status === 'revoked') return 'text-brand-muted line-through';
-    return 'text-brand-muted';
-  }
-
   return (
     <div className="min-h-screen bg-brand-bg p-8">
       <div className="max-w-3xl mx-auto">
+        {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h1 className="font-hand text-4xl font-bold text-brand-ink">Relay Connections</h1>
-          <button
-            onClick={() => setShowForm((v) => !v)}
-            className="font-sans font-semibold text-sm px-4 py-2 bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors"
-          >
-            {showForm ? 'Cancel' : '+ New Connection'}
-          </button>
+          {!showConnect && (
+            <button
+              onClick={() => setShowConnect(true)}
+              className="font-sans font-semibold text-sm px-4 py-2 bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors"
+            >
+              + Connect Instance
+            </button>
+          )}
         </div>
 
         <p className="font-sans text-xs text-brand-muted mb-6 p-3 bg-brand-surface border border-brand-border rounded">
-          Relay Monitoring detects missed heartbeats and alerts you. It does not complete release
-          by itself unless Relay Escrow is configured in a later phase.
+          Relay Monitoring detects missed heartbeats from your self-hosted Aegis Core instance
+          and alerts you. API keys are never sent in URLs — your instance exchanges a
+          short-lived code for a key server-to-server.
         </p>
 
         {error && <p className="font-sans text-sm text-brand-danger mb-4">{error}</p>}
 
-        {/* New key reveal */}
+        {/* New key reveal (after rotate) */}
         {newKey && (
           <div className="mb-6 p-4 bg-brand-surface border-2 border-brand-danger rounded-lg">
             <p className="font-sans text-sm font-semibold text-brand-danger mb-1">
@@ -147,119 +133,27 @@ export default function Relay() {
           </div>
         )}
 
-        {/* Create form */}
-        {showForm && (
-          <form
-            onSubmit={handleCreate}
-            className="mb-6 p-6 bg-brand-surface border-2 border-brand-border rounded-lg"
-          >
-            <h2 className="font-hand text-2xl font-bold text-brand-ink mb-4">
-              New Relay Connection
-            </h2>
-
-            <input
-              placeholder="Label (optional)"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-            />
-
-            <div className="mb-4">
-              <label className="font-sans text-xs text-brand-muted block mb-1">Mode</label>
-              <select
-                value={mode}
-                onChange={(e) => setMode(e.target.value)}
-                className="w-full font-sans text-sm p-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-              >
-                <option value="relay_monitoring">Relay Monitoring</option>
-                <option value="relay_escrow">Relay Escrow (Phase 2)</option>
-              </select>
-            </div>
-
-            {submitError && (
-              <p className="font-sans text-sm text-brand-danger mb-3">{submitError}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full font-sans font-semibold text-sm p-3 cursor-pointer bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors disabled:opacity-50"
-            >
-              {submitting ? 'Creating...' : 'Create Connection'}
-            </button>
-          </form>
+        {/* Secure connect flow */}
+        {showConnect && (
+          <RelayConnectCard
+            onConnected={() => {
+              setShowConnect(false);
+              loadConnections();
+            }}
+            onCancel={() => setShowConnect(false)}
+          />
         )}
 
         {/* Connection list */}
-        {connections.length === 0 && !showForm ? (
-          <div className="p-6 bg-brand-surface border border-dashed border-brand-border rounded-lg text-center">
-            <p className="font-sans text-sm text-brand-muted">No relay connections yet.</p>
-            <button
-              onClick={() => setShowForm(true)}
-              className="mt-2 font-sans text-sm text-brand-accent hover:underline"
-            >
-              Add your first relay connection
-            </button>
-          </div>
-        ) : (
-          <ul className="space-y-4">
-            {connections.map((conn) => (
-              <li
-                key={conn.id}
-                className="p-4 bg-brand-surface border border-brand-border rounded-lg"
-              >
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-sans text-sm font-semibold text-brand-ink">
-                      {conn.label ?? <span className="text-brand-muted italic">Unlabeled</span>}
-                    </p>
-                    <p className="font-sans text-xs">
-                      <span className={statusColor(conn.status)}>{conn.status}</span>
-                      <span className="text-brand-muted"> · {conn.mode}</span>
-                    </p>
-                    <p className="font-sans text-xs text-brand-muted">
-                      Created {new Date(conn.createdAt).toLocaleDateString()}
-                    </p>
-                    {conn.lastHeartbeatAt && (
-                      <p className="font-sans text-xs text-brand-muted">
-                        Last heartbeat: {new Date(conn.lastHeartbeatAt).toLocaleString()}
-                      </p>
-                    )}
-                    {conn.lastExpectedHeartbeatAt && (
-                      <p className="font-sans text-xs text-brand-muted">
-                        Expected by: {new Date(conn.lastExpectedHeartbeatAt).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleDelete(conn.id)}
-                    className="font-sans text-xs text-brand-danger hover:underline flex-shrink-0"
-                  >
-                    Delete
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {conn.status !== 'revoked' && (
-                    <>
-                      <button
-                        onClick={() => handleRotate(conn.id)}
-                        className="font-sans text-xs px-3 py-1 rounded border border-brand-border bg-brand-bg text-brand-ink hover:border-brand-accent transition-colors"
-                      >
-                        Rotate Key
-                      </button>
-                      <button
-                        onClick={() => handleRevoke(conn.id)}
-                        className="font-sans text-xs px-3 py-1 rounded border border-brand-danger bg-brand-bg text-brand-danger hover:bg-brand-danger hover:text-brand-bg transition-colors"
-                      >
-                        Revoke
-                      </button>
-                    </>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+        {!showConnect && (
+          <RelayConnectionList
+            connections={connections}
+            onRotate={handleRotate}
+            onRevoke={handleRevoke}
+            onDelete={handleDelete}
+            onRename={handleRename}
+            onConnect={() => setShowConnect(true)}
+          />
         )}
       </div>
     </div>
