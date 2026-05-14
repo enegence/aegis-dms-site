@@ -153,7 +153,7 @@ The public DeadDrop API product is implemented later.
 
 ---
 
-# Task 1: Cross-Repo Security Review Baseline
+# Task 1: Cross-Repo Security Review Baseline ✅
 
 **Goal:** Establish a repeatable security-review baseline for both repos before beta testing.
 
@@ -346,7 +346,7 @@ git commit -m "chore: establish phase 5 security review baseline"
 
 ---
 
-# Task 2: Release-Run Idempotency & Recovery Hardening
+# Task 2: Release-Run Idempotency & Recovery Hardening ✅
 
 **Goal:** Ensure release runs cannot duplicate, fork, race, or corrupt state if workers restart, two triggers fire, or notifications fail.
 
@@ -514,7 +514,7 @@ git commit -m "fix: harden release-run idempotency and recovery"
 
 ---
 
-# Task 3: Notification Delivery Reliability
+# Task 3: Notification Delivery Reliability ✅
 
 **Goal:** Make notification delivery reliable enough for beta users by adding retry, backoff, delivery-state tracking, and provider-specific failure handling.
 
@@ -1883,11 +1883,11 @@ After completing all tasks, verify:
 
 ## Data lifecycle
 
-- [ ] OSS encrypted export implemented
-- [ ] OSS restore preview implemented
-- [ ] SaaS account export implemented
-- [ ] SaaS account deletion implemented or explicitly documented with beta constraints
-- [ ] Export does not leak plaintext sensitive data outside encrypted payload
+- [x] OSS encrypted export implemented
+- [x] OSS restore preview implemented
+- [x] SaaS account export implemented
+- [x] SaaS account deletion implemented or explicitly documented with beta constraints
+- [x] Export does not leak plaintext sensitive data outside encrypted payload
 
 ## Observability
 
