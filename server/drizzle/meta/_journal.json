@@ -71,6 +71,13 @@
       "when": 1778350000000,
       "tag": "0009_phase5_notification_deliveries",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778436000000,
+      "tag": "0010_phase5_account_deletion",
+      "breakpoints": true
     }
   ]
 }

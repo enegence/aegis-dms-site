@@ -15,6 +15,11 @@ export const users = pgTable('users', {
   timezone: text('timezone').notNull().default('UTC'),
   phone: text('phone'),
   role: text('role').notNull().default('user'),
+  // Account deletion flow
+  deletionTokenHash: text('deletion_token_hash'),
+  deletionTokenExpiresAt: timestamp('deletion_token_expires_at'),
+  pendingDeletion: boolean('pending_deletion').notNull().default(false),
+  deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
