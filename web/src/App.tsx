@@ -16,6 +16,7 @@ import Onboarding from './pages/app/Onboarding';
 import Settings from './pages/app/Settings';
 import Landing from './pages/marketing/Landing';
 import Pricing from './pages/marketing/Pricing';
+import Docs from './pages/marketing/Docs';
 import ClaimLanding from './pages/claim/ClaimLanding';
 import ClaimVerify from './pages/claim/ClaimVerify';
 import ClaimAccept from './pages/claim/ClaimAccept';
@@ -73,6 +74,7 @@ function App() {
         {/* Public marketing */}
         <Route path="/" element={<Landing />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/docs" element={<Docs />} />
 
         {/* Auth */}
         <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register />} />

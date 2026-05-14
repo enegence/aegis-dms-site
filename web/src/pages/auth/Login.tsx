@@ -18,7 +18,7 @@ export default function Login() {
     try {
       const res = await post<{ user: any }>('/api/auth/login', { email, password });
       setUser(res.user);
-      navigate('/dashboard');
+      navigate('/onboarding');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {

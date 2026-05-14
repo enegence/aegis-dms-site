@@ -24,7 +24,7 @@ export default function Register() {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
       setUser(res.user);
-      navigate('/dashboard');
+      navigate('/onboarding');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {

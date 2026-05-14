@@ -65,7 +65,7 @@ describe('Onboarding routes', () => {
       expect(body).toHaveProperty('nextRoute');
       // New user has no subscription — should get billing CTA
       expect(body.subscription.plan).toBeNull();
-      expect(body.nextRoute).toBe('/billing');
+      expect(body.nextRoute).toBe('/app/billing');
       // completedAt starts null
       expect(body.completedAt).toBeNull();
     });
@@ -229,7 +229,7 @@ describe('Onboarding routes', () => {
   // ── Plan-aware routing (subscription-based nextRoute) ────────────────────────
 
   describe('Plan-aware route resolution', () => {
-    it('inactive subscription gets billing CTA (nextRoute = /billing)', async () => {
+    it('inactive subscription gets billing CTA (nextRoute = /app/billing)', async () => {
       // Fresh user with no subscription
       const freshCookies = await registerAndLogin(app, 'onboarding-nosub@example.com');
       const res = await app.inject({
@@ -239,7 +239,7 @@ describe('Onboarding routes', () => {
       });
       expect(res.statusCode).toBe(200);
       const body = JSON.parse(res.payload);
-      expect(body.nextRoute).toBe('/billing');
+      expect(body.nextRoute).toBe('/app/billing');
     });
 
     it('relay subscription gets relay next step (nextRoute = /relay)', async () => {

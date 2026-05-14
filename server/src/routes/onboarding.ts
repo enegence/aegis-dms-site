@@ -25,7 +25,7 @@ const completeStepSchema = z.object({
 /**
  * Resolve the recommended next route based on the user's active subscriptions.
  *
- * No active subscription  → /billing  (prompt user to subscribe)
+ * No active subscription  → /app/billing  (prompt user to subscribe)
  * Active relay only       → /relay    (relay setup checklist)
  * Active hosted only      → /dashboard (hosted setup — dashboard is entry point)
  * Both active             → /dashboard (let user choose; dashboard shows both surfaces)
@@ -36,7 +36,7 @@ function resolveNextRoute(
   const hasRelay = activePlans.some(s => s.plan === 'relay' && s.status === 'active');
   const hasHosted = activePlans.some(s => s.plan === 'hosted' && s.status === 'active');
 
-  if (!hasRelay && !hasHosted) return '/billing';
+  if (!hasRelay && !hasHosted) return '/app/billing';
   if (hasRelay && !hasHosted) return '/relay';
   // hosted (alone or both) → dashboard
   return '/dashboard';
