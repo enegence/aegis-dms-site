@@ -71,6 +71,27 @@ cd server && npm test
 
 ---
 
+## Deployment
+
+Aegis DMS Site is deployed to [Railway](https://railway.app) using a multi-stage Dockerfile. See [`docs/deployment.md`](docs/deployment.md) for the full guide.
+
+### Required environment variables
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `AEGIS_SECRET_KEY` | Session signing secret (>= 32 chars) |
+| `AEGIS_FIELD_ENCRYPTION_KEY` | AES-256 field encryption key (>= 32 chars) |
+| `AEGIS_BASE_URL` | Public app URL (e.g. `https://app.aegisdms.life`) |
+| `STRIPE_SECRET_KEY` | Stripe secret key |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
+| `POSTMARK_API_TOKEN` | Postmark server API token |
+| `POSTMARK_FROM_EMAIL` | Verified sender email |
+
+The server refuses to start in production if any required secret is missing or set to a default value.
+
+---
+
 ## Documentation
 
 - [`docs/relay.md`](docs/relay.md) — Relay Monitoring: heartbeat API, API key handling, offline detection, alert behavior

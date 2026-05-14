@@ -75,14 +75,58 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     ...overrides,
   };
 
-  if (!config.testing && process.env.NODE_ENV === 'production') {
-    if (config.secretKey.includes('change-me') || config.secretKey.length < 32) {
-      throw new Error('FATAL: AEGIS_SECRET_KEY is not set or too short.');
-    }
-    if (config.fieldEncryptionKey.includes('change-me') || config.fieldEncryptionKey.length < 32) {
-      throw new Error('FATAL: AEGIS_FIELD_ENCRYPTION_KEY is not set or too short.');
-    }
+  return config;
+}
+
+/**
+ * Validates that all required secrets and config values are set for production.
+ * Throws a descriptive error if any required value is missing or still set to a default.
+ * Must be called at server startup when NODE_ENV === 'production'.
+ */
+export function validateProductionConfig(config: AppConfig): void {
+  const errors: string[] = [];
+
+  // AEGIS_SECRET_KEY
+  if (!config.secretKey || config.secretKey.includes('change-me') || config.secretKey.length < 32) {
+    errors.push('AEGIS_SECRET_KEY must be set, must not be the default value, and must be >= 32 characters');
   }
 
-  return config;
+  // AEGIS_FIELD_ENCRYPTION_KEY
+  if (!config.fieldEncryptionKey || config.fieldEncryptionKey.includes('change-me') || config.fieldEncryptionKey.length < 32) {
+    errors.push('AEGIS_FIELD_ENCRYPTION_KEY must be set, must not be the default value, and must be >= 32 characters');
+  }
+
+  // AEGIS_BASE_URL — must not be localhost
+  if (!config.baseUrl || /^https?:\/\/localhost/i.test(config.baseUrl)) {
+    errors.push('AEGIS_BASE_URL must be set to a non-localhost URL (e.g. https://app.aegisdms.life)');
+  }
+
+  // DATABASE_URL — must not be the default localhost URL
+  const defaultDbUrl = 'postgresql://aegis:aegis@localhost:5432/aegis_site';
+  if (!config.databaseUrl || config.databaseUrl === defaultDbUrl || /localhost/.test(config.databaseUrl)) {
+    errors.push('DATABASE_URL must be set to a non-localhost PostgreSQL URL');
+  }
+
+  // Stripe
+  if (!config.stripe.secretKey) {
+    errors.push('STRIPE_SECRET_KEY must be set');
+  }
+  if (!config.stripe.webhookSecret) {
+    errors.push('STRIPE_WEBHOOK_SECRET must be set');
+  }
+
+  // Postmark
+  if (!config.postmark.apiToken) {
+    errors.push('POSTMARK_API_TOKEN must be set');
+  }
+  if (!config.postmark.fromEmail) {
+    errors.push('POSTMARK_FROM_EMAIL must be set');
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      `FATAL: Production configuration is invalid. Fix the following before starting:\n` +
+      errors.map(e => `  - ${e}`).join('\n')
+    );
+  }
 }

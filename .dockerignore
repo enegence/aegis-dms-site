@@ -1,0 +1,30 @@
+.git
+.gitignore
+*.local
+*.md
+node_modules
+server/node_modules
+web/node_modules
+packages/*/node_modules
+
+# Built artifacts (rebuilt inside Docker)
+server/dist
+server/static
+web/dist
+
+# Test coverage
+coverage
+server/coverage
+
+# Dev tooling
+.env
+.env.*
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea

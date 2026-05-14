@@ -2,7 +2,10 @@ import Fastify from 'fastify';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import formbody from '@fastify/formbody';
-import { loadConfig, type AppConfig } from './config.js';
+import fastifyStatic from '@fastify/static';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { loadConfig, validateProductionConfig, type AppConfig } from './config.js';
 import { getDb, type AegisDb } from './db/index.js';
 import authPlugin from './auth/plugin.js';
 import { validateCsrfToken } from './auth/csrf.js';
@@ -38,9 +41,18 @@ declare module 'fastify' {
   }
 }
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 export async function buildApp(overrides: Partial<AppConfig> = {}) {
   const config = loadConfig(overrides);
-  const app = Fastify({ logger: !config.testing });
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  const app = Fastify({
+    logger: !config.testing,
+    // Trust Railway's reverse proxy so req.ip / X-Forwarded-For are correct
+    trustProxy: isProduction,
+  });
 
   const db = getDb(config.databaseUrl);
 
@@ -85,6 +97,31 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(settingsRoutes);
   await app.register(securityRoutes);
 
+  // Serve built Vite frontend in production (or when server/static exists)
+  // Static dir is at <server-root>/static relative to this compiled file's directory
+  const staticDir = join(__dirname, '..', 'static');
+  await app.register(fastifyStatic, {
+    root: staticDir,
+    prefix: '/',
+    // Don't throw if the directory doesn't exist (e.g. in dev/test without a build)
+    prefixAvoidTrailingSlash: true,
+  });
+
+  // SPA fallback: all non-API, non-health routes serve index.html
+  app.setNotFoundHandler(async (req, reply) => {
+    const url = req.url;
+    // API and health routes should return 404, not the SPA
+    if (url.startsWith('/api/') || url === '/health') {
+      return reply.status(404).send({ error: 'Not found' });
+    }
+    try {
+      // sendFile is added by @fastify/static — serves from the registered root
+      return reply.sendFile('index.html');
+    } catch {
+      return reply.status(404).send({ error: 'Not found' });
+    }
+  });
+
   app.addHook('onRequest', async (req, reply) => {
     const method = req.method;
     const url = req.url;
@@ -116,8 +153,14 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
 }
 
 async function start() {
-  const app = await buildApp();
   const config = loadConfig();
+
+  // Validate production config before starting — fail fast with clear errors
+  if (process.env.NODE_ENV === 'production') {
+    validateProductionConfig(config);
+  }
+
+  const app = await buildApp();
 
   try {
     await app.listen({ port: config.port, host: config.host });
