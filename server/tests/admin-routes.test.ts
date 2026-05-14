@@ -98,6 +98,24 @@ describe('Admin API', () => {
     expect(typeof body.activeReleaseRuns).toBe('number');
     expect(typeof body.packetsStored).toBe('number');
     expect(typeof body.notificationFailuresLast24h).toBe('number');
+    // Phase 5 Task 5: worker status and alerts
+    expect(['ok', 'degraded', 'unknown']).toContain(body.workerStatus);
+    expect(Array.isArray(body.recentAlerts)).toBe(true);
+    // workerLastTickAt is null until worker ticks
+    expect(body.workerLastTickAt === null || typeof body.workerLastTickAt === 'string').toBe(true);
+  });
+
+  it('GET /api/admin/metrics does not include decrypted user PII', async () => {
+    const res = await app.inject({
+      method: 'GET', url: '/api/admin/metrics',
+      headers: { cookie: adminCookies },
+    });
+    expect(res.statusCode).toBe(200);
+    const rawPayload = res.payload;
+    // No encrypted field values or sensitive keys in the metrics response
+    expect(rawPayload).not.toContain('passwordHash');
+    expect(rawPayload).not.toContain('totpSecretEncrypted');
+    expect(rawPayload).not.toContain('packetKeyEncrypted');
   });
 
   // ── Users ─────────────────────────────────────────────────────────────────

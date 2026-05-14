@@ -8,7 +8,9 @@ import {
   packets,
   notificationEvents,
   switches,
+  workerHeartbeats,
 } from '../db/schema.js';
+import { getActiveAlerts, type Alert } from './alerts.js';
 
 export interface AdminMetrics {
   totalUsers: number;
@@ -22,10 +24,15 @@ export interface AdminMetrics {
   activeReleaseRuns: number;
   packetsStored: number;
   notificationFailuresLast24h: number;
+  // Phase 5 Task 5 additions
+  workerLastTickAt: string | null;
+  workerStatus: 'ok' | 'degraded' | 'unknown';
+  recentAlerts: Alert[];
 }
 
 export async function getAdminMetrics(db: AegisDb): Promise<AdminMetrics> {
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const now = new Date();
 
   const [
     [totalUsersRow], [verifiedUsersRow], [activeSubsRow],
@@ -53,6 +60,33 @@ export async function getAdminMetrics(db: AegisDb): Promise<AdminMetrics> {
     ),
   ]);
 
+  // Worker heartbeat status
+  let workerLastTickAt: string | null = null;
+  let workerStatus: 'ok' | 'degraded' | 'unknown' = 'unknown';
+  try {
+    const [hb] = await db
+      .select()
+      .from(workerHeartbeats)
+      .where(eq(workerHeartbeats.id, 'singleton'));
+
+    if (hb?.lastTickAt) {
+      workerLastTickAt = hb.lastTickAt.toISOString();
+      const staleMs = parseInt(process.env.ALERT_WORKER_STALE_MINUTES ?? '10', 10) * 60 * 1000;
+      const msSince = now.getTime() - hb.lastTickAt.getTime();
+      workerStatus = msSince <= staleMs ? 'ok' : 'degraded';
+    }
+  } catch {
+    // Table may not exist
+  }
+
+  // Recent alerts
+  let recentAlerts: Alert[] = [];
+  try {
+    recentAlerts = await getActiveAlerts(db);
+  } catch {
+    // Non-fatal
+  }
+
   return {
     totalUsers: Number(totalUsersRow!.c),
     verifiedUsers: Number(verifiedUsersRow!.c),
@@ -65,5 +99,8 @@ export async function getAdminMetrics(db: AegisDb): Promise<AdminMetrics> {
     activeReleaseRuns: Number(activeRunsRow!.c),
     packetsStored: Number(packetsRow!.c),
     notificationFailuresLast24h: Number(failuresRow!.c),
+    workerLastTickAt,
+    workerStatus,
+    recentAlerts,
   };
 }

@@ -335,3 +335,15 @@ export const relayEscrowMaterials = pgTable('relay_escrow_materials', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   revokedAt: timestamp('revoked_at'),
 });
+
+// worker_heartbeats: single-row upsert table (id = 'singleton').
+// Records last tick time, last success, last error for operational health checks.
+// lastErrorRedacted stores error type/code only — no stack traces, no user data.
+export const workerHeartbeats = pgTable('worker_heartbeats', {
+  id: text('id').primaryKey().default('singleton'),
+  lastTickAt: timestamp('last_tick_at'),
+  lastSuccessAt: timestamp('last_success_at'),
+  lastErrorAt: timestamp('last_error_at'),
+  lastErrorRedacted: text('last_error_redacted'),
+  tickDurationMs: integer('tick_duration_ms'),
+});

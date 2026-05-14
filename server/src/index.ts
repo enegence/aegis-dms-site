@@ -7,6 +7,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { loadConfig, validateProductionConfig, type AppConfig } from './config.js';
 import { getDb, type AegisDb } from './db/index.js';
+import { createLoggerConfig } from './logger.js';
 import authPlugin from './auth/plugin.js';
 import { validateCsrfToken } from './auth/csrf.js';
 import { healthRoutes } from './routes/health.js';
@@ -49,9 +50,10 @@ const __dirname = dirname(__filename);
 export async function buildApp(overrides: Partial<AppConfig> = {}) {
   const config = loadConfig(overrides);
   const isProduction = process.env.NODE_ENV === 'production';
+  const loggerConfig = createLoggerConfig({ testing: !!config.testing });
 
   const app = Fastify({
-    logger: !config.testing,
+    logger: loggerConfig as any,
     // Trust Railway's reverse proxy so req.ip / X-Forwarded-For are correct
     trustProxy: isProduction,
   });
