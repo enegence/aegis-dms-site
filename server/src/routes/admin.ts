@@ -1,10 +1,11 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { getAdminMetrics } from '../services/admin-metrics.js';
 import { writeAuditEvent } from '../services/audit.js';
 import {
   users,
+  subscriptions,
   relayConnections,
   releaseRuns,
   packets,
@@ -16,11 +17,19 @@ async function requireAdmin(req: FastifyRequest, reply: FastifyReply): Promise<v
   if (reply.sent) return;
 
   const [row] = await (req.server as FastifyInstance).db
-    .select({ role: users.role })
+    .select({ role: users.role, email: users.email })
     .from(users)
     .where(eq(users.id, req.userId!));
 
-  if (!row || (row.role !== 'admin' && row.role !== 'sa')) {
+  if (!row) {
+    return reply.status(403).send({ error: 'Admin access required' });
+  }
+
+  const isRoleAdmin = row.role === 'admin' || row.role === 'sa';
+  const adminEmails = (req.server as FastifyInstance).config.adminEmails;
+  const isEmailAdmin = adminEmails.length > 0 && adminEmails.includes(row.email.toLowerCase());
+
+  if (!isRoleAdmin && !isEmailAdmin) {
     return reply.status(403).send({ error: 'Admin access required' });
   }
 }
@@ -38,6 +47,7 @@ async function adminPlugin(app: FastifyInstance) {
     return reply.send(metrics);
   });
 
+  // Redacted: no phone, no passwordHash, no tokens, no totpSecret
   app.get('/api/admin/users', { preHandler: requireAdmin }, async (_req, reply) => {
     const rows = await app.db
       .select({
@@ -47,12 +57,12 @@ async function adminPlugin(app: FastifyInstance) {
         emailVerified: users.emailVerified,
         role: users.role,
         timezone: users.timezone,
-        phone: users.phone,
         totpEnabled: users.totpEnabled,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
-      .from(users);
+      .from(users)
+      .orderBy(desc(users.createdAt));
 
     return reply.send({ users: rows });
   });
@@ -67,7 +77,6 @@ async function adminPlugin(app: FastifyInstance) {
         emailVerified: users.emailVerified,
         role: users.role,
         timezone: users.timezone,
-        phone: users.phone,
         totpEnabled: users.totpEnabled,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
@@ -93,13 +102,26 @@ async function adminPlugin(app: FastifyInstance) {
         createdAt: relayConnections.createdAt,
         updatedAt: relayConnections.updatedAt,
       })
-      .from(relayConnections);
+      .from(relayConnections)
+      .orderBy(desc(relayConnections.createdAt));
 
     return reply.send({ connections: rows });
   });
 
   app.get('/api/admin/release-runs', { preHandler: requireAdmin }, async (_req, reply) => {
-    const rows = await app.db.select().from(releaseRuns);
+    const rows = await app.db
+      .select({
+        id: releaseRuns.id,
+        userId: releaseRuns.userId,
+        source: releaseRuns.source,
+        status: releaseRuns.status,
+        startedAt: releaseRuns.startedAt,
+        completedAt: releaseRuns.completedAt,
+        cancelledAt: releaseRuns.cancelledAt,
+        createdAt: releaseRuns.createdAt,
+      })
+      .from(releaseRuns)
+      .orderBy(desc(releaseRuns.createdAt));
     return reply.send({ releaseRuns: rows });
   });
 
@@ -124,14 +146,58 @@ async function adminPlugin(app: FastifyInstance) {
         expiresAt: packets.expiresAt,
         createdAt: packets.createdAt,
       })
-      .from(packets);
+      .from(packets)
+      .orderBy(desc(packets.createdAt));
 
     return reply.send({ packets: rows });
   });
 
   app.get('/api/admin/notifications', { preHandler: requireAdmin }, async (_req, reply) => {
-    const rows = await app.db.select().from(notificationEvents);
+    const rows = await app.db
+      .select()
+      .from(notificationEvents)
+      .orderBy(desc(notificationEvents.createdAt));
     return reply.send({ events: rows });
+  });
+
+  // Subscriptions: no Stripe secrets (no stripeCustomerId, no stripeSubscriptionId)
+  app.get('/api/admin/subscriptions', { preHandler: requireAdmin }, async (_req, reply) => {
+    const rows = await app.db
+      .select({
+        id: subscriptions.id,
+        userId: subscriptions.userId,
+        email: users.email,
+        plan: subscriptions.plan,
+        status: subscriptions.status,
+        currentPeriodEnd: subscriptions.currentPeriodEnd,
+        cancelledAt: subscriptions.cancelledAt,
+        createdAt: subscriptions.createdAt,
+        updatedAt: subscriptions.updatedAt,
+      })
+      .from(subscriptions)
+      .innerJoin(users, eq(subscriptions.userId, users.id))
+      .orderBy(desc(subscriptions.createdAt));
+
+    return reply.send({ subscriptions: rows });
+  });
+
+  // System health: DB connectivity + uptime
+  app.get('/api/admin/system-health', { preHandler: requireAdmin }, async (_req, reply) => {
+    let dbConnected = false;
+    try {
+      await app.db.select({ c: eq(users.id, users.id) }).from(users).limit(1);
+      dbConnected = true;
+    } catch {
+      dbConnected = false;
+    }
+
+    const status = dbConnected ? 'ok' : 'degraded';
+    return reply.send({
+      status,
+      dbConnected,
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString(),
+    });
   });
 }
 

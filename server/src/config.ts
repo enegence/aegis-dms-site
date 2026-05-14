@@ -10,6 +10,7 @@ export interface AppConfig {
   secretKey: string;
   fieldEncryptionKey: string;
   baseUrl: string;
+  adminEmails: string[];
   stripe: {
     secretKey: string;
     publishableKey: string;
@@ -44,6 +45,9 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     secretKey: process.env.AEGIS_SECRET_KEY || 'dev-secret-key-change-me',
     fieldEncryptionKey: process.env.AEGIS_FIELD_ENCRYPTION_KEY || 'dev-field-key-change-me-32bytes!!',
     baseUrl: process.env.AEGIS_BASE_URL || 'http://localhost:8001',
+    adminEmails: process.env.AEGIS_ADMIN_EMAILS
+      ? process.env.AEGIS_ADMIN_EMAILS.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+      : [],
     stripe: {
       secretKey: process.env.STRIPE_SECRET_KEY || '',
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
