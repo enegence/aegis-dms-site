@@ -1,6 +1,6 @@
 # Aegis DMS Site — Phase 4: Onboarding, Relay UI, Billing Portal, Deployment, E2E
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Finish the commercial Aegis DMS Site alpha by turning the Phase 1–3 SaaS foundation into a deployable product: onboarding flow, Relay connection UI, billing portal management, production/Railway deployment configuration, hosted account settings, operational docs, and end-to-end tests for hosted and relay workflows — all with tests.
 
@@ -101,7 +101,7 @@ Before starting, the engineer needs:
 - Create: `web/src/components/onboarding/OnboardingShell.tsx`
 - Test: `server/tests/onboarding.test.ts`
 
-- [ ] **Step 1: Add onboarding state if missing**
+- [x] **Step 1: Add onboarding state if missing**
 
 Add or confirm user/account fields:
 
@@ -123,7 +123,7 @@ createdAt
 updatedAt
 ```
 
-- [ ] **Step 2: Add onboarding API**
+- [x] **Step 2: Add onboarding API**
 
 Implement:
 
@@ -142,7 +142,7 @@ Rules:
 - Does not expose sensitive payment/provider secrets.
 ```
 
-- [ ] **Step 3: Plan-aware route resolution**
+- [x] **Step 3: Plan-aware route resolution**
 
 Route logic:
 
@@ -160,7 +160,7 @@ Both active or admin/test account:
   let user choose product surface.
 ```
 
-- [ ] **Step 4: Build onboarding UI**
+- [x] **Step 4: Build onboarding UI**
 
 Onboarding paths:
 
@@ -181,7 +181,7 @@ Aegis Relay:
   5. Review relay status
 ```
 
-- [ ] **Step 5: Tests**
+- [x] **Step 5: Tests**
 
 Test:
 
@@ -195,7 +195,7 @@ relay user gets relay next step
 hosted user gets hosted next step
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/routes/onboarding.ts server/src/db server/drizzle web/src/App.tsx web/src/pages/app/Onboarding.tsx web/src/components/onboarding server/tests/onboarding.test.ts
@@ -216,7 +216,7 @@ git commit -m "feat: add plan-aware onboarding flow"
 - Update: `web/src/lib/api.ts`
 - Test: frontend smoke test if available
 
-- [ ] **Step 1: Create checklist model**
+- [x] **Step 1: Create checklist model**
 
 Checklist items:
 
@@ -229,7 +229,7 @@ Review readiness checks
 Test notification path if available
 ```
 
-- [ ] **Step 2: Trust acknowledgement card**
+- [x] **Step 2: Trust acknowledgement card**
 
 Required copy:
 
@@ -239,7 +239,7 @@ Aegis Hosted is a managed service. Aegis SaaS stores and processes your encrypte
 
 Require versioned acknowledgement using existing `trust_acknowledgements` table.
 
-- [ ] **Step 3: Deep links**
+- [x] **Step 3: Deep links**
 
 Checklist should link to:
 
@@ -251,7 +251,7 @@ Checklist should link to:
 /app/billing
 ```
 
-- [ ] **Step 4: Dashboard integration**
+- [x] **Step 4: Dashboard integration**
 
 If onboarding incomplete, dashboard should show:
 
@@ -261,7 +261,7 @@ Finish setting up Aegis Hosted
 
 After completion, show normal hosted dashboard.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add web/src/components/onboarding web/src/pages/app/Dashboard.tsx web/src/lib/api.ts
@@ -288,7 +288,7 @@ git commit -m "feat: add hosted onboarding checklist"
 - Create: `web/src/components/relay/RelayEscrowCard.tsx`
 - Test: `server/tests/relay-link.test.ts`
 
-- [ ] **Step 1: Add relay link code table if missing**
+- [x] **Step 1: Add relay link code table if missing**
 
 Create table:
 
@@ -305,7 +305,7 @@ relay_link_codes
   createdAt
 ```
 
-- [ ] **Step 2: Start link flow endpoint**
+- [x] **Step 2: Start link flow endpoint**
 
 Implement:
 
@@ -333,7 +333,7 @@ Rules:
 - Store only code hash.
 ```
 
-- [ ] **Step 3: Confirm link flow endpoint**
+- [x] **Step 3: Confirm link flow endpoint**
 
 Implement server-to-server exchange endpoint:
 
@@ -373,7 +373,7 @@ Rules:
 - Write audit event.
 ```
 
-- [ ] **Step 4: Add UI for manual/guided linking**
+- [x] **Step 4: Add UI for manual/guided linking**
 
 Relay page should show:
 
@@ -385,7 +385,7 @@ copyable SaaS connect URL / instructions
 API key rotation/revocation actions
 ```
 
-- [ ] **Step 5: Add connection management actions**
+- [x] **Step 5: Add connection management actions**
 
 Implement UI/API:
 
@@ -405,7 +405,7 @@ Rotation behavior:
 - Invalidates old key immediately or after optional grace if implemented.
 ```
 
-- [ ] **Step 6: Tests**
+- [x] **Step 6: Tests**
 
 Test:
 
@@ -421,7 +421,7 @@ API key hash authenticates heartbeat
 revoked key rejected
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add server/src/routes/relay-link.ts server/src/routes/relay.ts server/src/services/relay.ts server/src/db server/drizzle web/src/pages/app/Relay.tsx web/src/components/relay server/tests/relay-link.test.ts
@@ -443,7 +443,7 @@ git commit -m "feat: add secure relay connection ui and link exchange"
 - Update: `web/src/components/onboarding/TrustModelCard.tsx`
 - Test: `server/tests/relay-escrow-ack.test.ts`
 
-- [ ] **Step 1: Define escrow status response**
+- [x] **Step 1: Define escrow status response**
 
 Response:
 
@@ -457,7 +457,7 @@ interface RelayEscrowStatus {
 }
 ```
 
-- [ ] **Step 2: Enforce acknowledgement before enabling escrow**
+- [x] **Step 2: Enforce acknowledgement before enabling escrow**
 
 Endpoint:
 
@@ -477,7 +477,7 @@ Rules:
 - Write audit event.
 ```
 
-- [ ] **Step 3: Required copy**
+- [x] **Step 3: Required copy**
 
 Use:
 
@@ -485,7 +485,7 @@ Use:
 Relay Escrow increases release resilience by allowing Aegis SaaS to execute your configured release policy if your self-hosted server remains offline. This requires trusting Aegis SaaS with release authority or release material according to the selected configuration.
 ```
 
-- [ ] **Step 4: Tests**
+- [x] **Step 4: Tests**
 
 Test:
 
@@ -497,7 +497,7 @@ stale acknowledgement version rejected
 unsubscribed user rejected
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/routes server/src/services/trust-acknowledgements.ts web/src/components/relay web/src/components/onboarding server/tests/relay-escrow-ack.test.ts
@@ -520,7 +520,7 @@ git commit -m "feat: add relay escrow trust acknowledgement flow"
 - Update: `web/src/App.tsx`
 - Test: `server/tests/billing-portal.test.ts`
 
-- [ ] **Step 1: Add billing summary endpoint**
+- [x] **Step 1: Add billing summary endpoint**
 
 Implement:
 
@@ -546,7 +546,7 @@ interface BillingSummary {
 }
 ```
 
-- [ ] **Step 2: Add customer portal endpoint**
+- [x] **Step 2: Add customer portal endpoint**
 
 Implement:
 
@@ -563,7 +563,7 @@ Rules:
 - Return URL should be /app/billing.
 ```
 
-- [ ] **Step 3: Build Billing UI**
+- [x] **Step 3: Build Billing UI**
 
 Show:
 
@@ -576,7 +576,7 @@ open billing portal button
 pricing page link
 ```
 
-- [ ] **Step 4: Subscription gating copy**
+- [x] **Step 4: Subscription gating copy**
 
 If no active plan:
 
@@ -584,7 +584,7 @@ If no active plan:
 Choose Aegis Relay to connect a self-hosted instance, or Aegis Hosted for the fully managed app.
 ```
 
-- [ ] **Step 5: Tests**
+- [x] **Step 5: Tests**
 
 Test:
 
@@ -596,7 +596,7 @@ user cannot access another customer
 no customer returns actionable error
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/routes/billing.ts server/src/services/stripe.ts web/src/pages/app/Billing.tsx web/src/components/billing web/src/App.tsx server/tests/billing-portal.test.ts
@@ -619,7 +619,7 @@ git commit -m "feat: add billing management page and customer portal"
 - Create: `web/src/components/settings/NotificationPreferenceSettings.tsx`
 - Test: `server/tests/account-settings.test.ts`
 
-- [ ] **Step 1: Add account settings endpoints**
+- [x] **Step 1: Add account settings endpoints**
 
 Implement:
 
@@ -638,7 +638,7 @@ Rules:
 - Write audit event for password change and profile update.
 ```
 
-- [ ] **Step 2: Build settings UI**
+- [x] **Step 2: Build settings UI**
 
 Tabs:
 
@@ -651,7 +651,7 @@ Relay
 Hosted
 ```
 
-- [ ] **Step 3: Security page**
+- [x] **Step 3: Security page**
 
 Show:
 
@@ -662,7 +662,7 @@ TOTP placeholder/status if not implemented
 active session note
 ```
 
-- [ ] **Step 4: Tests**
+- [x] **Step 4: Tests**
 
 Test:
 
@@ -674,7 +674,7 @@ password hash changes on success
 sensitive fields not returned
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/routes/settings.ts server/src/routes/security.ts web/src/pages/app/Settings.tsx web/src/components/settings server/tests/account-settings.test.ts
@@ -698,7 +698,7 @@ git commit -m "feat: add account and security settings"
 - Create: `web/src/components/admin/SystemHealthPanel.tsx`
 - Test: `server/tests/admin-dashboard.test.ts`
 
-- [ ] **Step 1: Admin auth rule**
+- [x] **Step 1: Admin auth rule**
 
 Confirm admin routes require:
 
@@ -714,7 +714,7 @@ If no admin role exists, use explicit env allowlist for alpha:
 AEGIS_ADMIN_EMAILS=eric@example.com,other@example.com
 ```
 
-- [ ] **Step 2: Metrics endpoints**
+- [x] **Step 2: Metrics endpoints**
 
 Implement/read:
 
@@ -726,7 +726,7 @@ GET /api/admin/subscriptions
 GET /api/admin/system-health
 ```
 
-- [ ] **Step 3: Redaction requirements**
+- [x] **Step 3: Redaction requirements**
 
 Admin UI may show:
 
@@ -751,7 +751,7 @@ API keys
 storage credentials
 ```
 
-- [ ] **Step 4: Build UI panels**
+- [x] **Step 4: Build UI panels**
 
 Admin dashboard panels:
 
@@ -764,7 +764,7 @@ System Health
 Recent Redacted Audit Events
 ```
 
-- [ ] **Step 5: Tests**
+- [x] **Step 5: Tests**
 
 Test:
 
@@ -775,7 +775,7 @@ sensitive data is not returned
 pagination works for users
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/routes/admin.ts server/src/services/admin-metrics.ts web/src/pages/admin web/src/components/admin server/tests/admin-dashboard.test.ts
@@ -799,7 +799,7 @@ git commit -m "feat: polish alpha admin dashboard"
 - Create: `docs/deployment.md`
 - Test: local production build
 
-- [ ] **Step 1: Add Railway config**
+- [x] **Step 1: Add Railway config**
 
 Create/update:
 
@@ -816,7 +816,7 @@ restartPolicyMaxRetries = 3
 
 Adjust to actual Railway deployment model if using Nixpacks instead of Dockerfile.
 
-- [ ] **Step 2: Production config validation**
+- [x] **Step 2: Production config validation**
 
 Fail production startup if missing/default:
 
@@ -838,7 +838,7 @@ TELEGRAM_BOT_TOKEN
 R2/S3 vars if hosted storage is disabled in current env
 ```
 
-- [ ] **Step 3: Production CORS/cookies**
+- [x] **Step 3: Production CORS/cookies**
 
 Ensure:
 
@@ -851,7 +851,7 @@ SameSite=Lax or Strict
 trust proxy configured if needed behind Railway
 ```
 
-- [ ] **Step 4: Static serving**
+- [x] **Step 4: Static serving**
 
 Confirm server serves built Vite app in production:
 
@@ -862,7 +862,7 @@ health route still available
 API routes not swallowed by fallback
 ```
 
-- [ ] **Step 5: Build locally**
+- [x] **Step 5: Build locally**
 
 Run:
 
@@ -873,7 +873,7 @@ NODE_ENV=production npm run start --workspace=server
 
 Use test env vars and local DB.
 
-- [ ] **Step 6: Deployment docs**
+- [x] **Step 6: Deployment docs**
 
 `docs/deployment.md` should cover:
 
@@ -889,7 +889,7 @@ migration commands
 rollback notes
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add railway.toml Dockerfile .dockerignore server/src/config.ts server/src/index.ts README.md docs/deployment.md
@@ -912,7 +912,7 @@ git commit -m "chore: add railway deployment configuration and production valida
 - Create: `docs/incident-response.md`
 - Update: `README.md`
 
-- [ ] **Step 1: Operations doc**
+- [x] **Step 1: Operations doc**
 
 Include:
 
@@ -927,7 +927,7 @@ backup assumptions
 known limitations
 ```
 
-- [ ] **Step 2: Stripe doc**
+- [x] **Step 2: Stripe doc**
 
 Include:
 
@@ -940,7 +940,7 @@ customer portal setup
 failure modes
 ```
 
-- [ ] **Step 3: Postmark doc**
+- [x] **Step 3: Postmark doc**
 
 Include:
 
@@ -951,7 +951,7 @@ templates if used
 bounce/failure handling
 ```
 
-- [ ] **Step 4: Storage doc**
+- [x] **Step 4: Storage doc**
 
 Include:
 
@@ -963,7 +963,7 @@ retention expectations
 delete behavior
 ```
 
-- [ ] **Step 5: Relay doc**
+- [x] **Step 5: Relay doc**
 
 Include:
 
@@ -976,7 +976,7 @@ linking flow
 revocation
 ```
 
-- [ ] **Step 6: Incident response doc**
+- [x] **Step 6: Incident response doc**
 
 Include:
 
@@ -991,7 +991,7 @@ claim abuse report
 suspected data exposure
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add docs README.md
@@ -1017,7 +1017,7 @@ git commit -m "docs: add saas operations and provider setup guides"
 - Create: `tests/e2e/claim-portal.spec.ts`
 - Create: `tests/e2e/admin.spec.ts`
 
-- [ ] **Step 1: Add Playwright scripts**
+- [x] **Step 1: Add Playwright scripts**
 
 Root scripts:
 
@@ -1028,7 +1028,7 @@ Root scripts:
 }
 ```
 
-- [ ] **Step 2: Configure isolated test environment**
+- [x] **Step 2: Configure isolated test environment**
 
 Use:
 
@@ -1041,7 +1041,7 @@ POSTMARK test/mocked mode
 
 If real Stripe/Postmark are not used in E2E, mock services at the server boundary.
 
-- [ ] **Step 3: Marketing/auth E2E**
+- [x] **Step 3: Marketing/auth E2E**
 
 Test:
 
@@ -1053,7 +1053,7 @@ login/logout works
 reset password request does not leak account existence
 ```
 
-- [ ] **Step 4: Billing E2E**
+- [x] **Step 4: Billing E2E**
 
 Test with mocks:
 
@@ -1065,7 +1065,7 @@ mock active subscription unlocks onboarding path
 portal button calls portal endpoint
 ```
 
-- [ ] **Step 5: Hosted onboarding E2E**
+- [x] **Step 5: Hosted onboarding E2E**
 
 Test:
 
@@ -1077,7 +1077,7 @@ creates draft switch
 readiness appears
 ```
 
-- [ ] **Step 6: Relay connection E2E**
+- [x] **Step 6: Relay connection E2E**
 
 Test:
 
@@ -1089,7 +1089,7 @@ heartbeat updates status
 rotate/revoke actions work
 ```
 
-- [ ] **Step 7: Claim portal E2E**
+- [x] **Step 7: Claim portal E2E**
 
 Use seeded release run.
 
@@ -1102,7 +1102,7 @@ verification works
 accept/download/key-view/acknowledge path works according to Phase 3 behavior
 ```
 
-- [ ] **Step 8: Admin E2E**
+- [x] **Step 8: Admin E2E**
 
 Test:
 
@@ -1113,7 +1113,7 @@ metrics panels render
 sensitive data not visible
 ```
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add package.json web/package.json playwright.config.ts tests/e2e
@@ -1134,7 +1134,7 @@ git commit -m "test: add saas e2e coverage for onboarding relay billing and admi
 - Update: `web/src/components/layout/AppShell.tsx`
 - Update: `web/src/components/layout/Nav.tsx`
 
-- [ ] **Step 1: Public positioning copy**
+- [x] **Step 1: Public positioning copy**
 
 Use consistent positioning:
 
@@ -1151,7 +1151,7 @@ Aegis Core
 DeadDrop API (future)
 ```
 
-- [ ] **Step 2: Avoid overclaims**
+- [x] **Step 2: Avoid overclaims**
 
 Do not claim:
 
@@ -1165,7 +1165,7 @@ Shamir protection
 
 Unless actually implemented and validated.
 
-- [ ] **Step 3: App navigation**
+- [x] **Step 3: App navigation**
 
 Authenticated nav should include:
 
@@ -1181,7 +1181,7 @@ Admin if admin
 
 Adjust labels to match actual pages.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add web/src/pages/marketing web/src/components/layout
@@ -1200,13 +1200,13 @@ git commit -m "chore: polish product positioning and app navigation"
 - Create: `docs/phase4-completion-notes.md`
 - Create: `docs/alpha-readiness.md`
 
-- [ ] **Step 1: Run full server tests**
+- [x] **Step 1: Run full server tests**
 
 ```bash
 npm run test --workspace=server
 ```
 
-- [ ] **Step 2: Run contract tests**
+- [x] **Step 2: Run contract tests**
 
 ```bash
 npm run test --workspace=packages/contracts
@@ -1214,31 +1214,31 @@ npm run test --workspace=packages/contracts
 
 or the actual workspace command if different.
 
-- [ ] **Step 3: Run frontend build**
+- [x] **Step 3: Run frontend build**
 
 ```bash
 npm run build --workspace=web
 ```
 
-- [ ] **Step 4: Run full build**
+- [x] **Step 4: Run full build**
 
 ```bash
 npm run build
 ```
 
-- [ ] **Step 5: Run migrations against local Postgres**
+- [x] **Step 5: Run migrations against local Postgres**
 
 ```bash
 npm run db:migrate --workspace=server
 ```
 
-- [ ] **Step 6: Run E2E tests**
+- [x] **Step 6: Run E2E tests**
 
 ```bash
 npm run test:e2e
 ```
 
-- [ ] **Step 7: Manual smoke test**
+- [x] **Step 7: Manual smoke test**
 
 Test manually:
 
@@ -1258,7 +1258,7 @@ admin dashboard
 production build start
 ```
 
-- [ ] **Step 8: Alpha readiness doc**
+- [x] **Step 8: Alpha readiness doc**
 
 Create `docs/alpha-readiness.md` with checklist:
 
@@ -1278,7 +1278,7 @@ CORS/cookies production-safe
 Known limitations documented
 ```
 
-- [ ] **Step 9: Completion notes**
+- [x] **Step 9: Completion notes**
 
 Create `docs/phase4-completion-notes.md` with:
 
@@ -1291,7 +1291,7 @@ known limitations
 recommended next phase
 ```
 
-- [ ] **Step 10: Final commit**
+- [x] **Step 10: Final commit**
 
 ```bash
 git add -A

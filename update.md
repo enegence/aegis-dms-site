@@ -227,12 +227,19 @@ aegis-dms-site/
 - End-to-end testing
 - README + self-hosting docs
 
-**SaaS:**
-- Onboarding flow
-- Relay connection UI
-- Billing management (Stripe portal)
-- Railway deployment
-- End-to-end testing
+**SaaS Phase 4: COMPLETE** (449 server tests, 16 contract tests, 31 E2E tests configured)
+- [x] Task 1: Finalize onboarding state and plan-aware routing
+- [x] Task 2: Build hosted onboarding checklist
+- [x] Task 3: Relay connection UI
+- [x] Task 4: Relay API key rotation/revocation UI
+- [x] Task 5: Billing management page (Stripe portal)
+- [x] Task 6: Subscription status UX and gating
+- [x] Task 7: Account and security settings polish
+- [x] Task 8: Railway deployment config and production environment validation
+- [x] Task 9: Production-safe CORS/cookies/CSRF/session settings
+- [x] Task 10: Operational docs
+- [x] Task 11: E2E tests (marketing → register → subscribe → onboarding → hosted app, Relay flow)
+- [x] Task 12: Final alpha readiness checklist
 
 ---
 
