@@ -91,7 +91,7 @@ Before starting, the engineer needs:
 - Update/Create: `server/drizzle/*.sql`
 - Test: `server/tests/schema-phase3.test.ts`
 
-- [ ] **Step 1: Confirm existing required tables**
+- [x] **Step 1: Confirm existing required tables**
 
 Confirm these tables exist:
 
@@ -109,7 +109,7 @@ app_settings or settings
 local_acknowledgements
 ```
 
-- [ ] **Step 2: Confirm packet fields**
+- [x] **Step 2: Confirm packet fields**
 
 The `packets` table should support:
 
@@ -137,7 +137,7 @@ createdAt
 
 If missing, add a migration.
 
-- [ ] **Step 3: Confirm contact claim fields**
+- [x] **Step 3: Confirm contact claim fields**
 
 The `contact_claims` table should support:
 
@@ -164,7 +164,7 @@ createdAt
 
 If the current schema stores plaintext `claimToken`, replace it with `claimTokenHash`. Plain claim tokens should only be shown/generated at creation time and embedded in outbound notifications.
 
-- [ ] **Step 4: Confirm release run fields**
+- [x] **Step 4: Confirm release run fields**
 
 The `release_runs` table should support:
 
@@ -183,7 +183,7 @@ createdAt
 updatedAt
 ```
 
-- [ ] **Step 5: Add storage settings if missing**
+- [x] **Step 5: Add storage settings if missing**
 
 Add or confirm settings keys for:
 
@@ -198,7 +198,7 @@ s3_force_path_style
 packet_retention_days
 ```
 
-- [ ] **Step 6: Add migration tests**
+- [x] **Step 6: Add migration tests**
 
 Create `server/tests/schema-phase3.test.ts` to assert:
 
@@ -210,7 +210,7 @@ storage setting keys can be persisted
 no plaintext claim token column remains if migration updates it
 ```
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 Run:
 
@@ -220,7 +220,7 @@ cd server && npm test -- schema-phase3.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add server/src/db/schema.ts server/drizzle server/tests/schema-phase3.test.ts
@@ -242,7 +242,7 @@ git commit -m "feat: extend schema for packets storage claims and release runs"
 - Update: `packages/contracts/src/storage-provider.ts`
 - Test: `packages/contracts/tests/contracts.test.ts`
 
-- [ ] **Step 1: Add shared packet types**
+- [x] **Step 1: Add shared packet types**
 
 Add shared types:
 
@@ -267,7 +267,7 @@ export interface PacketSummary {
 }
 ```
 
-- [ ] **Step 2: Add release run types**
+- [x] **Step 2: Add release run types**
 
 ```typescript
 export type ReleaseRunStatus = 'active' | 'cascade_active' | 'completed' | 'cancelled' | 'failed';
@@ -285,7 +285,7 @@ export interface ReleaseRunSummary {
 }
 ```
 
-- [ ] **Step 3: Add claim types**
+- [x] **Step 3: Add claim types**
 
 ```typescript
 export interface ClaimPublicSummary {
@@ -301,7 +301,7 @@ export interface ClaimPublicSummary {
 }
 ```
 
-- [ ] **Step 4: Confirm contract schemas are versioned**
+- [x] **Step 4: Confirm contract schemas are versioned**
 
 Confirm packet envelopes include:
 
@@ -317,7 +317,7 @@ encryptedObjectHash
 storage metadata
 ```
 
-- [ ] **Step 5: Add contract tests**
+- [x] **Step 5: Add contract tests**
 
 Tests should validate:
 
@@ -329,7 +329,7 @@ claim event schema supports opened/verified/accepted/downloaded/key_viewed/ackno
 storage provider schema supports S3-compatible metadata
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/shared packages/contracts
@@ -348,7 +348,7 @@ git commit -m "feat: add packet release claim and storage shared contracts"
 - Update: `server/src/services/crypto.ts`
 - Test: `server/tests/packet-crypto.test.ts`
 
-- [ ] **Step 1: Define packet crypto API**
+- [x] **Step 1: Define packet crypto API**
 
 Create service functions:
 
@@ -370,7 +370,7 @@ export function hashPlainPacket(packetJson: unknown): string;
 export function hashEncryptedPacket(ciphertext: Buffer): string;
 ```
 
-- [ ] **Step 2: Use AES-256-GCM**
+- [x] **Step 2: Use AES-256-GCM**
 
 Requirements:
 
@@ -383,11 +383,11 @@ sha256 ciphertext hash
 base64url encoding for envelope fields
 ```
 
-- [ ] **Step 3: Add canonical JSON serialization**
+- [x] **Step 3: Add canonical JSON serialization**
 
 Ensure packet hashes are deterministic for the same logical packet content.
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -401,7 +401,7 @@ encrypted object hash changes with new IV
 packet key is never logged
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/services/packet-crypto.ts server/src/services/crypto.ts server/tests/packet-crypto.test.ts
@@ -420,7 +420,7 @@ git commit -m "feat: implement packet encryption service"
 - Create: `server/src/repositories/packet-repository.ts`
 - Create: `server/tests/packet-builder.test.ts`
 
-- [ ] **Step 1: Define packet payload shape**
+- [x] **Step 1: Define packet payload shape**
 
 The plaintext packet JSON should contain:
 
@@ -464,11 +464,11 @@ interface LegacyPacketPayload {
 
 Do not include passwords, secrets, app settings, SMTP credentials, S3 credentials, session data, or field-encryption keys.
 
-- [ ] **Step 2: Load and decrypt selected records**
+- [x] **Step 2: Load and decrypt selected records**
 
 Use existing field-encryption helpers to decrypt selected estate/contact fields only inside the packet builder.
 
-- [ ] **Step 3: Validate selection**
+- [x] **Step 3: Validate selection**
 
 Fail packet generation if:
 
@@ -480,7 +480,7 @@ selected records do not exist
 packet payload contains disallowed secret-like fields
 ```
 
-- [ ] **Step 4: Encrypt and persist packet metadata**
+- [x] **Step 4: Encrypt and persist packet metadata**
 
 Persist:
 
@@ -499,7 +499,7 @@ expiresAt
 
 Prefer storing encrypted packet bytes in a local data directory rather than directly in SQLite.
 
-- [ ] **Step 5: Add tests**
+- [x] **Step 5: Add tests**
 
 Test:
 
@@ -512,7 +512,7 @@ version increments per switch
 generation writes redacted audit event
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/services/packet-builder.ts server/src/repositories/packet-repository.ts server/tests/packet-builder.test.ts
@@ -531,7 +531,7 @@ git commit -m "feat: build encrypted legacy packets from selected release data"
 - Update: `server/src/index.ts`
 - Test: `server/tests/packets-routes.test.ts`
 
-- [ ] **Step 1: Add routes**
+- [x] **Step 1: Add routes**
 
 Implement:
 
@@ -543,11 +543,11 @@ POST   /api/packets/:id/verify
 DELETE /api/packets/:id
 ```
 
-- [ ] **Step 2: Enforce auth + CSRF**
+- [x] **Step 2: Enforce auth + CSRF**
 
 All state-changing packet routes require owner auth + CSRF.
 
-- [ ] **Step 3: Return metadata only**
+- [x] **Step 3: Return metadata only**
 
 Packet list/detail routes should return metadata only:
 
@@ -566,7 +566,7 @@ expiresAt
 
 Do not return plaintext packet contents.
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -578,7 +578,7 @@ list returns metadata only
 delete removes local encrypted object and marks deletion status
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/routes/packets.ts server/src/index.ts server/tests/packets-routes.test.ts
@@ -598,7 +598,7 @@ git commit -m "feat: add authenticated packet management routes"
 - Create: `server/src/services/storage/index.ts`
 - Test: `server/tests/storage-s3.test.ts`
 
-- [ ] **Step 1: Add dependency**
+- [x] **Step 1: Add dependency**
 
 Add AWS SDK v3 modules:
 
@@ -606,7 +606,7 @@ Add AWS SDK v3 modules:
 cd server && npm install @aws-sdk/client-s3 @aws-sdk/lib-storage
 ```
 
-- [ ] **Step 2: Define provider interface**
+- [x] **Step 2: Define provider interface**
 
 ```typescript
 export interface PacketStorageProvider {
@@ -617,7 +617,7 @@ export interface PacketStorageProvider {
 }
 ```
 
-- [ ] **Step 3: Implement S3 provider**
+- [x] **Step 3: Implement S3 provider**
 
 Support:
 
@@ -637,7 +637,7 @@ Use object key format:
 <configured-prefix>/<switch-id>/<packet-version>/<packet-id>.aegis.enc
 ```
 
-- [ ] **Step 4: Verify after upload**
+- [x] **Step 4: Verify after upload**
 
 After upload:
 
@@ -648,7 +648,7 @@ store ETag/versionId if present
 recompute/compare encryptedObjectHash where possible
 ```
 
-- [ ] **Step 5: Add safe logging**
+- [x] **Step 5: Add safe logging**
 
 Do not log:
 
@@ -660,7 +660,7 @@ object body
 packet key
 ```
 
-- [ ] **Step 6: Add tests with mocked S3 client**
+- [x] **Step 6: Add tests with mocked S3 client**
 
 Test:
 
@@ -672,7 +672,7 @@ delete calls DeleteObject
 credentials are not logged
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add server/package.json package-lock.json server/src/services/storage server/tests/storage-s3.test.ts
@@ -692,7 +692,7 @@ git commit -m "feat: add s3-compatible packet storage provider"
 - Test: `server/tests/dead-drop-sync.test.ts`
 - Test: `server/tests/worker-dead-drop.test.ts`
 
-- [ ] **Step 1: Define sync behavior**
+- [x] **Step 1: Define sync behavior**
 
 Dead Drop sync should run:
 
@@ -704,7 +704,7 @@ when selected estate/contact data changes for an armed switch
 before entering warning mode if packet is stale
 ```
 
-- [ ] **Step 2: Define staleness logic**
+- [x] **Step 2: Define staleness logic**
 
 A packet is stale if:
 
@@ -715,7 +715,7 @@ last verified upload failed
 last verified upload older than configured max age
 ```
 
-- [ ] **Step 3: Implement `syncPacketForSwitch`**
+- [x] **Step 3: Implement `syncPacketForSwitch`**
 
 ```typescript
 export async function syncPacketForSwitch(switchId: number): Promise<DeadDropSyncResult>
@@ -732,7 +732,7 @@ update switch.lastPacketSyncAt
 write audit event
 ```
 
-- [ ] **Step 4: Integrate worker**
+- [x] **Step 4: Integrate worker**
 
 Worker should call dead-drop sync for armed switches with deployment modes:
 
@@ -744,7 +744,7 @@ relay_escrow
 
 Do not require S3 sync for Vault Mode.
 
-- [ ] **Step 5: Failure behavior**
+- [x] **Step 5: Failure behavior**
 
 If upload/verify fails:
 
@@ -755,7 +755,7 @@ surface degraded storage status in dashboard
 prevent arming if readiness requires storage and storage is failing
 ```
 
-- [ ] **Step 6: Add tests**
+- [x] **Step 6: Add tests**
 
 Test:
 
@@ -768,7 +768,7 @@ stale packet regenerates
 fresh packet is not regenerated unnecessarily
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add server/src/services/dead-drop-sync.ts server/src/worker/index.ts server/tests/dead-drop-sync.test.ts server/tests/worker-dead-drop.test.ts
@@ -788,7 +788,7 @@ git commit -m "feat: sync encrypted packets to dead drop storage"
 - Update: `server/src/services/switch-engine.ts`
 - Test: `server/tests/release-run.test.ts`
 
-- [ ] **Step 1: Define service API**
+- [x] **Step 1: Define service API**
 
 ```typescript
 export async function startOrAttachReleaseRun(input: {
@@ -797,7 +797,7 @@ export async function startOrAttachReleaseRun(input: {
 }): Promise<ReleaseRunStartResult>;
 ```
 
-- [ ] **Step 2: Enforce one active run**
+- [x] **Step 2: Enforce one active run**
 
 If no active run exists:
 
@@ -817,11 +817,11 @@ return existing release run
 DO NOT start second cascade
 ```
 
-- [ ] **Step 3: Integrate switch engine**
+- [x] **Step 3: Integrate switch engine**
 
 When switch engine detects trigger condition, call release-run service instead of directly transitioning into cascade behavior.
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -834,7 +834,7 @@ cancelled run allows a later new run
 suppression metadata contains no PII
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/services/release-run.ts server/src/repositories/release-run-repository.ts server/src/services/switch-engine.ts server/tests/release-run.test.ts
@@ -854,7 +854,7 @@ git commit -m "feat: add release run service with single active run constraint"
 - Update: `server/src/services/notifications.ts`
 - Test: `server/tests/cascade.test.ts`
 
-- [ ] **Step 1: Define cascade stages**
+- [x] **Step 1: Define cascade stages**
 
 Use statuses:
 
@@ -872,7 +872,7 @@ escalated
 failed
 ```
 
-- [ ] **Step 2: Start cascade**
+- [x] **Step 2: Start cascade**
 
 For the first selected contact by priority:
 
@@ -884,7 +884,7 @@ set notifiedAt
 write audit event
 ```
 
-- [ ] **Step 3: Generate claim URL**
+- [x] **Step 3: Generate claim URL**
 
 Format:
 
@@ -894,7 +894,7 @@ Format:
 
 Only the token appears in URL. The database stores only a hash.
 
-- [ ] **Step 4: Escalate on timeout**
+- [x] **Step 4: Escalate on timeout**
 
 If current contact does not acknowledge within `confirmationWindowHours`:
 
@@ -905,7 +905,7 @@ send notification to next contact
 write audit event
 ```
 
-- [ ] **Step 5: Complete cascade**
+- [x] **Step 5: Complete cascade**
 
 Release run completes only when a contact:
 
@@ -916,7 +916,7 @@ views key or receives key according to local release policy
 acknowledges receipt
 ```
 
-- [ ] **Step 6: Failure behavior**
+- [x] **Step 6: Failure behavior**
 
 If all contacts fail/expire:
 
@@ -926,7 +926,7 @@ mark switch failed
 write audit event
 ```
 
-- [ ] **Step 7: Add tests**
+- [x] **Step 7: Add tests**
 
 Test:
 
@@ -940,7 +940,7 @@ cascade completes after acknowledgement
 cascade fails after all contacts fail
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add server/src/services/cascade.ts server/src/repositories/contact-claim-repository.ts server/src/services/notifications.ts server/tests/cascade.test.ts
@@ -959,7 +959,7 @@ git commit -m "feat: implement ordered contact cascade"
 - Update: `server/src/index.ts`
 - Test: `server/tests/claim-routes.test.ts`
 
-- [ ] **Step 1: Add public routes**
+- [x] **Step 1: Add public routes**
 
 Implement:
 
@@ -974,11 +974,11 @@ POST /api/claim/:token/key-view
 POST /api/claim/:token/acknowledge
 ```
 
-- [ ] **Step 2: Validate token hash**
+- [x] **Step 2: Validate token hash**
 
 Hash incoming token and compare to stored claim token hash.
 
-- [ ] **Step 3: Add claim verification**
+- [x] **Step 3: Add claim verification**
 
 For Phase 3, support claim PIN if configured:
 
@@ -990,7 +990,7 @@ rate limit failed attempts
 
 If no PIN is configured, require explicit confirmation form before accept.
 
-- [ ] **Step 4: Packet download behavior**
+- [x] **Step 4: Packet download behavior**
 
 Only allow packet download after:
 
@@ -1002,7 +1002,7 @@ release run is active/cascade_active
 
 Return encrypted packet by default, plus clear explanation. If local key release policy allows plaintext, keep plaintext display out of Phase 3 unless explicitly implemented with strong warnings.
 
-- [ ] **Step 5: Key view behavior**
+- [x] **Step 5: Key view behavior**
 
 For local release key display:
 
@@ -1015,7 +1015,7 @@ show key once per view with warning
 
 Do not log key material.
 
-- [ ] **Step 6: Acknowledge behavior**
+- [x] **Step 6: Acknowledge behavior**
 
 Acknowledgement sets:
 
@@ -1026,7 +1026,7 @@ releaseRun.status = completed
 switch.status = completed
 ```
 
-- [ ] **Step 7: Add tests**
+- [x] **Step 7: Add tests**
 
 Test:
 
@@ -1042,7 +1042,7 @@ key view audited without key logging
 acknowledge completes release run
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add server/src/routes/claim.ts server/src/index.ts server/tests/claim-routes.test.ts
@@ -1061,7 +1061,7 @@ git commit -m "feat: add public claim flow api"
 - Update: `server/src/services/cascade.ts`
 - Test: `server/tests/worker-cascade.test.ts`
 
-- [ ] **Step 1: Add worker release loop**
+- [x] **Step 1: Add worker release loop**
 
 Worker should:
 
@@ -1075,7 +1075,7 @@ complete release run when claim acknowledged
 fail release run if cascade exhausted
 ```
 
-- [ ] **Step 2: Ensure idempotency**
+- [x] **Step 2: Ensure idempotency**
 
 Repeated worker ticks must not:
 
@@ -1086,11 +1086,11 @@ regenerate packets unnecessarily
 start parallel cascades
 ```
 
-- [ ] **Step 3: Add lock/guard behavior**
+- [x] **Step 3: Add lock/guard behavior**
 
 Use DB fields/timestamps to avoid duplicate execution across overlapping worker ticks.
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -1102,7 +1102,7 @@ worker completes acknowledged run
 worker fails exhausted cascade
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/worker/index.ts server/src/services/cascade.ts server/tests/worker-cascade.test.ts
@@ -1123,7 +1123,7 @@ git commit -m "feat: progress release cascades from worker"
 - Test: `server/tests/release-routes.test.ts`
 - Test: `server/tests/audit-routes.test.ts`
 
-- [ ] **Step 1: Add release routes**
+- [x] **Step 1: Add release routes**
 
 Implement:
 
@@ -1137,7 +1137,7 @@ POST /api/release/simulate
 
 `simulate` should validate the flow without sending real notifications unless a test flag is explicitly provided.
 
-- [ ] **Step 2: Add audit routes**
+- [x] **Step 2: Add audit routes**
 
 Implement:
 
@@ -1146,7 +1146,7 @@ GET /api/audit-log
 GET /api/audit-log/export
 ```
 
-- [ ] **Step 3: Redact audit metadata**
+- [x] **Step 3: Redact audit metadata**
 
 Ensure audit responses do not include:
 
@@ -1159,7 +1159,7 @@ claim tokens
 storage credentials
 ```
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -1171,7 +1171,7 @@ audit log requires auth
 audit log excludes PII
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/routes/release.ts server/src/routes/audit.ts server/src/index.ts server/tests/release-routes.test.ts server/tests/audit-routes.test.ts
@@ -1194,7 +1194,7 @@ git commit -m "feat: add release status and audit log api"
 - Update: `web/src/App.tsx`
 - Update: `web/src/lib/api.ts`
 
-- [ ] **Step 1: Add claim route group**
+- [x] **Step 1: Add claim route group**
 
 Add public routes:
 
@@ -1206,7 +1206,7 @@ Add public routes:
 /claim/:token/acknowledge
 ```
 
-- [ ] **Step 2: Claim landing**
+- [x] **Step 2: Claim landing**
 
 Show:
 
@@ -1220,11 +1220,11 @@ continue button
 
 Do not show packet data yet.
 
-- [ ] **Step 3: Verification screen**
+- [x] **Step 3: Verification screen**
 
 Support claim PIN entry if required.
 
-- [ ] **Step 4: Accept screen**
+- [x] **Step 4: Accept screen**
 
 Require contact to confirm:
 
@@ -1233,15 +1233,15 @@ I understand I may receive sensitive estate instructions.
 I will handle this information responsibly.
 ```
 
-- [ ] **Step 5: Download/key screen**
+- [x] **Step 5: Download/key screen**
 
 Show packet download and key-view actions only when API says allowed.
 
-- [ ] **Step 6: Acknowledge screen**
+- [x] **Step 6: Acknowledge screen**
 
 Require final acknowledgement after packet/key access.
 
-- [ ] **Step 7: Error states**
+- [x] **Step 7: Error states**
 
 Handle:
 
@@ -1253,7 +1253,7 @@ already acknowledged
 server unavailable
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add web/src/pages/claim web/src/App.tsx web/src/lib/api.ts
@@ -1275,7 +1275,7 @@ git commit -m "feat: add public claim portal ui"
 - Create: `web/src/components/release/DeploymentModeWarning.tsx`
 - Update: `web/src/App.tsx`
 
-- [ ] **Step 1: Add Release page route**
+- [x] **Step 1: Add Release page route**
 
 Route:
 
@@ -1283,7 +1283,7 @@ Route:
 /release
 ```
 
-- [ ] **Step 2: Show packet status**
+- [x] **Step 2: Show packet status**
 
 Display:
 
@@ -1296,7 +1296,7 @@ last verification
 hash/version metadata
 ```
 
-- [ ] **Step 3: Show release run status**
+- [x] **Step 3: Show release run status**
 
 Display:
 
@@ -1307,7 +1307,7 @@ current claim status
 suppressed switches
 ```
 
-- [ ] **Step 4: Show deployment warnings**
+- [x] **Step 4: Show deployment warnings**
 
 Examples:
 
@@ -1317,7 +1317,7 @@ Dead Drop: packet survives host loss, but local app may still be required for re
 Relay modes: connect SaaS relay in Phase 4+.
 ```
 
-- [ ] **Step 5: Add manual actions**
+- [x] **Step 5: Add manual actions**
 
 Support:
 
@@ -1331,7 +1331,7 @@ simulate release flow
 
 All state-changing actions require CSRF.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add web/src/pages/Release.tsx web/src/components/release web/src/App.tsx
@@ -1350,7 +1350,7 @@ git commit -m "feat: add release and packet status ui"
 - Create: `web/src/components/audit/AuditEventRow.tsx`
 - Update: `web/src/App.tsx`
 
-- [ ] **Step 1: Add Audit Log route**
+- [x] **Step 1: Add Audit Log route**
 
 Route:
 
@@ -1358,7 +1358,7 @@ Route:
 /audit-log
 ```
 
-- [ ] **Step 2: Display event list**
+- [x] **Step 2: Display event list**
 
 Columns:
 
@@ -1371,7 +1371,7 @@ status/channel
 redacted metadata
 ```
 
-- [ ] **Step 3: Add filters**
+- [x] **Step 3: Add filters**
 
 Filter by:
 
@@ -1384,11 +1384,11 @@ packet
 claim lifecycle
 ```
 
-- [ ] **Step 4: Add export button**
+- [x] **Step 4: Add export button**
 
 Export redacted audit JSON/CSV.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add web/src/pages/AuditLog.tsx web/src/components/audit web/src/App.tsx
@@ -1407,7 +1407,7 @@ git commit -m "feat: add redacted audit log ui"
 - Update: `web/src/pages/Dashboard.tsx`
 - Test: `server/tests/dashboard-phase3.test.ts`
 
-- [ ] **Step 1: Extend dashboard API**
+- [x] **Step 1: Extend dashboard API**
 
 Add:
 
@@ -1419,7 +1419,7 @@ currentClaim
 lastAuditEvents
 ```
 
-- [ ] **Step 2: Update dashboard UI**
+- [x] **Step 2: Update dashboard UI**
 
 Add cards:
 
@@ -1431,7 +1431,7 @@ Current Cascade Step
 Recent Release Activity
 ```
 
-- [ ] **Step 3: Add tests**
+- [x] **Step 3: Add tests**
 
 Test API response for:
 
@@ -1442,7 +1442,7 @@ storage failed
 active release run
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add server/src/routes/dashboard.ts web/src/pages/Dashboard.tsx server/tests/dashboard-phase3.test.ts
@@ -1463,7 +1463,7 @@ git commit -m "feat: show packet and release status on dashboard"
 - Create/Update: `docs/storage-setup.md`
 - Create/Update: `docs/threat-model.md`
 
-- [ ] **Step 1: Document Dead Drop**
+- [x] **Step 1: Document Dead Drop**
 
 Explain:
 
@@ -1475,7 +1475,7 @@ what happens if local host is offline
 limitations of Dead Drop without Relay Escrow
 ```
 
-- [ ] **Step 2: Document claim flow**
+- [x] **Step 2: Document claim flow**
 
 Explain contact steps:
 
@@ -1489,7 +1489,7 @@ acknowledgement
 escalation
 ```
 
-- [ ] **Step 3: Document key model**
+- [x] **Step 3: Document key model**
 
 For OSS Phase 3:
 
@@ -1500,7 +1500,7 @@ no zero-knowledge claim
 packet key material never logged
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/dead-drop.md docs/release-flow.md docs/key-management.md docs/storage-setup.md docs/threat-model.md
@@ -1518,7 +1518,7 @@ git commit -m "docs: document dead drop packet and claim release model"
 - Create: `server/tests/phase3-flow.test.ts`
 - Update: `README.md` if useful
 
-- [ ] **Step 1: Run full test suite**
+- [x] **Step 1: Run full test suite**
 
 ```bash
 npm test
@@ -1526,7 +1526,7 @@ npm test
 
 Expected: PASS.
 
-- [ ] **Step 2: Add integration flow test**
+- [x] **Step 2: Add integration flow test**
 
 Test:
 
@@ -1549,7 +1549,7 @@ switch completed
 audit log contains redacted events only
 ```
 
-- [ ] **Step 3: Manual smoke test**
+- [x] **Step 3: Manual smoke test**
 
 Run app and verify:
 
@@ -1562,7 +1562,7 @@ Claim portal opens from notification link
 Audit log displays claim/release events
 ```
 
-- [ ] **Step 4: Build Docker image**
+- [x] **Step 4: Build Docker image**
 
 ```bash
 docker compose build
@@ -1570,7 +1570,7 @@ docker compose build
 
 Expected: Build succeeds.
 
-- [ ] **Step 5: Final commit**
+- [x] **Step 5: Final commit**
 
 ```bash
 git add -A
@@ -1583,20 +1583,20 @@ git commit -m "test: verify phase 3 packet dead drop and cascade flow"
 
 Phase 3 is complete when:
 
-- [ ] Packet crypto service is implemented and tested.
-- [ ] Packet builder creates encrypted canonical packets.
-- [ ] Packet routes expose metadata-only owner operations.
-- [ ] S3-compatible storage provider uploads/verifies/deletes packets.
-- [ ] Dead Drop sync runs from worker and after packet generation.
-- [ ] Release run service enforces one active release run.
-- [ ] Contact cascade starts, escalates, completes, and fails correctly.
-- [ ] Public claim API supports open, verify, accept, download, key view, and acknowledge.
-- [ ] Claim portal UI is functional.
-- [ ] Release page shows packet, storage, release, and cascade status.
-- [ ] Audit log API/UI display redacted events only.
-- [ ] Dashboard surfaces packet/dead-drop/release health.
-- [ ] Docs explain Dead Drop, packet encryption, and claim flow limitations.
-- [ ] Full test suite passes.
+- [x] Packet crypto service is implemented and tested.
+- [x] Packet builder creates encrypted canonical packets.
+- [x] Packet routes expose metadata-only owner operations.
+- [x] S3-compatible storage provider uploads/verifies/deletes packets.
+- [x] Dead Drop sync runs from worker and after packet generation.
+- [x] Release run service enforces one active release run.
+- [x] Contact cascade starts, escalates, completes, and fails correctly.
+- [x] Public claim API supports open, verify, accept, download, key view, and acknowledge.
+- [x] Claim portal UI is functional.
+- [x] Release page shows packet, storage, release, and cascade status.
+- [x] Audit log API/UI display redacted events only.
+- [x] Dashboard surfaces packet/dead-drop/release health.
+- [x] Docs explain Dead Drop, packet encryption, and claim flow limitations.
+- [x] Full test suite passes.
 
 ---
 

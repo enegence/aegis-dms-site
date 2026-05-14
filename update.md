@@ -172,28 +172,28 @@ aegis-dms-site/
 
 ### Phase 3: Encryption, Packets, Cascade
 
-**OSS Phase 2: IN PROGRESS** (plan: `2026-05-08-aegis-oss-phase2.md`)
-- [x] Task 1: Schema extensions
-- [x] Task 2: Shared types + Zod schemas
-- [x] Task 3: Audit service
-- [x] Task 4: Switch repository
-- [x] Task 5: Switch state machine
-- [x] Task 6: Readiness service
-- [x] Task 7: Switch API routes
-- [x] Task 8: Notification providers
-- [x] Task 9: Settings API
-- [x] Task 10: Reminder scheduler
-- [x] Task 11: Worker polling loop
-- [x] Task 12: Dashboard API
-- [x] Task 13: Frontend API client
-- [x] Task 14: Switch management UI
-- [x] Task 15: Dashboard UI
-- [x] Task 16: Notification settings UI
-- [x] Task 17: Documentation
-- [x] Task 18: Verification ← WE ARE HERE (OSS Phase 2 COMPLETE)
+**OSS Phase 2: COMPLETE** (178 passing tests, merged to master)
+- [x] Task 1–18: All complete
 
-**OSS Phase 3: NOT STARTED** (plan: `2026-05-08-aegis-oss-phase3.md`)
-- Packet builder, S3 dead-drop, contact cascade, claim portal, audit log
+**OSS Phase 3: COMPLETE** (292 passing tests, branch `oss-phase-3`, plan: `2026-05-08-aegis-oss-phase3.md`)
+- [x] Task 1: Schema extensions (packets, contact_claims, release_runs, encryption_keys)
+- [x] Task 2: Shared contracts + Zod schemas
+- [x] Task 3: Packet crypto service (AES-256-GCM)
+- [x] Task 4: Packet builder and repository
+- [x] Task 5: Packet API routes
+- [x] Task 6: S3-compatible storage provider
+- [x] Task 7: Dead-drop sync service and worker integration
+- [x] Task 8: Release run service (single active run constraint)
+- [x] Task 9: Contact cascade service
+- [x] Task 10: Public claim API routes
+- [x] Task 11: Cascade integration in worker (auto-builds packet, starts cascade)
+- [x] Task 12: Release status and audit log API routes
+- [x] Task 13: Claim portal UI
+- [x] Task 14: Release page and packet status UI
+- [x] Task 15: Audit log UI
+- [x] Task 16: Dashboard Phase 3 status cards
+- [x] Task 17: Documentation (dead-drop, release flow, key management, threat model)
+- [x] Task 18: End-to-end verification ← WE ARE HERE
 
 **SaaS Phase 3: COMPLETE** (369 passing tests, plan: `2026-05-08-aegis-dms-site-phase3.md`)
 - [x] Task 1: Schema verification and extension
