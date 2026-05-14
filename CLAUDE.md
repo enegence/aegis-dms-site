@@ -53,11 +53,11 @@ After completing each numbered Task (not each step), update `update.md`:
 
 At the END of every session (or when context is getting long), update this section:
 
-**Last completed:** SaaS Phase 4 Task 12 — Final full test and deployment candidate pass. **SaaS Phase 4 is COMPLETE.**
-**Next up:** SaaS Phase 5 — Production hardening and alpha launch: real Railway deploy + domain, legal/terms/privacy pages, TOTP (2FA), better email templates, security review, Relay/Core integration testing with real OSS instance, operational alerting, DeadDrop API design preview docs.
-**OSS status:** Phase 1 complete (21 tests). Phase 2 IN PROGRESS on `oss-phase-2` branch — server/backend done (173 tests), UI Tasks 14-18 implemented but Codex reported 5 runtime bugs (wrong API URLs, wrong response shapes, missing `purpose: test`, countdown logic). Do NOT merge until Codex fixes confirmed. Phase 3 NOT STARTED.
+**Last completed:** OSS Phase 2 runtime bug fixes — all 5 reported bugs repaired and committed to `oss-phase-2` branch (178 tests pass, build clean). Ready to merge to master.
+**Next up:** Merge `oss-phase-2` → master (manual review recommended), then choose: OSS Phase 3 (packets, S3, cascade, claim portal) OR SaaS Phase 5 (production hardening, Railway deploy, TOTP, legal pages).
+**OSS status:** Phase 1 complete (21 tests). Phase 2 COMPLETE on `oss-phase-2` branch (178 tests) — all bugs fixed: wrong dashboard URL, wrong response shapes, missing purpose field, login CSRF, countdown logic, SwitchCard action date. Branch ready to merge. Phase 3 NOT STARTED.
 **Blockers/notes:** Manual UI smoke test not performed (headless). RelayEscrowCard enable form is a UI skeleton — needs contact/packet selection dropdowns for production use. E2E tests require live dev server.
-**Tests passing:** 449 SaaS server (41 test files) + 16 contracts + 31 E2E configured
+**Tests passing:** 449 SaaS server (41 test files) + 16 contracts + 31 E2E configured; OSS 178 server tests on oss-phase-2
 
 ## Non-Negotiable Constraints
 
