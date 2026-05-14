@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { createHash } from 'crypto';
 import {
@@ -188,7 +188,17 @@ export async function accountRoutes(app: FastifyInstance) {
             const stripe = getStripe(app.config.stripe.secretKey);
             await stripe.subscriptions.cancel(sub.stripeSubscriptionId);
           } catch (stripeErr) {
+            // If Stripe cancellation fails, we proceed with account deletion anyway.
+            // The subscription may need manual cancellation. This is documented in docs/support-runbook.md
+            // as a known beta operational risk. Stripe's own churn detection will eventually lapse the sub.
             app.log.error({ err: stripeErr }, 'Failed to cancel Stripe subscription during deletion');
+            await writeAuditEvent(app.db, {
+              userId,
+              eventType: 'stripe_cancellation_failed_on_deletion',
+              actorType: 'system',
+              actorId: userId,
+              metadata: { userId, stripeError: 'redacted' },
+            });
           }
         }
       }
@@ -198,8 +208,19 @@ export async function accountRoutes(app: FastifyInstance) {
 
     // Delete user data — cascade handles most FK-linked records
     // Explicitly delete records that may not cascade cleanly
-    await app.db.delete(notificationDeliveries)
-      .where(eq(notificationDeliveries.contactId, userId));
+
+    // notificationDeliveries.contactId is a contact's UUID, not the user's UUID.
+    // We must look up the user's contact IDs first, then delete by those IDs.
+    const userContactIds = await app.db
+      .select({ id: contacts.id })
+      .from(contacts)
+      .where(eq(contacts.userId, userId));
+
+    if (userContactIds.length > 0) {
+      await app.db
+        .delete(notificationDeliveries)
+        .where(inArray(notificationDeliveries.contactId, userContactIds.map(c => c.id)));
+    }
 
     // Delete all user-owned data (cascade handles most via userId FK)
     // The deletions below handle tables without cascade or for clarity
