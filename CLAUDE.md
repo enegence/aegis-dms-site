@@ -54,7 +54,7 @@ After completing each numbered Task (not each step), update `update.md`:
 At the END of every session (or when context is getting long), update this section:
 
 **Last completed:** OSS Phase 4 — all 12 tasks complete. 319 server tests passing. Branch `oss-phase-4` ready to merge to master.
-**Next up:** Merge `oss-phase-4` → master (manual review recommended), then choose: OSS Phase 5 (TOTP recovery codes, password change, Relay heartbeat polling, rate limiting) OR SaaS Phase 5 (production hardening, Railway deploy, legal pages).
+**Next up:** Merge `oss-phase-4` → master (manual review recommended). There is no separate Phase 5 plan checked in yet; follow the recommended next-phase guidance from the Phase 4 plans: OSS = Relay authorization-code linking with SaaS, backup/export tooling, accessibility/failure-mode hardening, security review, public release packaging. SaaS = production hardening, real deploy/DNS, legal pages, support/contact flow, operational alerting, and OSS integration testing.
 **OSS status:** Phase 1 COMPLETE (21 tests). Phase 2 COMPLETE (178 tests, merged). Phase 3 COMPLETE (292 tests, merged). Phase 4 COMPLETE (319 tests, branch `oss-phase-4`) — setup wizard, tabbed settings UI, TOTP, Docker hardening, E2E harness, full docs suite, alpha readiness checklist.
 **Blockers/notes:** Manual UI smoke test not performed (headless). E2E tests require live server. Factory reset and TOTP recovery codes not implemented (alpha limitation, documented). RelayEscrowCard is stub (requires Relay subscription backend).
 **Tests passing:** 449 SaaS server (41 test files) + 16 contracts + 31 E2E configured; OSS 319 server tests on oss-phase-4
