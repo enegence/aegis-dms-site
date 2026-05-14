@@ -14,12 +14,20 @@
  */
 
 import { createHash } from 'crypto';
-import { eq, and, desc, isNull } from 'drizzle-orm';
+import { eq, and, desc, isNull, inArray } from 'drizzle-orm';
 import type { AegisDb } from '../db/index.js';
 import { trustAcknowledgements, relayEscrowMaterials, relayConnections } from '../db/schema.js';
 import { encryptField, decryptField } from './field-encrypt.js';
 
 export const RELAY_ESCROW_POLICY_VERSION = '1.0';
+
+/**
+ * RELAY_ESCROW_ACK_VERSION is the current server-side version string for the
+ * Relay Escrow trust acknowledgement (introduced in Phase 4 Task 4).
+ * The global acknowledge endpoint writes this version; the enable endpoint
+ * accepts rows at either this version or RELAY_ESCROW_POLICY_VERSION.
+ */
+export const RELAY_ESCROW_ACK_VERSION = 'relay-escrow-v1';
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
@@ -35,6 +43,11 @@ async function getOwnerConnection(db: AegisDb, userId: string, relayConnectionId
   return rows[0] ?? null;
 }
 
+/**
+ * getCurrentAcknowledgement — returns the most recent trust_acknowledgements row
+ * for relay_escrow mode at any accepted version (legacy '1.0' or current 'relay-escrow-v1').
+ * The enable endpoint requires any such row; the global acknowledge endpoint writes 'relay-escrow-v1'.
+ */
 async function getCurrentAcknowledgement(db: AegisDb, userId: string) {
   const rows = await db
     .select()
@@ -43,7 +56,7 @@ async function getCurrentAcknowledgement(db: AegisDb, userId: string) {
       and(
         eq(trustAcknowledgements.userId, userId),
         eq(trustAcknowledgements.mode, 'relay_escrow'),
-        eq(trustAcknowledgements.version, RELAY_ESCROW_POLICY_VERSION),
+        inArray(trustAcknowledgements.version, [RELAY_ESCROW_POLICY_VERSION, RELAY_ESCROW_ACK_VERSION]),
       ),
     )
     .orderBy(desc(trustAcknowledgements.acceptedAt))
@@ -116,6 +129,31 @@ export async function getEscrowStatus(
     revokedAt: material?.revokedAt?.toISOString() ?? null,
     policyVersion: RELAY_ESCROW_POLICY_VERSION,
   };
+}
+
+/**
+ * globalAcknowledgeEscrowPolicy — user-level (not per-connection) acknowledgement
+ * of the Relay Escrow trust model. Writes a trust_acknowledgements row at
+ * version 'relay-escrow-v1'. No relay connection required.
+ */
+export async function globalAcknowledgeEscrowPolicy(
+  db: AegisDb,
+  userId: string,
+  ip: string | null,
+  userAgent: string | null,
+): Promise<{ acknowledgementId: string; version: string }> {
+  const [row] = await db
+    .insert(trustAcknowledgements)
+    .values({
+      userId,
+      mode: 'relay_escrow',
+      version: RELAY_ESCROW_ACK_VERSION,
+      ipHash: ip ? hashValue(ip) : null,
+      userAgentHash: userAgent ? hashValue(userAgent) : null,
+    })
+    .returning();
+
+  return { acknowledgementId: row.id, version: RELAY_ESCROW_ACK_VERSION };
 }
 
 export async function acknowledgeEscrowPolicy(
