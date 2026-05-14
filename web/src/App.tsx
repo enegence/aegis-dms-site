@@ -13,6 +13,7 @@ import Relay from './pages/app/Relay';
 import Release from './pages/app/Release';
 import Billing from './pages/app/Billing';
 import Onboarding from './pages/app/Onboarding';
+import Settings from './pages/app/Settings';
 import Landing from './pages/marketing/Landing';
 import Pricing from './pages/marketing/Pricing';
 import ClaimLanding from './pages/claim/ClaimLanding';
@@ -80,6 +81,7 @@ function App() {
 
         {/* App (protected) */}
         <Route path="/app/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+        <Route path="/app/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/estate" element={<ProtectedRoute><Estate /></ProtectedRoute>} />

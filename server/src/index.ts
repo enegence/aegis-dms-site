@@ -23,6 +23,8 @@ import { adminRoutes } from './routes/admin.js';
 import { releaseRunRoutes } from './routes/release-runs.js';
 import { onboardingRoutes } from './routes/onboarding.js';
 import { relayLinkRoutes } from './routes/relay-link.js';
+import { settingsRoutes } from './routes/settings.js';
+import { securityRoutes } from './routes/security.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -80,6 +82,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(releaseRunRoutes);
   await app.register(onboardingRoutes);
   await app.register(relayLinkRoutes);
+  await app.register(settingsRoutes);
+  await app.register(securityRoutes);
 
   app.addHook('onRequest', async (req, reply) => {
     const method = req.method;
