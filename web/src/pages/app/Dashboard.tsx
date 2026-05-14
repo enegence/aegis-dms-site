@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getDashboard, type DashboardSummary } from '../../lib/dashboard';
 import { get, getOnboardingState, type OnboardingState } from '../../lib/api';
+import { Nav } from '../../components/Nav';
 
 interface ReleaseOverview {
   packetCount: number;
@@ -43,7 +44,9 @@ export default function Dashboard() {
   if (!data) return <div className="p-8 text-brand-muted font-sans">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-brand-bg p-8">
+    <div className="min-h-screen bg-brand-bg">
+      <Nav />
+      <div className="p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="font-hand text-4xl font-bold mb-1 text-brand-ink">
           Aegis Dashboard
@@ -133,12 +136,12 @@ export default function Dashboard() {
                 ({data.subscription.status ?? 'inactive'})
               </span>
             </div>
-            <a
-              href="/billing"
+            <Link
+              to="/app/billing"
               className="font-sans text-xs text-brand-accent hover:underline"
             >
               Manage billing
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -194,6 +197,7 @@ export default function Dashboard() {
         {data.activeSwitchCount === 0 && data.estateItemCount > 0 && data.contactCount > 0 && (
           <EmptyPrompt to="/switches" text="Create and arm your first switch." />
         )}
+      </div>
       </div>
     </div>
   );

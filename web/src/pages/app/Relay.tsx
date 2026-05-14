@@ -9,6 +9,7 @@ import {
 } from '../../lib/relay';
 import { RelayConnectionList } from '../../components/relay/RelayConnectionList';
 import { RelayConnectCard } from '../../components/relay/RelayConnectCard';
+import { Nav } from '../../components/Nav';
 
 interface NewKeyReveal {
   connectionId: string;
@@ -84,7 +85,9 @@ export default function Relay() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-bg p-8">
+    <div className="min-h-screen bg-brand-bg">
+      <Nav />
+      <div className="p-8">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -155,6 +158,7 @@ export default function Relay() {
             onConnect={() => setShowConnect(true)}
           />
         )}
+      </div>
       </div>
     </div>
   );

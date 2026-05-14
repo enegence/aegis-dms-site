@@ -153,6 +153,7 @@ export async function authRoutes(app: FastifyInstance) {
       email: user.email,
       emailVerified: user.emailVerified,
       timezone: user.timezone,
+      role: user.role,
       totpEnabled: user.totpEnabled,
       createdAt: user.createdAt.toISOString(),
     });

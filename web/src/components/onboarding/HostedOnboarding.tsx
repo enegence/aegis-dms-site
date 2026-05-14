@@ -140,7 +140,7 @@ export default function HostedOnboarding({ onComplete }: HostedOnboardingProps) 
       description: 'Confirm your security settings and review the readiness summary before arming.',
       complete: allRequiredComplete,
       required: false,
-      linkTo: '/settings/security',
+      linkTo: '/app/settings',
       linkLabel: 'Review security settings',
     },
     {
@@ -255,8 +255,8 @@ export default function HostedOnboarding({ onComplete }: HostedOnboardingProps) 
           { to: '/contacts', label: 'Contacts' },
           { to: '/estate', label: 'Estate' },
           { to: '/switches', label: 'Switches' },
-          { to: '/settings/security', label: 'Security settings' },
-          { to: '/billing', label: 'Billing' },
+          { to: '/app/settings', label: 'Security settings' },
+          { to: '/app/billing', label: 'Billing' },
         ].map(link => (
           <Link
             key={link.to}

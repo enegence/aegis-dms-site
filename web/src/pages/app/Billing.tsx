@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { get, post } from '../../lib/api';
 import { PlanStatusCard } from '../../components/billing/PlanStatusCard';
 import { BillingActions } from '../../components/billing/BillingActions';
+import { Nav } from '../../components/Nav';
 
 interface SubscriptionSummary {
   id: string;
@@ -52,7 +53,9 @@ export default function Billing() {
   const hasActivePlan = summary.hasRelay || summary.hasHosted;
 
   return (
-    <div className="min-h-screen bg-brand-bg p-8">
+    <div className="min-h-screen bg-brand-bg">
+      <Nav />
+      <div className="p-8">
       <div className="max-w-2xl mx-auto">
         <h1 className="font-hand text-4xl font-bold mb-1 text-brand-ink">Billing</h1>
         <p className="font-sans text-sm text-brand-muted mb-6">
@@ -89,6 +92,7 @@ export default function Billing() {
         {portalError && (
           <p className="mt-3 font-sans text-sm text-brand-danger">{portalError}</p>
         )}
+      </div>
       </div>
     </div>
   );

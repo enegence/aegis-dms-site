@@ -98,7 +98,7 @@ function BillingCTA() {
         View plans and pricing
       </a>
       <a
-        href="/billing"
+        href="/app/billing"
         className="block w-full text-center py-2 px-4 border border-brand-border rounded-lg font-sans text-sm text-brand-muted hover:border-brand-accent transition-colors"
       >
         Manage billing

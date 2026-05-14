@@ -32,6 +32,7 @@ interface AuthUser {
   email: string;
   emailVerified: boolean;
   timezone: string;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -88,6 +89,7 @@ function App() {
         <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
         <Route path="/switches" element={<ProtectedRoute><Trigger /></ProtectedRoute>} />
         <Route path="/relay" element={<ProtectedRoute><Relay /></ProtectedRoute>} />
+        <Route path="/app/relay" element={<ProtectedRoute><Relay /></ProtectedRoute>} />
         <Route path="/release" element={<ProtectedRoute><Release /></ProtectedRoute>} />
 
         {/* Admin (protected — role checked server-side) */}

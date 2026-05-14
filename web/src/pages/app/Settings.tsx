@@ -4,6 +4,7 @@ import { get } from '../../lib/api';
 import { AccountSettings } from '../../components/settings/AccountSettings';
 import { SecuritySettings } from '../../components/settings/SecuritySettings';
 import { NotificationPreferenceSettings } from '../../components/settings/NotificationPreferenceSettings';
+import { Nav } from '../../components/Nav';
 
 interface AccountInfo {
   email: string;
@@ -43,7 +44,9 @@ export default function Settings() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-bg p-8">
+    <div className="min-h-screen bg-brand-bg">
+      <Nav />
+      <div className="p-8">
       <div className="max-w-2xl mx-auto">
         <h1 className="font-hand text-4xl font-bold mb-1 text-brand-ink">Settings</h1>
         <p className="font-sans text-sm text-brand-muted mb-6">
@@ -95,6 +98,7 @@ export default function Settings() {
         {activeTab === 'notifications' && (
           <NotificationPreferenceSettings />
         )}
+      </div>
       </div>
     </div>
   );

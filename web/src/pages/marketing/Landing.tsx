@@ -2,24 +2,6 @@ import { Link } from 'react-router-dom';
 
 const PRODUCTS = [
   {
-    name: 'Aegis Core',
-    tag: 'Open-source · Self-hosted · AGPL-3.0',
-    description:
-      'A self-hosted application for managing and releasing digital legacy information. Run it on your own server with full control over your data. SQLite-backed, no cloud dependencies required.',
-    cta: 'View on GitHub',
-    href: 'https://github.com/your-org/aegis',
-    external: true,
-  },
-  {
-    name: 'Aegis Relay',
-    tag: 'SaaS add-on · For self-hosters',
-    description:
-      'Heartbeat monitoring for Aegis Core instances. Relay detects missed check-ins and alerts you. In a later phase, Relay Escrow can hold release material on your behalf.',
-    cta: 'Get started',
-    href: '/register',
-    external: false,
-  },
-  {
     name: 'Aegis Hosted',
     tag: 'Fully managed · No server required',
     description:
@@ -29,8 +11,26 @@ const PRODUCTS = [
     external: false,
   },
   {
+    name: 'Aegis Relay',
+    tag: 'SaaS add-on · For self-hosters',
+    description:
+      'Heartbeat monitoring for Aegis Core instances. Relay detects missed check-ins and alerts you. Relay Escrow can hold release material on your behalf — available as a paid add-on.',
+    cta: 'Get started',
+    href: '/register',
+    external: false,
+  },
+  {
+    name: 'Aegis Core',
+    tag: 'Open-source · Self-hosted · AGPL-3.0',
+    description:
+      'A self-hosted application for managing and releasing digital legacy information. Run it on your own server with full control over your data. SQLite-backed, no cloud dependencies required.',
+    cta: 'View on GitHub',
+    href: 'https://github.com/your-org/aegis',
+    external: true,
+  },
+  {
     name: 'DeadDrop API',
-    tag: 'Future · Platform layer',
+    tag: 'Coming soon · Platform layer',
     description:
       'A future infrastructure API for developers and platforms who want to build legacy-release functionality into their own products. Not yet available — we are designing this layer now.',
     cta: null,
@@ -67,15 +67,14 @@ export default function Landing() {
       {/* Hero */}
       <section className="px-6 py-20 text-center max-w-3xl mx-auto">
         <h1 className="font-hand text-5xl font-bold text-brand-ink mb-4 leading-tight">
-          Encrypted legacy-release infrastructure
+          Legacy-release infrastructure
         </h1>
         <p className="font-sans text-lg text-brand-muted mb-2">
-          For self-hosters, families, and platforms.
+          Aegis is legacy-release infrastructure for self-hosters, families, and future platform integrations.
         </p>
         <p className="font-sans text-sm text-brand-muted mb-8 max-w-xl mx-auto">
-          Aegis helps you organize estate information, designate trusted contacts, and configure
-          automated release under conditions you define — a missed check-in, a fixed date, or a
-          manual trigger.
+          Organize estate information, designate trusted contacts, and configure automated release
+          under conditions you define — a missed check-in, a fixed date, or a manual trigger.
         </p>
 
         <div className="flex items-center justify-center gap-4 flex-wrap">
