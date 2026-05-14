@@ -15,6 +15,7 @@
  *  - No PII is echoed back in responses.
  */
 
+import { timingSafeEqual } from 'crypto';
 import type { FastifyInstance } from 'fastify';
 import { ingestPostmarkEvent, type PostmarkEvent } from '../services/postmark-events.js';
 
@@ -39,7 +40,18 @@ export async function postmarkWebhookRoutes(app: FastifyInstance): Promise<void>
       (req.headers['x-webhook-token'] as string | undefined) ??
       '';
 
-    if (incomingToken !== webhookToken) {
+    if (!incomingToken) {
+      return reply.status(401).send({ error: 'Unauthorized' });
+    }
+
+    try {
+      const match = timingSafeEqual(
+        Buffer.from(incomingToken),
+        Buffer.from(webhookToken),
+      );
+      if (!match) return reply.status(401).send({ error: 'Unauthorized' });
+    } catch {
+      // timingSafeEqual throws if buffers differ in length
       return reply.status(401).send({ error: 'Unauthorized' });
     }
 

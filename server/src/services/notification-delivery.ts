@@ -447,7 +447,11 @@ export async function markPermanentFailureByMessageId(
   if (rows.length === 0) return false;
 
   const delivery = rows[0];
-  if (delivery.status === 'failed_permanent') return true; // idempotent
+
+  // Do not regress a terminal state — a cancelled delivery should not be moved
+  // to failed_permanent by a late webhook.
+  const TERMINAL_STATES = ['delivered', 'failed_permanent', 'cancelled'];
+  if (TERMINAL_STATES.includes(delivery.status)) return true; // idempotent no-op
 
   await db
     .update(notificationDeliveries)
@@ -478,6 +482,11 @@ export async function markRetryableFailureByMessageId(
   if (rows.length === 0) return false;
 
   const delivery = rows[0];
+
+  // Do not regress a terminal state — a late soft-bounce webhook must not
+  // revert a delivered (or cancelled) delivery back to failed_retryable.
+  const TERMINAL_STATES = ['delivered', 'failed_permanent', 'cancelled'];
+  if (TERMINAL_STATES.includes(delivery.status)) return true; // idempotent no-op
 
   // Check if max attempts exceeded
   const delayMs = getNextAttemptDelay(delivery.attemptCount);
