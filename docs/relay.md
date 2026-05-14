@@ -1,4 +1,4 @@
-# Aegis Relay — Phase 3 Behavior
+# Aegis Relay — Operations and Behavior
 
 ## What Relay Monitoring Does
 
@@ -178,3 +178,70 @@ The following events are written to `audit_events` with no PII in metadata:
 - `relay_connection_revoked`
 - `relay_connection_deleted`
 - `relay_heartbeat_received`
+
+---
+
+## Relay Linking Flow (OSS Instance → SaaS)
+
+Linking an Aegis Core (self-hosted) instance to Aegis SaaS uses an auth code exchange to avoid passing the API key in a URL.
+
+### Step 1 — Start linking from the SaaS dashboard
+
+The user goes to `/app/relay`, clicks **Add Connection**, and the frontend calls:
+
+```
+POST /api/relay/connections
+Authorization: <session cookie>
+X-CSRF-Token: <csrf-token>
+```
+
+The server creates a new relay connection record, generates the API key (shown once), and returns the connection details.
+
+### Step 2 — Enter the API key in the OSS instance
+
+The user copies the API key from the SaaS dashboard one-time display and pastes it into the Aegis Core config (e.g. `config.json` or environment variable). The OSS instance then starts sending heartbeats:
+
+```
+POST /api/relay/heartbeat
+Authorization: Bearer <relay_api_key>
+```
+
+The SaaS server validates the key against the stored SHA-256 hash and updates `lastHeartbeatAt`.
+
+> The API key is never passed in a URL query string. It is always transmitted in the `Authorization: Bearer` header.
+
+### Step 3 — Verify the connection
+
+On the SaaS dashboard, the connection status changes from `pending` to `active` after the first heartbeat is received. The user can confirm the link is working via `GET /api/relay/status` (authenticated by API key) from the OSS instance, or by checking the dashboard.
+
+---
+
+## Key Rotation
+
+If an API key is lost or suspected compromised:
+
+1. Go to `/app/relay` in the SaaS dashboard.
+2. Click **Rotate Key** on the connection.
+3. The server calls `POST /api/relay/connections/:id/rotate-key`, generates a new key, invalidates the old key immediately, and returns the new key **once**.
+4. Update the API key in the Aegis Core instance config.
+5. The next heartbeat must use the new key.
+
+> After rotation, any in-flight heartbeats using the old key are rejected.
+
+---
+
+## Revocation
+
+To permanently disconnect an Aegis Core instance:
+
+```
+POST /api/relay/connections/:id/revoke
+```
+
+Or use the **Revoke** button on `/app/relay`. The connection is marked `disconnected`. Heartbeats from a revoked connection are rejected. Escrow (if enabled) is not automatically revoked — revoke it separately via `POST /api/relay/:id/escrow/revoke` if needed.
+
+To fully remove the connection record:
+
+```
+DELETE /api/relay/connections/:id
+```

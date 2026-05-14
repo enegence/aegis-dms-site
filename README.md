@@ -61,7 +61,7 @@ cd server && npm test
 - Frontend: dashboard, estate, contacts, trigger, relay, billing, marketing, pricing pages
 - Audit log with redacted PII metadata
 
-### Phase 3: Packets and Cascade (upcoming)
+### Phase 3: Packets and Cascade (complete — 369 tests)
 
 - Managed packet generation and R2/S3 storage
 - Hosted contact cascade (notify → verify → accept → download → acknowledge)
@@ -94,11 +94,25 @@ The server refuses to start in production if any required secret is missing or s
 
 ## Documentation
 
-- [`docs/relay.md`](docs/relay.md) — Relay Monitoring: heartbeat API, API key handling, offline detection, alert behavior
+### Operations
+
+- [`docs/deployment.md`](docs/deployment.md) — Railway deployment guide: env vars, Docker build, migrations, rollback
+- [`docs/operations.md`](docs/operations.md) — Day-to-day ops: service overview, log review, health check, backup assumptions, alpha limitations
+- [`docs/incident-response.md`](docs/incident-response.md) — Incident runbook: lost keys, Stripe/Postmark failures, storage outages, false triggers, data exposure
+
+### Provider Setup
+
+- [`docs/stripe.md`](docs/stripe.md) — Stripe products, webhook setup, customer portal, local testing, failure modes
+- [`docs/postmark.md`](docs/postmark.md) — Postmark server token, domain/DKIM setup, email types, bounce handling
+- [`docs/storage.md`](docs/storage.md) — R2/S3 bucket setup, permissions, object prefixing, retention, delete behavior
+
+### Product and Architecture
+
+- [`docs/relay.md`](docs/relay.md) — Relay Monitoring and Escrow: heartbeat API, linking flow, API key handling, offline detection, alert behavior
 - [`docs/hosted.md`](docs/hosted.md) — Hosted: data management, switch modes, Phase 2 limitations, trust model
 - [`docs/billing.md`](docs/billing.md) — Plans, Stripe integration, billing portal, alpha pricing
 - [`docs/security.md`](docs/security.md) — Field encryption, auth, API keys, audit log, alpha limitations
-- [`docs/superpowers/plans/`](docs/superpowers/plans/) — Implementation plans (master plan, Phase 1, Phase 2)
+- [`docs/superpowers/plans/`](docs/superpowers/plans/) — Implementation plans (master plan, Phase 1, Phase 2, Phase 3)
 
 ---
 
