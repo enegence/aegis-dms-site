@@ -291,6 +291,30 @@ export const idempotencyKeys = pgTable('idempotency_keys', {
   expiresAt: timestamp('expires_at'),
 });
 
+export const notificationDeliveries = pgTable('notification_deliveries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  releaseRunId: uuid('release_run_id').references(() => releaseRuns.id, { onDelete: 'cascade' }),
+  claimId: uuid('claim_id'),
+  contactId: uuid('contact_id').notNull(),
+  channel: text('channel').notNull(), // 'email' | 'telegram'
+  provider: text('provider').notNull(),
+  // queued|sending|sent|delivered|failed_retryable|failed_permanent|cancelled
+  status: text('status').notNull().default('queued'),
+  attemptCount: integer('attempt_count').notNull().default(0),
+  lastAttemptAt: timestamp('last_attempt_at'),
+  nextAttemptAt: timestamp('next_attempt_at'),
+  providerMessageId: text('provider_message_id'),
+  lastErrorCode: text('last_error_code'),
+  lastErrorMessageRedacted: text('last_error_message_redacted'),
+  payloadHash: text('payload_hash'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  releaseRunIdx: index('notification_deliveries_release_run_id_idx').on(table.releaseRunId),
+  statusNextAttemptIdx: index('notification_deliveries_status_next_attempt_idx').on(table.status, table.nextAttemptAt),
+  providerMessageIdx: index('notification_deliveries_provider_message_id_idx').on(table.providerMessageId),
+}));
+
 export const relayEscrowMaterials = pgTable('relay_escrow_materials', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),

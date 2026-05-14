@@ -240,11 +240,11 @@ aegis-dms-site/
 
 ### Phase 5: Production Hardening & Beta Readiness
 
-**Phase 5: PLANNED** (combined OSS + SaaS, plan: `2026-05-13-aegis-phase5-production-hardening.md`) ← WE ARE HERE
-- [ ] Task 1: Cross-repo security review baseline — threat model, security checklist, auth/session/CSRF verification, audit/log redaction checks, encrypted-field validation, TOTP recovery code/password change/rate-limit coverage
-- [ ] Task 2: Release-run idempotency and recovery hardening — explicit state guards, one-active-run enforcement, idempotency keys, worker restart recovery, duplicate-trigger suppression
-- [ ] Task 3: Notification delivery reliability — delivery-state tracking, retry/backoff policy, payload minimization, provider failure handling, SaaS Postmark event ingestion
-- [ ] Task 4: Backup, export, restore, and deletion — OSS encrypted export/restore preview, SaaS account export, SaaS account deletion flow, backup/restore docs
+**Phase 5: IN PROGRESS** (combined OSS + SaaS, plan: `2026-05-13-aegis-phase5-production-hardening.md`)
+- [x] Task 1: Cross-repo security review baseline — threat model, security checklist, auth/session/CSRF verification, audit/log redaction checks, encrypted-field validation, TOTP recovery code/password change/rate-limit coverage (OSS: 343 tests, SaaS: 483 tests)
+- [x] Task 2: Release-run idempotency and recovery hardening — state transition guards, one-active-run enforcement, atomic idempotency_keys table, worker restart recovery (OSS: 370 tests, SaaS: 506 tests)
+- [x] Task 3: Notification delivery reliability — notification_deliveries table, retry/backoff policy, payload minimization, Postmark webhook ingestion (OSS: 413 tests, SaaS: 563 tests)
+- [ ] Task 4: Backup, export, restore, and deletion ← WE ARE HERE — OSS encrypted export/restore preview, SaaS account export, SaaS account deletion flow, backup/restore docs
 - [ ] Task 5: Observability, health, and operational readiness — structured redacted logs, detailed health endpoints, worker heartbeat persistence, admin metrics, beta-critical alert-state visibility
 - [ ] Task 6: SaaS support, billing, and admin hardening — admin-role tightening, billing lifecycle edge cases, webhook replay safety, support runbook
 - [ ] Task 7: Legal, trust, and public safety pages — Terms/Privacy/Security/AUP/Disclaimers/Data Deletion pages, required acknowledgements, OSS trust-model references

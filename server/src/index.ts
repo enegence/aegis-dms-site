@@ -28,6 +28,7 @@ import { onboardingRoutes } from './routes/onboarding.js';
 import { relayLinkRoutes } from './routes/relay-link.js';
 import { settingsRoutes } from './routes/settings.js';
 import { securityRoutes } from './routes/security.js';
+import { postmarkWebhookRoutes } from './routes/postmark-webhook.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -96,6 +97,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(relayLinkRoutes);
   await app.register(settingsRoutes);
   await app.register(securityRoutes);
+  await app.register(postmarkWebhookRoutes);
 
   // Serve built Vite frontend in production (or when server/static exists)
   // Static dir is at <server-root>/static relative to this compiled file's directory
@@ -137,6 +139,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
       '/api/relay/heartbeat',
       '/api/relay/link/exchange',
       '/api/claim/',
+      '/webhooks/',
     ];
     if (exemptPaths.some(p => url.startsWith(p))) return;
 
