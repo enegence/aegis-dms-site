@@ -1,8 +1,42 @@
+import { inArray } from 'drizzle-orm';
 import type { AegisDb } from '../db/index.js';
 import type { AppConfig } from '../config.js';
+import { releaseRuns } from '../db/schema.js';
 import { runRelayMonitorOnce } from '../services/relay-monitor.js';
 import { runRelayEscrowCascadeOnce } from '../services/relay-assisted-cascade.js';
 import { runHostedWorkerOnce } from './hosted-worker.js';
+import { writeAuditEvent } from '../services/audit.js';
+
+// ─── Worker restart recovery ──────────────────────────────────────────────────
+
+/**
+ * On startup, recover active/paused release runs.
+ * Emits audit events so operators can observe recovery events.
+ * The actual deduplication for notifications/uploads is enforced by idempotency
+ * keys checked in the cascade/packet build layers.
+ */
+export async function recoverActiveReleaseRuns(db: AegisDb): Promise<number> {
+  const rows = await db
+    .select()
+    .from(releaseRuns)
+    .where(inArray(releaseRuns.status, ['active', 'cascade_active', 'paused', 'active_pending_packet']));
+
+  if (rows.length === 0) return 0;
+
+  await writeAuditEvent(db, {
+    eventType: 'worker_recovery_started',
+    actorType: 'system',
+    metadata: { activeRunCount: rows.length },
+  });
+
+  await writeAuditEvent(db, {
+    eventType: 'worker_recovery_completed',
+    actorType: 'system',
+    metadata: { activeRunCount: rows.length },
+  });
+
+  return rows.length;
+}
 
 export interface WorkerOptions {
   intervalSeconds?: number;
@@ -26,6 +60,12 @@ export function startWorker(
 
   let stopped = false;
   let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Recovery: on startup, find and log any in-flight release runs so the
+  // worker can resume from current state rather than starting fresh.
+  recoverActiveReleaseRuns(db).catch((err) =>
+    console.error('[worker] recovery error:', err),
+  );
 
   async function tick() {
     if (stopped) return;

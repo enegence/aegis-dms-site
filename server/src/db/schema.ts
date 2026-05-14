@@ -282,6 +282,15 @@ export const userOnboarding = pgTable('user_onboarding', {
 // relay_escrow_materials: stores encrypted release material for Relay Escrow.
 // materialEncrypted must always be set — unencrypted key material is never stored.
 // acceptedAcknowledgementId links to the trust_acknowledgements record for consent.
+export const idempotencyKeys = pgTable('idempotency_keys', {
+  key: text('key').primaryKey(),
+  scope: text('scope').notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  resultJson: jsonb('result_json'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  expiresAt: timestamp('expires_at'),
+});
+
 export const relayEscrowMaterials = pgTable('relay_escrow_materials', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
