@@ -29,7 +29,8 @@ Historical/applied patch docs (already baked into plans, read only if referenced
 - **OSS Phase 2:** NOT STARTED — plan at `docs/superpowers/plans/2026-05-08-aegis-oss-phase2.md`
 - **SaaS Phase 1:** COMPLETE (25 tests)
 - **SaaS Phase 2:** COMPLETE (175 tests at completion)
-- **SaaS Phase 3:** IN PROGRESS — Tasks 1-10 done, Tasks 11-19 remaining. 312 tests passing.
+- **SaaS Phase 3:** COMPLETE (369 tests at completion)
+- **SaaS Phase 4:** COMPLETE (449 server tests, 16 contract tests, 31 E2E tests configured)
 
 ## Completion Tracking Protocol
 
@@ -52,11 +53,11 @@ After completing each numbered Task (not each step), update `update.md`:
 
 At the END of every session (or when context is getting long), update this section:
 
-**Last completed:** SaaS Phase 3 Task 19 — End-to-end verification. **SaaS Phase 3 is COMPLETE.**
-**Next up:** SaaS Phase 4 — Onboarding, Railway deployment, billing polish, legal pages, E2E browser flows, security review, launch readiness.
+**Last completed:** SaaS Phase 4 Task 12 — Final full test and deployment candidate pass. **SaaS Phase 4 is COMPLETE.**
+**Next up:** SaaS Phase 5 — Production hardening and alpha launch: real Railway deploy + domain, legal/terms/privacy pages, TOTP (2FA), better email templates, security review, Relay/Core integration testing with real OSS instance, operational alerting, DeadDrop API design preview docs.
 **OSS status:** Phase 1 complete (21 tests). Phase 2 IN PROGRESS on `oss-phase-2` branch — server/backend done (173 tests), UI Tasks 14-18 implemented but Codex reported 5 runtime bugs (wrong API URLs, wrong response shapes, missing `purpose: test`, countdown logic). Do NOT merge until Codex fixes confirmed. Phase 3 NOT STARTED.
-**Blockers/notes:** Manual UI smoke test for SaaS Phase 3 not performed (headless). Recommend manual verification before Phase 4.
-**Tests passing:** 369 SaaS (36 test files)
+**Blockers/notes:** Manual UI smoke test not performed (headless). RelayEscrowCard enable form is a UI skeleton — needs contact/packet selection dropdowns for production use. E2E tests require live dev server.
+**Tests passing:** 449 SaaS server (41 test files) + 16 contracts + 31 E2E configured
 
 ## Non-Negotiable Constraints
 
