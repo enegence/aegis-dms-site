@@ -16,7 +16,7 @@
  *   // (key was already inserted; result can be updated by calling setIdempotencyKeyResult)
  */
 
-import { eq } from 'drizzle-orm';
+import { eq, and, lt } from 'drizzle-orm';
 import { idempotencyKeys } from '../db/schema.js';
 import type { AegisDb } from '../db/index.js';
 
@@ -80,11 +80,15 @@ export async function setIdempotencyKey(
 }
 
 /**
- * Check if a key exists (and is not expired). If not, insert it.
- * Returns { found: true, result } for cached hit, { found: false } for new insert.
+ * Atomically claim an idempotency key using INSERT ... ON CONFLICT DO NOTHING (PostgreSQL).
  *
- * Callers should treat found === false as "proceed with work" and
- * found === true as "return cached result".
+ * - Expired keys are deleted first so a fresh insert can proceed.
+ * - ON CONFLICT DO NOTHING atomically claims the row if not already present.
+ * - Uses RETURNING to detect whether our insert won the race:
+ *     • Inserted row returned  → we claimed it → { found: false }
+ *     • No row returned (conflict) → already existed → read it and return { found: true, result }
+ *
+ * Only the first inserter gets found: false. All subsequent callers get found: true.
  */
 export async function checkOrSetIdempotencyKey(
   db: AegisDb,
@@ -96,11 +100,57 @@ export async function checkOrSetIdempotencyKey(
     ttlMs?: number;
   },
 ): Promise<IdempotencyKeyResult> {
-  const existing = await checkIdempotencyKey(db, key);
-  if (existing.found) return existing;
+  const now = new Date();
+  const expiresAt = opts?.ttlMs ? new Date(Date.now() + opts.ttlMs) : null;
 
-  await setIdempotencyKey(db, key, scope, opts);
-  return { found: false, result: null };
+  // Delete expired key first so the insert below can claim it fresh
+  await db.delete(idempotencyKeys).where(
+    and(
+      eq(idempotencyKeys.key, key),
+      lt(idempotencyKeys.expiresAt as any, now),
+    ),
+  );
+
+  // Atomically insert; returns the inserted row only if the insert succeeded (no conflict)
+  const inserted = await db.insert(idempotencyKeys).values({
+    key,
+    scope,
+    userId: opts?.userId ?? null,
+    resultJson: opts?.resultJson ?? null,
+    expiresAt: expiresAt ?? undefined,
+  }).onConflictDoNothing().returning();
+
+  if (inserted.length > 0) {
+    // We claimed the key — caller should proceed with work
+    return { found: false, result: null };
+  }
+
+  // Key already existed — read the current state
+  const rows = await db
+    .select()
+    .from(idempotencyKeys)
+    .where(eq(idempotencyKeys.key, key))
+    .limit(1);
+
+  if (rows.length === 0) {
+    // Edge case: row was deleted between our insert attempt and this read (e.g. concurrent purge)
+    return { found: false, result: null };
+  }
+
+  const row = rows[0];
+  return { found: true, result: row.resultJson ?? null };
+}
+
+/**
+ * Purge all expired idempotency keys (called by maintenance worker tick).
+ */
+export async function purgeExpiredIdempotencyKeys(db: AegisDb): Promise<number> {
+  const now = new Date();
+  const rows = await db
+    .delete(idempotencyKeys)
+    .where(lt(idempotencyKeys.expiresAt as any, now))
+    .returning();
+  return rows.length;
 }
 
 /**
