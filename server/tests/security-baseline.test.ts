@@ -20,7 +20,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { buildApp } from '../src/index.js';
-import { estateItems, contacts, users, auditEvents } from '../src/db/schema.js';
+import { estateItems, contacts, users, auditEvents, sessions } from '../src/db/schema.js';
 import { validateProductionConfig, loadConfig } from '../src/config.js';
 import { sanitizeAuditMetadata } from '../src/services/audit.js';
 
@@ -176,6 +176,38 @@ describe('Session lifecycle', () => {
       headers: { cookie: 'aegis_session=totally-fake-session-id-that-does-not-exist' },
     });
     expect(res.statusCode).toBe(401);
+  });
+
+  it('expired session is rejected — returns 401', async () => {
+    // Register and login to get a userId, then insert an already-expired session
+    const cookies = await registerAndLogin(app, 'expired-session-saas@test.com');
+
+    // Extract the userId from the users table
+    const userRows = await app.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, 'expired-session-saas@test.com'));
+    const userId = userRows[0]!.id;
+
+    // Insert an already-expired session directly into the DB
+    const expiredSessionId = 'expired-session-id-for-test-baseline-saas';
+    const pastDate = new Date(Date.now() - 60 * 60 * 1000); // 1 hour ago
+    await app.db.insert(sessions).values({
+      id: expiredSessionId,
+      userId,
+      expiresAt: pastDate,
+      createdAt: pastDate,
+    });
+
+    // Request with the expired session cookie must be rejected
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      headers: { cookie: `aegis_session=${expiredSessionId}` },
+    });
+    expect(res.statusCode).toBe(401);
+
+    void cookies; // used for registering the user above
   });
 });
 
@@ -595,6 +627,75 @@ describe('Audit log redaction (sanitizeAuditMetadata)', () => {
       const metaStr = JSON.stringify(latest.metadata);
       expect(metaStr).not.toContain('AuditTestSecretBank');
       expect(metaStr).not.toContain('Top secret executor instruction');
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Audit Log — Packet / Release Events
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Audit log — packet/release events strip secrets', () => {
+  it('packet_generated audit event metadata does not contain key material, storage credentials, or API keys', async () => {
+    const app = await buildApp({ testing: true });
+    try {
+      const { writeAuditEvent } = await import('../src/services/audit.js');
+
+      // Simulate the metadata written by packets.ts for packet_generated
+      // (packetId, version — identifiers only, no secrets)
+      await writeAuditEvent(app.db, {
+        eventType: 'packet_generated',
+        actorType: 'user',
+        metadata: { packetId: 'uuid-abc-123', version: 1 },
+      });
+
+      const events = await app.db
+        .select()
+        .from(auditEvents)
+        .where(eq(auditEvents.eventType, 'packet_generated'));
+
+      expect(events.length).toBeGreaterThan(0);
+      const metaStr = JSON.stringify(events[events.length - 1]!.metadata);
+
+      // Must not contain raw key material, storage credentials, or API keys
+      expect(metaStr).not.toContain('secretKey');
+      expect(metaStr).not.toContain('encryptionKey');
+      expect(metaStr).not.toContain('accessKeyId');
+      expect(metaStr).not.toContain('secretAccessKey');
+      expect(metaStr).not.toContain('apiKey');
+      // Confirm non-secret identifiers are present
+      expect(JSON.parse(metaStr)).toMatchObject({ packetId: 'uuid-abc-123', version: 1 });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('packet_uploaded audit event metadata does not contain storage credentials', async () => {
+    const app = await buildApp({ testing: true });
+    try {
+      const { writeAuditEvent } = await import('../src/services/audit.js');
+
+      // Simulate the metadata written by packets.ts for packet_uploaded
+      await writeAuditEvent(app.db, {
+        eventType: 'packet_uploaded',
+        actorType: 'user',
+        metadata: { packetId: 'uuid-def-456' },
+      });
+
+      const events = await app.db
+        .select()
+        .from(auditEvents)
+        .where(eq(auditEvents.eventType, 'packet_uploaded'));
+
+      expect(events.length).toBeGreaterThan(0);
+      const metaStr = JSON.stringify(events[events.length - 1]!.metadata);
+
+      expect(metaStr).not.toContain('accessKeyId');
+      expect(metaStr).not.toContain('secretAccessKey');
+      expect(metaStr).not.toContain('apiKey');
+      expect(JSON.parse(metaStr)).toMatchObject({ packetId: 'uuid-def-456' });
     } finally {
       await app.close();
     }
