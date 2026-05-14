@@ -19,6 +19,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { eq } from 'drizzle-orm';
+import { createHash } from 'node:crypto';
 import { buildApp } from '../src/index.js';
 import { estateItems, contacts, users, auditEvents, sessions } from '../src/db/schema.js';
 import { validateProductionConfig, loadConfig } from '../src/config.js';
@@ -251,29 +252,41 @@ describe('Password reset token security', () => {
   });
 
   it('password reset token cannot be reused (second use returns 400)', async () => {
-    // Request reset
-    await app.inject({
-      method: 'POST',
-      url: '/api/auth/request-reset',
-      payload: { email: 'reset-test@test.com' },
-    });
+    // Inject a known plaintext token directly into the DB so we can control the
+    // first-use/second-use flow without reversing a hash.
+    const knownToken = 'test-reset-token-single-use-check-12345';
+    const tokenHash = createHash('sha256').update(knownToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
 
-    // Retrieve the token hash from DB (to reverse-test: we can't get the plaintext,
-    // so we confirm the second use of a "reset" returns 400 for invalid token)
-    // Use a fake token to simulate expired/invalid state
-    const fakeToken = 'definitely-not-a-valid-reset-token-xyz123';
+    await app.db
+      .update(users)
+      .set({
+        passwordResetTokenHash: tokenHash,
+        passwordResetExpiresAt: expiresAt,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.email, 'reset-test@test.com'));
+
+    // First use — must succeed (200) and invalidate the token
     const firstUse = await app.inject({
       method: 'POST',
       url: '/api/auth/reset-password',
-      payload: { token: fakeToken, password: 'new-password-12345' },
+      payload: { token: knownToken, password: 'new-password-after-reset-1' },
     });
-    expect(firstUse.statusCode).toBe(400); // invalid token
+    expect(firstUse.statusCode).toBe(200);
 
-    // Second use of same invalid token also returns 400
+    // Verify DB: token hash must now be null (invalidated on first use)
+    const [row] = await app.db
+      .select({ passwordResetTokenHash: users.passwordResetTokenHash })
+      .from(users)
+      .where(eq(users.email, 'reset-test@test.com'));
+    expect(row!.passwordResetTokenHash).toBeNull();
+
+    // Second use of the same token — must be rejected because hash was cleared
     const secondUse = await app.inject({
       method: 'POST',
       url: '/api/auth/reset-password',
-      payload: { token: fakeToken, password: 'another-password-12345' },
+      payload: { token: knownToken, password: 'new-password-after-reset-2' },
     });
     expect(secondUse.statusCode).toBe(400);
   });
