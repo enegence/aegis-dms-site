@@ -215,6 +215,8 @@ describe('Phase 3 audit event type coverage', () => {
     'relay_assisted_release_started',
     'release_run_cancelled',
     'admin_viewed_metrics',
+    'relay_link_code_created',
+    'relay_link_code_exchanged',
   ];
 
   it('all Phase 3 event types are non-empty strings (type registry check)', () => {
