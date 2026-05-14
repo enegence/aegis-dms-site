@@ -53,11 +53,11 @@ After completing each numbered Task (not each step), update `update.md`:
 
 At the END of every session (or when context is getting long), update this section:
 
-**Last completed:** OSS Phase 2 runtime bug fixes — all 5 reported bugs repaired and committed to `oss-phase-2` branch (178 tests pass, build clean). Ready to merge to master.
-**Next up:** Merge `oss-phase-2` → master (manual review recommended), then choose: OSS Phase 3 (packets, S3, cascade, claim portal) OR SaaS Phase 5 (production hardening, Railway deploy, TOTP, legal pages).
-**OSS status:** Phase 1 complete (21 tests). Phase 2 COMPLETE on `oss-phase-2` branch (178 tests) — all bugs fixed: wrong dashboard URL, wrong response shapes, missing purpose field, login CSRF, countdown logic, SwitchCard action date. Branch ready to merge. Phase 3 NOT STARTED.
-**Blockers/notes:** Manual UI smoke test not performed (headless). RelayEscrowCard enable form is a UI skeleton — needs contact/packet selection dropdowns for production use. E2E tests require live dev server.
-**Tests passing:** 449 SaaS server (41 test files) + 16 contracts + 31 E2E configured; OSS 178 server tests on oss-phase-2
+**Last completed:** OSS Phase 4 — all 12 tasks complete. 319 server tests passing. Branch `oss-phase-4` ready to merge to master.
+**Next up:** Merge `oss-phase-4` → master (manual review recommended), then choose: OSS Phase 5 (TOTP recovery codes, password change, Relay heartbeat polling, rate limiting) OR SaaS Phase 5 (production hardening, Railway deploy, legal pages).
+**OSS status:** Phase 1 COMPLETE (21 tests). Phase 2 COMPLETE (178 tests, merged). Phase 3 COMPLETE (292 tests, merged). Phase 4 COMPLETE (319 tests, branch `oss-phase-4`) — setup wizard, tabbed settings UI, TOTP, Docker hardening, E2E harness, full docs suite, alpha readiness checklist.
+**Blockers/notes:** Manual UI smoke test not performed (headless). E2E tests require live server. Factory reset and TOTP recovery codes not implemented (alpha limitation, documented). RelayEscrowCard is stub (requires Relay subscription backend).
+**Tests passing:** 449 SaaS server (41 test files) + 16 contracts + 31 E2E configured; OSS 319 server tests on oss-phase-4
 
 ## Non-Negotiable Constraints
 
