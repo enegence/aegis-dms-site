@@ -11,6 +11,7 @@ import Contacts from './pages/app/Contacts';
 import Trigger from './pages/app/Trigger';
 import Relay from './pages/app/Relay';
 import Release from './pages/app/Release';
+import Billing from './pages/app/Billing';
 import Onboarding from './pages/app/Onboarding';
 import Landing from './pages/marketing/Landing';
 import Pricing from './pages/marketing/Pricing';
@@ -78,6 +79,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* App (protected) */}
+        <Route path="/app/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/estate" element={<ProtectedRoute><Estate /></ProtectedRoute>} />

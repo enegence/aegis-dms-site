@@ -92,6 +92,36 @@ export async function billingRoutes(app: FastifyInstance) {
     return reply.send({ url });
   });
 
+  // Billing summary
+  app.get('/api/billing/summary', {
+    preHandler: [app.requireAuth],
+  }, async (req, reply) => {
+    const allSubs = await app.db.select()
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, req.userId!));
+
+    const customerId = allSubs.length > 0 ? allSubs[0].stripeCustomerId : null;
+
+    const subList = allSubs.map(sub => ({
+      id: sub.id,
+      plan: sub.plan as 'relay' | 'hosted',
+      status: sub.status,
+      currentPeriodEnd: sub.currentPeriodEnd?.toISOString() ?? null,
+      cancelledAt: sub.cancelledAt?.toISOString() ?? null,
+    }));
+
+    const hasRelay = allSubs.some(s => s.plan === 'relay' && s.status === 'active');
+    const hasHosted = allSubs.some(s => s.plan === 'hosted' && s.status === 'active');
+
+    return reply.send({
+      customerId,
+      subscriptions: subList,
+      hasRelay,
+      hasHosted,
+      pricingUrl: '/pricing',
+    });
+  });
+
   // Get current subscription
   app.get('/api/billing/subscription', {
     preHandler: [app.requireAuth],

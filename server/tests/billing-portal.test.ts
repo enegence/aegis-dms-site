@@ -125,4 +125,66 @@ describe('Billing Portal Route', () => {
     const body = JSON.parse(res.payload);
     expect(body.error).toBe('No billing account found');
   });
+
+  // ── Billing summary tests ──────────────────────────────────────────────────
+
+  it('GET /api/billing/summary requires auth (401 without cookie)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/billing/summary',
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('GET /api/billing/summary returns empty subscriptions list for user with no sub', async () => {
+    await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: {
+        displayName: 'Summary No Sub',
+        email: 'summary-nosub@example.com',
+        password: 'testpass12345',
+        timezone: 'UTC',
+      },
+    });
+    const loginRes = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email: 'summary-nosub@example.com', password: 'testpass12345' },
+    });
+    const noSubCookies = String(loginRes.headers['set-cookie']);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/billing/summary',
+      headers: { cookie: noSubCookies },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.payload);
+    expect(body.customerId).toBeNull();
+    expect(body.subscriptions).toEqual([]);
+    expect(body.hasRelay).toBe(false);
+    expect(body.hasHosted).toBe(false);
+    expect(body.pricingUrl).toBe('/pricing');
+  });
+
+  it('GET /api/billing/summary returns subscription info for subscribed user', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/billing/summary',
+      headers: { cookie: cookies },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.payload);
+    expect(body.customerId).toBe('cus_test123');
+    expect(body.subscriptions.length).toBeGreaterThanOrEqual(1);
+    const relaySub = body.subscriptions.find((s: { plan: string }) => s.plan === 'relay');
+    expect(relaySub).toBeDefined();
+    expect(relaySub.status).toBe('active');
+    expect(body.hasRelay).toBe(true);
+    expect(body.hasHosted).toBe(false);
+    expect(body.pricingUrl).toBe('/pricing');
+  });
 });
