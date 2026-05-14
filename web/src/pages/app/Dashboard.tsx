@@ -1,20 +1,33 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getDashboard, type DashboardSummary } from '../../lib/dashboard';
-import { get } from '../../lib/api';
+import { get, getOnboardingState, type OnboardingState } from '../../lib/api';
 
 interface ReleaseOverview {
   packetCount: number;
   activeRunCount: number;
 }
 
+/**
+ * Returns true when the hosted onboarding banner should be shown.
+ * Conditions: user has an active hosted subscription AND onboarding is not yet complete.
+ */
+function shouldShowHostedOnboarding(onboarding: OnboardingState | null): boolean {
+  if (!onboarding) return false;
+  if (onboarding.completedAt) return false;
+  return onboarding.subscription.hasHosted;
+}
+
 export default function Dashboard() {
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [release, setRelease] = useState<ReleaseOverview | null>(null);
+  const [onboarding, setOnboarding] = useState<OnboardingState | null>(null);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     getDashboard().then(setData).catch((e: Error) => setError(e.message));
+    getOnboardingState().then(setOnboarding).catch(() => {}); // non-critical
     Promise.all([
       get<{ packets: unknown[] }>('/api/app/packets'),
       get<{ releaseRuns: { status: string }[] }>('/api/app/release-runs'),
@@ -42,6 +55,43 @@ export default function Dashboard() {
         {!data.user.emailVerified && (
           <div className="mb-4 p-3 bg-brand-surface border border-brand-border rounded text-brand-danger font-sans text-sm">
             Please verify your email address to arm switches.
+          </div>
+        )}
+
+        {/* Hosted onboarding banner */}
+        {!onboardingDismissed && shouldShowHostedOnboarding(onboarding) && (
+          <div className="mb-6 p-4 bg-brand-surface border border-brand-accent rounded-lg">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="font-sans text-sm font-semibold text-brand-ink">
+                  Finish setting up Aegis Hosted
+                </p>
+                <p className="font-sans text-xs text-brand-muted mt-1">
+                  Complete your onboarding checklist to get your legacy switch ready.
+                </p>
+              </div>
+              <button
+                onClick={() => setOnboardingDismissed(true)}
+                className="flex-shrink-0 font-sans text-xs text-brand-muted hover:text-brand-ink transition-colors"
+                aria-label="Dismiss onboarding banner"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mt-3 flex gap-3">
+              <Link
+                to="/onboarding"
+                className="font-sans text-xs font-semibold text-white bg-brand-accent px-3 py-1.5 rounded hover:opacity-90 transition-opacity"
+              >
+                Continue setup &rarr;
+              </Link>
+              <button
+                onClick={() => setOnboardingDismissed(true)}
+                className="font-sans text-xs text-brand-muted hover:text-brand-ink transition-colors"
+              >
+                Remind me later
+              </button>
+            </div>
           </div>
         )}
 

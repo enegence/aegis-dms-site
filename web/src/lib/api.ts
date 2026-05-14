@@ -117,6 +117,36 @@ export const viewClaimKey = (token: string) =>
 export const acknowledgeClaimToken = (token: string) =>
   post<ClaimStatus>(`/api/claim/${token}/acknowledge`, {});
 
+// ── Onboarding API ─────────────────────────────────────────────────────────────
+
+export type OnboardingState = {
+  preferredProduct: 'relay' | 'hosted' | 'undecided';
+  currentStep: string;
+  completedAt: string | null;
+  subscription: {
+    plan: string | null;
+    status: string | null;
+    hasRelay: boolean;
+    hasHosted: boolean;
+  };
+  nextRoute: string;
+};
+
+export type TrustStatus = {
+  acknowledged: boolean;
+  version: string;
+  acknowledgedAt: string | null;
+};
+
+export const getOnboardingState = () => get<OnboardingState>('/api/onboarding');
+
+export const getTrustStatus = () => get<TrustStatus>('/api/onboarding/trust-status');
+
+export const acknowledgeHostedTrust = () =>
+  post<{ acknowledgementId: string; version: string }>('/api/onboarding/trust-acknowledge', {});
+
+export const completeOnboarding = () => post('/api/onboarding/complete', {});
+
 export async function downloadClaimPacket(token: string): Promise<{ blob: Blob; filename: string }> {
   const res = await fetch(`/api/claim/${token}/packet`, {
     method: 'GET',

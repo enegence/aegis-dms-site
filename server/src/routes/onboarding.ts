@@ -1,8 +1,15 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
-import { userOnboarding, subscriptions } from '../db/schema.js';
+import { createHash } from 'crypto';
+import { userOnboarding, subscriptions, trustAcknowledgements } from '../db/schema.js';
 import { writeAuditEvent } from '../services/audit.js';
+
+const HOSTED_TRUST_VERSION = 'hosted-v1';
+
+function hashValue(value: string): string {
+  return createHash('sha256').update(value).digest('hex');
+}
 
 const VALID_PRODUCTS = ['relay', 'hosted', 'undecided'] as const;
 type PreferredProduct = typeof VALID_PRODUCTS[number];
@@ -188,6 +195,65 @@ export async function onboardingRoutes(app: FastifyInstance) {
     return reply.send({
       completedAt: updated.completedAt?.toISOString() ?? null,
       currentStep: updated.currentStep,
+    });
+  });
+
+  // ── POST /api/onboarding/trust-acknowledge ──────────────────────────────────
+  // Records that the user has accepted the Hosted trust model (version hosted-v1).
+  // Inserts a row into trust_acknowledgements with mode='hosted', version='hosted-v1'.
+  // Auth + CSRF required.
+  app.post('/api/onboarding/trust-acknowledge', { preHandler: [app.requireAuth] }, async (req, reply) => {
+    const userId = req.userId!;
+
+    const ip = req.ip ?? null;
+    const userAgent = (req.headers['user-agent'] as string | undefined) ?? null;
+
+    const [row] = await app.db
+      .insert(trustAcknowledgements)
+      .values({
+        userId,
+        mode: 'hosted',
+        version: HOSTED_TRUST_VERSION,
+        ipHash: ip ? hashValue(ip) : null,
+        userAgentHash: userAgent ? hashValue(userAgent) : null,
+      })
+      .returning();
+
+    await writeAuditEvent(app.db, {
+      userId,
+      eventType: 'onboarding_hosted_trust_acknowledged',
+      actorType: 'user',
+      actorId: userId,
+      metadata: { version: HOSTED_TRUST_VERSION, acknowledgementId: row.id },
+    });
+
+    return reply.status(201).send({ acknowledgementId: row.id, version: HOSTED_TRUST_VERSION });
+  });
+
+  // ── GET /api/onboarding/trust-status ───────────────────────────────────────
+  // Returns whether the user has an active hosted trust acknowledgement.
+  // Auth required.
+  app.get('/api/onboarding/trust-status', { preHandler: [app.requireAuth] }, async (req, reply) => {
+    const userId = req.userId!;
+
+    const rows = await app.db
+      .select({ id: trustAcknowledgements.id, acceptedAt: trustAcknowledgements.acceptedAt })
+      .from(trustAcknowledgements)
+      .where(
+        and(
+          eq(trustAcknowledgements.userId, userId),
+          eq(trustAcknowledgements.mode, 'hosted'),
+          eq(trustAcknowledgements.version, HOSTED_TRUST_VERSION),
+        ),
+      );
+
+    const acknowledged = rows.length > 0;
+    const latestRow = rows[rows.length - 1] ?? null;
+
+    return reply.send({
+      acknowledged,
+      version: HOSTED_TRUST_VERSION,
+      acknowledgedAt: latestRow?.acceptedAt?.toISOString() ?? null,
     });
   });
 }
