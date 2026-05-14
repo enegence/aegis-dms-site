@@ -176,24 +176,21 @@ aegis-dms-site/
 - [x] Task 1–18: All complete
 
 **OSS Phase 3: COMPLETE** (292 passing tests, branch `oss-phase-3`, plan: `2026-05-08-aegis-oss-phase3.md`)
-- [x] Task 1: Schema extensions (packets, contact_claims, release_runs, encryption_keys)
-- [x] Task 2: Shared contracts + Zod schemas
-- [x] Task 3: Packet crypto service (AES-256-GCM)
-- [x] Task 4: Packet builder and repository
-- [x] Task 5: Packet API routes
-- [x] Task 6: S3-compatible storage provider
-- [x] Task 7: Dead-drop sync service and worker integration
-- [x] Task 8: Release run service (single active run constraint)
-- [x] Task 9: Contact cascade service
-- [x] Task 10: Public claim API routes
-- [x] Task 11: Cascade integration in worker (auto-builds packet, starts cascade)
-- [x] Task 12: Release status and audit log API routes
-- [x] Task 13: Claim portal UI
-- [x] Task 14: Release page and packet status UI
-- [x] Task 15: Audit log UI
-- [x] Task 16: Dashboard Phase 3 status cards
-- [x] Task 17: Documentation (dead-drop, release flow, key management, threat model)
-- [x] Task 18: End-to-end verification ← WE ARE HERE
+- [x] Task 1–18: All complete
+
+**OSS Phase 4: COMPLETE** (319 passing tests, branch `oss-phase-4`, plan: `2026-05-08-aegis-oss-phase4.md`) ← WE ARE HERE
+- [x] Task 1: Setup state, guards, first-run routing (428 before setup, /api/setup/status, TOTP login)
+- [x] Task 2: First-run setup wizard UI (6-step, deployment mode cards, TOTP login challenge)
+- [x] Task 3: Interactive setup.sh script + .env.example
+- [x] Task 4: Consolidated settings API (GET /api/settings + 6 PUT/POST endpoints)
+- [x] Task 5: Settings UI tabbed layout (8 tabs: Profile, Deployment, Notifications, Storage, Relay, Security, Packets, Danger Zone)
+- [x] Task 6: TOTP setup and disable flow (security routes + SecuritySettings inline wizard)
+- [x] Task 7: Backup and restore guidance (docs/backups.md + DangerZone reminder)
+- [x] Task 8: Docker and runtime hardening (healthcheck, bind mount, config validation)
+- [x] Task 9: E2E test harness (Playwright, 4 spec files)
+- [x] Task 10: Self-hosting documentation (self-hosting.md, troubleshooting.md, upgrading.md, README rewrite)
+- [x] Task 11: Alpha readiness checklist + dashboard warning banner
+- [x] Task 12: Final test and release candidate pass (TS build fix, completion notes)
 
 **SaaS Phase 3: COMPLETE** (369 passing tests, plan: `2026-05-08-aegis-dms-site-phase3.md`)
 - [x] Task 1: Schema verification and extension

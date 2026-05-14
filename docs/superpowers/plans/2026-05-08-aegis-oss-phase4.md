@@ -92,7 +92,7 @@ Before starting, the engineer needs:
 - Update/Create: `web/src/pages/Setup.tsx`
 - Test: `server/tests/setup-guards.test.ts`
 
-- [ ] **Step 1: Add setup status endpoint if missing**
+- [x] **Step 1: Add setup status endpoint if missing**
 
 Implement or confirm:
 
@@ -118,7 +118,7 @@ Rules:
 - Returns only setup state.
 ```
 
-- [ ] **Step 2: Harden setup route behavior**
+- [x] **Step 2: Harden setup route behavior**
 
 Confirm:
 
@@ -138,7 +138,7 @@ Rules:
 - Rejects repeat setup attempts once complete.
 ```
 
-- [ ] **Step 3: Add setup-aware route guards**
+- [x] **Step 3: Add setup-aware route guards**
 
 Server behavior:
 
@@ -157,7 +157,7 @@ Frontend behavior:
 - setupComplete=true and authenticated: route to /dashboard.
 ```
 
-- [ ] **Step 4: Test setup guard behavior**
+- [x] **Step 4: Test setup guard behavior**
 
 Create `server/tests/setup-guards.test.ts` covering:
 
@@ -170,7 +170,7 @@ protected route requires auth after setup
 claim route does not leak setup details
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run:
 
@@ -179,7 +179,7 @@ cd server && npm test -- setup-guards.test.ts
 npm test
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src web/src server/tests
@@ -203,7 +203,7 @@ git commit -m "feat: finalize setup status and first-run route guards"
 - Update: `web/src/lib/api.ts`
 - Test: `web/src/pages/Setup.test.tsx` or equivalent frontend test if available
 
-- [ ] **Step 1: Create wizard steps**
+- [x] **Step 1: Create wizard steps**
 
 Wizard steps:
 
@@ -216,7 +216,7 @@ Wizard steps:
 6. Review and create owner
 ```
 
-- [ ] **Step 2: Owner profile form**
+- [x] **Step 2: Owner profile form**
 
 Fields:
 
@@ -236,7 +236,7 @@ phone optional
 timezone defaults to browser timezone if available
 ```
 
-- [ ] **Step 3: Password/security step**
+- [x] **Step 3: Password/security step**
 
 Fields:
 
@@ -254,7 +254,7 @@ show password guidance
 no password strength telemetry
 ```
 
-- [ ] **Step 4: Deployment mode step**
+- [x] **Step 4: Deployment mode step**
 
 Available modes:
 
@@ -277,7 +277,7 @@ Copy must explain:
 Vault Mode stores and organizes your legacy information locally. It does not guarantee automated release if this machine is offline, destroyed, inaccessible, or unable to notify your contacts.
 ```
 
-- [ ] **Step 5: Acknowledgement step**
+- [x] **Step 5: Acknowledgement step**
 
 Require checkbox:
 
@@ -291,7 +291,7 @@ If Vault Mode selected, require:
 I understand Vault Mode is local planning/storage and may not perform automated release if this host is unavailable.
 ```
 
-- [ ] **Step 6: Submit setup**
+- [x] **Step 6: Submit setup**
 
 Call:
 
@@ -307,7 +307,7 @@ After success:
 - show next-step checklist card
 ```
 
-- [ ] **Step 7: Frontend test**
+- [x] **Step 7: Frontend test**
 
 Test:
 
@@ -318,7 +318,7 @@ deployment acknowledgement required
 successful setup routes to dashboard
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add web/src
@@ -338,7 +338,7 @@ git commit -m "feat: add guided first-run setup wizard"
 - Update: `README.md`
 - Test: manual shellcheck-style validation if available
 
-- [ ] **Step 1: Create script skeleton**
+- [x] **Step 1: Create script skeleton**
 
 `setup.sh` should:
 
@@ -360,7 +360,7 @@ Behavior:
 - print Docker Compose next steps
 ```
 
-- [ ] **Step 2: Generate high-entropy secrets**
+- [x] **Step 2: Generate high-entropy secrets**
 
 Use available tools in priority order:
 
@@ -374,7 +374,7 @@ node -e crypto.randomBytes(32).toString('hex')
 
 `AEGIS_FIELD_ENCRYPTION_KEY` should be 64 hex chars representing 32 bytes.
 
-- [ ] **Step 3: Prompt for optional providers**
+- [x] **Step 3: Prompt for optional providers**
 
 Prompt sections:
 
@@ -387,7 +387,7 @@ Relay? y/N
 
 If user skips, write blank config and explain it can be added in Settings later.
 
-- [ ] **Step 4: Add safety copy**
+- [x] **Step 4: Add safety copy**
 
 At completion, print:
 
@@ -397,7 +397,7 @@ Your SQLite database and data directory contain encrypted but sensitive applicat
 Vault Mode alone does not guarantee automated release.
 ```
 
-- [ ] **Step 5: Validate script locally**
+- [x] **Step 5: Validate script locally**
 
 Run:
 
@@ -409,7 +409,7 @@ chmod +x setup.sh
 
 Use a temp directory or reset `.env` afterward.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add setup.sh .env.example README.md
@@ -431,7 +431,7 @@ git commit -m "feat: add interactive self-hosted setup script"
 - Update: `server/src/services/storage.ts`
 - Test: `server/tests/settings.test.ts`
 
-- [ ] **Step 1: Define settings response shape**
+- [x] **Step 1: Define settings response shape**
 
 Create safe settings response:
 
@@ -476,7 +476,7 @@ interface SettingsResponse {
 
 Never return full SMTP passwords, S3 secrets, Telegram token, Relay API key, or field encryption keys.
 
-- [ ] **Step 2: Add settings update endpoints**
+- [x] **Step 2: Add settings update endpoints**
 
 Implement:
 
@@ -496,7 +496,7 @@ PUT /api/settings/packets
 
 All state-changing routes require auth + CSRF.
 
-- [ ] **Step 3: Encrypt provider secrets**
+- [x] **Step 3: Encrypt provider secrets**
 
 Encrypt at rest:
 
@@ -508,7 +508,7 @@ S3 secret access key
 Relay API key
 ```
 
-- [ ] **Step 4: Add test endpoints behavior**
+- [x] **Step 4: Add test endpoints behavior**
 
 Test endpoints should return:
 
@@ -522,7 +522,7 @@ Test endpoints should return:
 
 Do not echo secret values.
 
-- [ ] **Step 5: Add tests**
+- [x] **Step 5: Add tests**
 
 Test:
 
@@ -535,7 +535,7 @@ missing CSRF rejected
 unauthenticated rejected
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/routes/settings.ts server/src/services server/tests/settings.test.ts
@@ -561,7 +561,7 @@ git commit -m "feat: consolidate secure settings api"
 - Create: `web/src/components/settings/DangerZone.tsx`
 - Update: `web/src/lib/api.ts`
 
-- [ ] **Step 1: Build tabbed settings layout**
+- [x] **Step 1: Build tabbed settings layout**
 
 Tabs:
 
@@ -576,7 +576,7 @@ Packets
 Danger Zone
 ```
 
-- [ ] **Step 2: Profile settings**
+- [x] **Step 2: Profile settings**
 
 Allow update:
 
@@ -587,7 +587,7 @@ phone
 timezone
 ```
 
-- [ ] **Step 3: Deployment settings**
+- [x] **Step 3: Deployment settings**
 
 Show cards for:
 
@@ -609,7 +609,7 @@ whether current configuration is ready
 
 Mode changes require acknowledgement.
 
-- [ ] **Step 4: Notification settings**
+- [x] **Step 4: Notification settings**
 
 Support:
 
@@ -621,7 +621,7 @@ Test notification button
 
 Mask saved secrets.
 
-- [ ] **Step 5: Storage settings**
+- [x] **Step 5: Storage settings**
 
 Support:
 
@@ -644,7 +644,7 @@ configured/not configured
 Dead Drop readiness impact
 ```
 
-- [ ] **Step 6: Relay settings**
+- [x] **Step 6: Relay settings**
 
 Support current alpha behavior:
 
@@ -662,7 +662,7 @@ If authorization-code linking is not implemented yet, show disabled card:
 Guided Relay connection will be available when paired with Aegis DMS Site Relay linking.
 ```
 
-- [ ] **Step 7: Security settings**
+- [x] **Step 7: Security settings**
 
 Include:
 
@@ -672,7 +672,7 @@ active session note
 password change placeholder if not implemented
 ```
 
-- [ ] **Step 8: Packet settings**
+- [x] **Step 8: Packet settings**
 
 Include:
 
@@ -683,7 +683,7 @@ last packet uploaded
 manual packet sync button if Phase 3 supports it
 ```
 
-- [ ] **Step 9: Danger zone**
+- [x] **Step 9: Danger zone**
 
 Include guarded actions:
 
@@ -696,7 +696,7 @@ factory reset placeholder
 
 Factory reset may be documented but disabled unless implemented safely.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add web/src/pages/Settings.tsx web/src/components/settings web/src/lib/api.ts
@@ -717,7 +717,7 @@ git commit -m "feat: add complete self-hosted settings ui"
 - Update: `web/src/components/settings/SecuritySettings.tsx`
 - Test: `server/tests/totp.test.ts`
 
-- [ ] **Step 1: Add security routes**
+- [x] **Step 1: Add security routes**
 
 Implement:
 
@@ -737,7 +737,7 @@ Rules:
 - TOTP secret encrypted at rest.
 ```
 
-- [ ] **Step 2: Update login flow if needed**
+- [x] **Step 2: Update login flow if needed**
 
 If TOTP is enabled:
 
@@ -748,7 +748,7 @@ POST /api/login/totp verifies code and creates session
 
 If Phase 1/2 already implemented this, verify tests and UI.
 
-- [ ] **Step 3: Build UI flow**
+- [x] **Step 3: Build UI flow**
 
 Security settings should show:
 
@@ -758,7 +758,7 @@ TOTP setup started → show QR/secret + code input
 TOTP enabled → Disable flow
 ```
 
-- [ ] **Step 4: Add tests**
+- [x] **Step 4: Add tests**
 
 Test:
 
@@ -771,7 +771,7 @@ disable requires valid proof
 missing CSRF rejected
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/auth/totp.ts server/src/routes/security.ts server/src/index.ts web/src/components/settings/SecuritySettings.tsx server/tests/totp.test.ts
@@ -792,7 +792,7 @@ git commit -m "feat: add totp setup and security settings flow"
 - Optional Create: `server/src/routes/backup.ts`
 - Optional Test: `server/tests/backup.test.ts`
 
-- [ ] **Step 1: Document backup scope**
+- [x] **Step 1: Document backup scope**
 
 Back up:
 
@@ -811,7 +811,7 @@ Database alone may not be recoverable without .env.
 S3 packets may not be useful without key material and metadata.
 ```
 
-- [ ] **Step 2: Add backup checklist UI**
+- [x] **Step 2: Add backup checklist UI**
 
 In Danger Zone or Settings:
 
@@ -821,7 +821,7 @@ Last packet sync status
 Link to docs/backups.md
 ```
 
-- [ ] **Step 3: Optional backup archive endpoint**
+- [x] **Step 3: Optional backup archive endpoint**
 
 Only implement if safe:
 
@@ -840,7 +840,7 @@ Requirements:
 
 If not implemented, document manual backup commands instead.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/backups.md README.md web/src/components/settings/DangerZone.tsx
@@ -862,7 +862,7 @@ git commit -m "docs: add self-hosted backup and restore guidance"
 - Update: `server/src/index.ts`
 - Test: manual Docker build/run
 
-- [ ] **Step 1: Validate production config**
+- [x] **Step 1: Validate production config**
 
 At startup, fail in production if:
 
@@ -874,7 +874,7 @@ configured data directory missing and cannot be created
 configured provider secrets malformed
 ```
 
-- [ ] **Step 2: Ensure persistent volumes**
+- [x] **Step 2: Ensure persistent volumes**
 
 `docker-compose.yml` should include persistent mount:
 
@@ -883,7 +883,7 @@ volumes:
   - ./data:/app/data
 ```
 
-- [ ] **Step 3: Add healthcheck**
+- [x] **Step 3: Add healthcheck**
 
 Add Docker healthcheck:
 
@@ -897,7 +897,7 @@ healthcheck:
 
 Use `curl` or `wget` depending on image contents.
 
-- [ ] **Step 4: Build and run locally**
+- [x] **Step 4: Build and run locally**
 
 Run:
 
@@ -908,7 +908,7 @@ docker compose logs -f
 curl http://localhost:8000/health
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add Dockerfile docker-compose.yml .dockerignore server/src/config.ts server/src/index.ts
@@ -932,7 +932,7 @@ git commit -m "chore: harden docker runtime and config validation"
 - Create: `tests/e2e/settings.spec.ts`
 - Create: `tests/e2e/helpers.ts`
 
-- [ ] **Step 1: Add Playwright dependencies and scripts**
+- [x] **Step 1: Add Playwright dependencies and scripts**
 
 Root scripts:
 
@@ -943,7 +943,7 @@ Root scripts:
 }
 ```
 
-- [ ] **Step 2: Configure Playwright**
+- [x] **Step 2: Configure Playwright**
 
 Use local dev server:
 
@@ -959,7 +959,7 @@ AEGIS_DB_PATH=./data/e2e-aegis.db
 NODE_ENV=test
 ```
 
-- [ ] **Step 3: Setup wizard E2E**
+- [x] **Step 3: Setup wizard E2E**
 
 Test:
 
@@ -970,7 +970,7 @@ owner lands on dashboard
 login works after logout
 ```
 
-- [ ] **Step 4: Core app E2E**
+- [x] **Step 4: Core app E2E**
 
 Test:
 
@@ -984,7 +984,7 @@ arm switch
 check-in updates dashboard
 ```
 
-- [ ] **Step 5: Claim flow E2E**
+- [x] **Step 5: Claim flow E2E**
 
 Use test hooks or seeded data to simulate triggered release.
 
@@ -1000,7 +1000,7 @@ packet download/key view gated by claim state
 acknowledge completes claim
 ```
 
-- [ ] **Step 6: Settings E2E**
+- [x] **Step 6: Settings E2E**
 
 Test:
 
@@ -1012,7 +1012,7 @@ TOTP setup screen renders
 backup docs link visible
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add package.json web/package.json playwright.config.ts tests/e2e
@@ -1038,7 +1038,7 @@ git commit -m "test: add e2e coverage for setup settings and claim flows"
 - Create: `docs/troubleshooting.md`
 - Create: `docs/upgrading.md`
 
-- [ ] **Step 1: README structure**
+- [x] **Step 1: README structure**
 
 README should include:
 
@@ -1056,7 +1056,7 @@ Docs links
 License
 ```
 
-- [ ] **Step 2: Self-hosting guide**
+- [x] **Step 2: Self-hosting guide**
 
 Include:
 
@@ -1072,7 +1072,7 @@ updating containers
 backup/restore basics
 ```
 
-- [ ] **Step 3: Storage setup guide**
+- [x] **Step 3: Storage setup guide**
 
 Include examples for:
 
@@ -1083,7 +1083,7 @@ MinIO
 Backblaze B2 S3-compatible
 ```
 
-- [ ] **Step 4: Notification guide**
+- [x] **Step 4: Notification guide**
 
 Include:
 
@@ -1096,7 +1096,7 @@ notification test flow
 failure modes
 ```
 
-- [ ] **Step 5: Release modes doc**
+- [x] **Step 5: Release modes doc**
 
 Document:
 
@@ -1110,7 +1110,7 @@ Hosted
 
 For OSS, Hosted should be described as SaaS product, not local mode.
 
-- [ ] **Step 6: Key management doc**
+- [x] **Step 6: Key management doc**
 
 Document:
 
@@ -1126,7 +1126,7 @@ no Shamir in alpha
 no zero-knowledge claim in alpha
 ```
 
-- [ ] **Step 7: Threat model doc**
+- [x] **Step 7: Threat model doc**
 
 Document:
 
@@ -1141,7 +1141,7 @@ storage provider failure
 host unavailable at trigger time
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add README.md docs
@@ -1160,7 +1160,7 @@ git commit -m "docs: add self-hosting security and operations guides"
 - Update: `README.md`
 - Optional Update: `web/src/pages/Dashboard.tsx`
 
-- [ ] **Step 1: Create readiness checklist doc**
+- [x] **Step 1: Create readiness checklist doc**
 
 Checklist:
 
@@ -1182,7 +1182,7 @@ no default secrets in production
 no plaintext PII in audit logs
 ```
 
-- [ ] **Step 2: Add UI alpha warning if appropriate**
+- [x] **Step 2: Add UI alpha warning if appropriate**
 
 Dashboard or footer copy:
 
@@ -1190,7 +1190,7 @@ Dashboard or footer copy:
 Aegis Core alpha: verify your deployment, backups, notifications, and packet sync before relying on this system.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/alpha-readiness.md README.md web/src/pages/Dashboard.tsx
@@ -1208,7 +1208,7 @@ git commit -m "docs: add alpha readiness checklist"
 - Update: any failing files found during final pass
 - Create: `docs/phase4-completion-notes.md`
 
-- [ ] **Step 1: Run full server tests**
+- [x] **Step 1: Run full server tests**
 
 ```bash
 npm test
@@ -1220,31 +1220,31 @@ or:
 npm run test --workspace=server
 ```
 
-- [ ] **Step 2: Run frontend build**
+- [x] **Step 2: Run frontend build**
 
 ```bash
 npm run build --workspace=web
 ```
 
-- [ ] **Step 3: Run full app build**
+- [x] **Step 3: Run full app build**
 
 ```bash
 npm run build
 ```
 
-- [ ] **Step 4: Run Docker build**
+- [x] **Step 4: Run Docker build**
 
 ```bash
 docker compose build
 ```
 
-- [ ] **Step 5: Run E2E tests**
+- [x] **Step 5: Run E2E tests**
 
 ```bash
 npm run test:e2e
 ```
 
-- [ ] **Step 6: Manual smoke test**
+- [x] **Step 6: Manual smoke test**
 
 Test manually:
 
@@ -1260,7 +1260,7 @@ claim simulation
 backup docs visible
 ```
 
-- [ ] **Step 7: Completion notes**
+- [x] **Step 7: Completion notes**
 
 Create `docs/phase4-completion-notes.md` with:
 
@@ -1272,7 +1272,7 @@ manual smoke results
 recommended next phase
 ```
 
-- [ ] **Step 8: Final commit**
+- [x] **Step 8: Final commit**
 
 ```bash
 git add -A
