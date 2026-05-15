@@ -1909,13 +1909,13 @@ After completing all tasks, verify:
 
 ## Legal/trust
 
-- [ ] Terms page exists
-- [ ] Privacy page exists
-- [ ] Security page exists
-- [ ] AUP page exists
-- [ ] Data deletion page exists
-- [ ] Disclaimers page exists
-- [ ] Required acknowledgements stored
+- [x] Terms page exists
+- [x] Privacy page exists
+- [x] Security page exists
+- [x] AUP page exists
+- [x] Data deletion page exists
+- [x] Disclaimers page exists
+- [x] Required acknowledgements stored
 
 ## Testing/docs
 

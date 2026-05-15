@@ -190,6 +190,20 @@ export default function Pricing() {
           Alpha software. Not a legal instrument. Does not replace a will, trust, or attorney.
           Security has not been independently audited. Use at your own risk.
         </p>
+
+        <div className="mt-6 text-center">
+          <p className="font-sans text-xs text-brand-muted">
+            <Link to="/terms" className="text-brand-accent hover:underline">Terms</Link>
+            {' · '}
+            <Link to="/privacy" className="text-brand-accent hover:underline">Privacy</Link>
+            {' · '}
+            <Link to="/security" className="text-brand-accent hover:underline">Security</Link>
+            {' · '}
+            <Link to="/disclaimers" className="text-brand-accent hover:underline">Disclaimers</Link>
+            {' · '}
+            <Link to="/acceptable-use" className="text-brand-accent hover:underline">Acceptable Use</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { nanoid } from 'nanoid';
 import { createHash } from 'crypto';
 import { eq } from 'drizzle-orm';
-import { users } from '../db/schema.js';
+import { users, trustAcknowledgements } from '../db/schema.js';
 import { hashPassword, verifyPassword } from '../auth/password.js';
 import { createSession, deleteSession } from '../auth/session.js';
 import { sendEmail, buildVerifyEmailHtml, buildResetPasswordHtml } from '../services/email.js';
@@ -13,6 +13,7 @@ const registerSchema = z.object({
   email: z.string().email().max(320),
   password: z.string().min(8).max(256),
   timezone: z.string().default('UTC'),
+  termsVersion: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -41,7 +42,7 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: 'Invalid input', details: body.error.flatten() });
     }
 
-    const { displayName, email, password, timezone } = body.data;
+    const { displayName, email, password, timezone, termsVersion } = body.data;
 
     const [existing] = await app.db.select({ id: users.id })
       .from(users)
@@ -63,6 +64,14 @@ export async function authRoutes(app: FastifyInstance) {
       emailVerifyToken,
       emailVerifyTokenExpiresAt,
     }).returning();
+
+    if (termsVersion) {
+      await app.db.insert(trustAcknowledgements).values({
+        userId: created.id,
+        mode: 'terms',
+        version: termsVersion,
+      });
+    }
 
     const sessionId = await createSession(app.db, created.id);
 

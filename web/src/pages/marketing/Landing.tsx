@@ -143,9 +143,22 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-brand-border bg-brand-surface px-6 py-6 text-center">
-        <p className="font-sans text-xs text-brand-muted">
+      <footer className="border-t border-brand-border bg-brand-surface px-6 py-8 text-center">
+        <p className="font-sans text-xs text-brand-muted mb-3">
           &copy; {new Date().getFullYear()} Aegis DMS. Open-source core under AGPL-3.0.
+        </p>
+        <p className="font-sans text-xs text-brand-muted">
+          <Link to="/terms" className="text-brand-accent hover:underline">Terms</Link>
+          {' · '}
+          <Link to="/privacy" className="text-brand-accent hover:underline">Privacy</Link>
+          {' · '}
+          <Link to="/security" className="text-brand-accent hover:underline">Security</Link>
+          {' · '}
+          <Link to="/disclaimers" className="text-brand-accent hover:underline">Disclaimers</Link>
+          {' · '}
+          <Link to="/acceptable-use" className="text-brand-accent hover:underline">Acceptable Use</Link>
+          {' · '}
+          <Link to="/data-deletion" className="text-brand-accent hover:underline">Data Deletion</Link>
         </p>
       </footer>
     </div>
