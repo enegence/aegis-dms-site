@@ -250,8 +250,8 @@ aegis-dms-site/
 - [x] Task 7: Legal, trust, and public safety pages — Terms/Privacy/Security/AUP/Disclaimers/Data Deletion pages, required acknowledgements, OSS trust-model references
 - [x] Task 8: Beta E2E test matrix — expanded OSS/Hosted/Relay flows, real OSS↔SaaS integration coverage at nightly or release-gate, CI wiring
 - [x] Task 9: Beta documentation and known limitations — beta-readiness docs, release checklist, known limitations, DeadDrop architecture doc, DeadDrop API preview doc
-- [ ] Task 10: OSS Relay linking, provider coverage, and accessibility polish ← WE ARE HERE — real Relay auth-code linking with SaaS, TOTP recovery/password change/rate-limit carryovers, provider presets/docs, accessibility smoke coverage
-- [ ] Task 11: Production deployment, email templates, alerting, and release packaging — SaaS production deploy/DNS/rollback runbook, public support/contact flow, production-safe email templates, operator alerting, OSS beta release packaging
+- [x] Task 10: OSS Relay linking, provider coverage, and accessibility polish — relay auth-code link-exchange endpoint, TOTP recovery codes (8 one-time codes, encrypted, constant-time verify), password change + session invalidation, @fastify/rate-limit on login/recovery/claim, S3/SMTP provider docs, a11y on Login/Setup/SecuritySettings/ClaimPortal/Register/AdminUsers (OSS: 504 tests, SaaS: 615 tests)
+- [ ] Task 11: Production deployment, email templates, alerting, and release packaging — SaaS production deploy/DNS/rollback runbook, public support/contact flow, production-safe email templates, operator alerting, OSS beta release packaging ← WE ARE HERE
 
 ---
 
