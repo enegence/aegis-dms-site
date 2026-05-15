@@ -9,6 +9,14 @@
  */
 
 import { eq, count, and, lte, inArray } from 'drizzle-orm';
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 import type { AegisDb } from '../db/index.js';
 import { workerHeartbeats, notificationDeliveries, releaseRuns } from '../db/schema.js';
 import { sendEmailStructured } from './email.js';
@@ -119,8 +127,16 @@ export async function getActiveAlerts(db: AegisDb): Promise<Alert[]> {
  * Minute-level deduplication set.
  * Key format: `${alert.type}:${raisedAt.toISOString().slice(0, 16)}`
  * Resets on module reload — acceptable for beta.
+ * Capped at 1000 entries to prevent unbounded growth.
  */
 const _sentAlertKeys = new Set<string>();
+
+function addSentAlertKey(key: string): void {
+  if (_sentAlertKeys.size >= 1000) {
+    _sentAlertKeys.clear();
+  }
+  _sentAlertKeys.add(key);
+}
 
 /**
  * Detects active alerts via getActiveAlerts and emails each one to the operator.
@@ -173,9 +189,9 @@ export async function sendOperatorAlerts(
   </div>
   <div style="background:#fff;padding:24px 20px;border:1px solid #DDE8F4;border-top:none;border-radius:0 0 6px 6px;">
     <table style="border-collapse:collapse;width:100%;font-size:14px;color:#0B1C2C;">
-      <tr><td style="padding:6px 0;color:#4A6B8A;width:100px;"><strong>Type</strong></td><td style="padding:6px 0;">${alert.type}</td></tr>
-      <tr><td style="padding:6px 0;color:#4A6B8A;"><strong>Severity</strong></td><td style="padding:6px 0;">${alert.severity}</td></tr>
-      <tr><td style="padding:6px 0;color:#4A6B8A;"><strong>Message</strong></td><td style="padding:6px 0;">${alert.message}</td></tr>
+      <tr><td style="padding:6px 0;color:#4A6B8A;width:100px;"><strong>Type</strong></td><td style="padding:6px 0;">${escapeHtml(alert.type)}</td></tr>
+      <tr><td style="padding:6px 0;color:#4A6B8A;"><strong>Severity</strong></td><td style="padding:6px 0;">${escapeHtml(alert.severity)}</td></tr>
+      <tr><td style="padding:6px 0;color:#4A6B8A;"><strong>Message</strong></td><td style="padding:6px 0;">${escapeHtml(alert.message)}</td></tr>
       <tr><td style="padding:6px 0;color:#4A6B8A;"><strong>Raised at</strong></td><td style="padding:6px 0;">${alert.raisedAt.toISOString()}</td></tr>
     </table>
     <p style="font-size:11px;color:#8AAAC8;margin-top:20px;">This is an automated operational alert. No user PII is included.</p>
@@ -185,7 +201,7 @@ export async function sendOperatorAlerts(
 
     if (!opts.postmarkApiToken) {
       console.log(`[alerts-stub] Would send operator alert: ${subject} — ${alert.message}`);
-      _sentAlertKeys.add(dedupeKey);
+      addSentAlertKey(dedupeKey);
       continue;
     }
 
@@ -200,7 +216,7 @@ export async function sendOperatorAlerts(
       if (result.error) {
         console.error(`[alerts] Failed to send operator alert for ${alert.type}: ${result.error}`);
       } else {
-        _sentAlertKeys.add(dedupeKey);
+        addSentAlertKey(dedupeKey);
       }
     } catch (err) {
       console.error(`[alerts] Unexpected error sending operator alert for ${alert.type}:`, err);

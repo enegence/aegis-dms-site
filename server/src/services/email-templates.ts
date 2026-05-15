@@ -13,6 +13,14 @@ export interface EmailTemplate {
   text: string;
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 // ── Shared layout helpers ────────────────────────────────────────────────────
 
 const LEGAL_FOOTER_HTML = `
@@ -27,7 +35,7 @@ function wrapHtml(title: string, body: string): string {
   return `
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title></head>
 <body style="margin:0;padding:0;background:#F4F8FB;">
   <div style="font-family:sans-serif;max-width:520px;margin:40px auto;padding:0 16px;">
     <div style="background:#0B1C2C;padding:20px 24px;border-radius:6px 6px 0 0;">
@@ -154,7 +162,7 @@ export function buildRelayOfflineAlertTemplate(relayName: string, offlineSince: 
   const body = `
     <h1 style="font-size:22px;color:#0B1C2C;margin:0 0 12px;">Relay connection offline</h1>
     <p style="color:#4A6B8A;line-height:1.6;margin:0 0 8px;">
-      Your Aegis Relay connection <strong>${relayName}</strong> has gone offline.
+      Your Aegis Relay connection <strong>${escapeHtml(relayName)}</strong> has gone offline.
     </p>
     <p style="color:#4A6B8A;line-height:1.6;margin:0 0 16px;">
       <strong>Offline since:</strong> ${offlineSinceStr}
@@ -185,17 +193,17 @@ export function buildBillingStateChangeTemplate(
     payment_failed: {
       subject: 'Payment failed — action required for your Aegis DMS subscription',
       title: 'Payment failed',
-      message: `A payment for <strong>${plan}</strong> was declined. Please update your payment method to keep your Aegis DMS subscription active. If payment is not resolved, your account may be downgraded.`,
+      message: `A payment for <strong>${escapeHtml(plan)}</strong> was declined. Please update your payment method to keep your Aegis DMS subscription active. If payment is not resolved, your account may be downgraded.`,
     },
     subscription_cancelled: {
       subject: 'Your Aegis DMS subscription has been cancelled',
       title: 'Subscription cancelled',
-      message: `Your subscription to <strong>${plan}</strong> has been cancelled. You will retain access until the end of your current billing period. After that, your account will revert to the free tier. If this was a mistake, you can resubscribe from the billing portal.`,
+      message: `Your subscription to <strong>${escapeHtml(plan)}</strong> has been cancelled. You will retain access until the end of your current billing period. After that, your account will revert to the free tier. If this was a mistake, you can resubscribe from the billing portal.`,
     },
     subscription_renewed: {
       subject: 'Your Aegis DMS subscription has been renewed',
       title: 'Subscription renewed',
-      message: `Your subscription to <strong>${plan}</strong> has been successfully renewed. Thank you for continuing to use Aegis DMS.`,
+      message: `Your subscription to <strong>${escapeHtml(plan)}</strong> has been successfully renewed. Thank you for continuing to use Aegis DMS.`,
     },
   };
 

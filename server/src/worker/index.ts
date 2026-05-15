@@ -7,6 +7,7 @@ import { runRelayEscrowCascadeOnce } from '../services/relay-assisted-cascade.js
 import { runHostedWorkerOnce } from './hosted-worker.js';
 import { writeAuditEvent } from '../services/audit.js';
 import { purgeExpiredIdempotencyKeys } from '../services/idempotency-keys.js';
+import { sendOperatorAlerts } from '../services/alerts.js';
 
 // ─── Worker restart recovery ──────────────────────────────────────────────────
 
@@ -154,6 +155,14 @@ export function startWorker(
       purgeExpiredIdempotencyKeys(db).catch((err) =>
         console.error('[worker] purge idempotency keys error:', err),
       );
+    }
+    // Operator alerting — only if configured
+    const operatorEmail = process.env.OPERATOR_EMAIL ?? '';
+    const fromEmail = process.env.FROM_EMAIL ?? process.env.POSTMARK_FROM_EMAIL ?? '';
+    const postmarkApiToken = process.env.POSTMARK_API_TOKEN ?? '';
+    const baseUrl = process.env.BASE_URL ?? 'http://localhost:3000';
+    if (operatorEmail) {
+      await sendOperatorAlerts(db, { operatorEmail, fromEmail, postmarkApiToken, baseUrl });
     }
     if (!stopped) {
       timeout = setTimeout(tick, intervalMs);
