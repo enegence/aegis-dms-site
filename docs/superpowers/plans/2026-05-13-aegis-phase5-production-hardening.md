@@ -1929,10 +1929,10 @@ After completing all tasks, verify:
 - [x] real OSS<->SaaS integration coverage passes on nightly or release gate <!-- nightly job documented in e2e-test-plan.md -->
 - [x] PR-path Relay E2E or mocked integration tests pass <!-- relay-escrow.spec.ts -->
 - [x] CI runs unit/build/E2E checks <!-- .github/workflows/test.yml -->
-- [ ] Known limitations doc exists
-- [ ] Release checklist exists
-- [ ] DeadDrop architecture doc exists
-- [ ] DeadDrop API preview doc exists
+- [x] Known limitations doc exists
+- [x] Release checklist exists
+- [x] DeadDrop architecture doc exists
+- [x] DeadDrop API preview doc exists
 
 ---
 

@@ -249,8 +249,8 @@ aegis-dms-site/
 - [x] Task 6: SaaS support, billing, and admin hardening — admin 403 enforcement, full Stripe lifecycle (9 event types), idempotent webhook replay, UserDetail view, support runbook (SaaS: 610 tests)
 - [x] Task 7: Legal, trust, and public safety pages — Terms/Privacy/Security/AUP/Disclaimers/Data Deletion pages, required acknowledgements, OSS trust-model references
 - [x] Task 8: Beta E2E test matrix — expanded OSS/Hosted/Relay flows, real OSS↔SaaS integration coverage at nightly or release-gate, CI wiring
-- [ ] Task 9: Beta documentation and known limitations ← WE ARE HERE — beta-readiness docs, release checklist, known limitations, DeadDrop architecture doc, DeadDrop API preview doc
-- [ ] Task 10: OSS Relay linking, provider coverage, and accessibility polish — real Relay auth-code linking with SaaS, TOTP recovery/password change/rate-limit carryovers, provider presets/docs, accessibility smoke coverage
+- [x] Task 9: Beta documentation and known limitations — beta-readiness docs, release checklist, known limitations, DeadDrop architecture doc, DeadDrop API preview doc
+- [ ] Task 10: OSS Relay linking, provider coverage, and accessibility polish ← WE ARE HERE — real Relay auth-code linking with SaaS, TOTP recovery/password change/rate-limit carryovers, provider presets/docs, accessibility smoke coverage
 - [ ] Task 11: Production deployment, email templates, alerting, and release packaging — SaaS production deploy/DNS/rollback runbook, public support/contact flow, production-safe email templates, operator alerting, OSS beta release packaging
 
 ---
