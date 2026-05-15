@@ -1879,7 +1879,7 @@ After completing all tasks, verify:
 - [ ] Permanent failure handling implemented
 - [ ] Payload minimization tests pass
 - [ ] SaaS Postmark event handling implemented or explicitly deferred with doc note
-- [ ] production-safe email templates implemented and tested
+- [x] production-safe email templates implemented and tested
 
 ## Data lifecycle
 
@@ -1896,7 +1896,7 @@ After completing all tasks, verify:
 - [ ] Worker heartbeat persisted
 - [ ] Structured redacted logs implemented
 - [ ] SaaS admin operational dashboard shows non-sensitive health/metrics
-- [ ] operational alerting exists for beta-critical failures
+- [x] operational alerting exists for beta-critical failures
 
 ## SaaS operations
 
@@ -1904,8 +1904,8 @@ After completing all tasks, verify:
 - [ ] Webhook replay is idempotent
 - [ ] Admin support view excludes decrypted PII
 - [ ] Support runbook exists
-- [ ] public support/contact flow exists
-- [ ] real production deploy/DNS runbook exists
+- [x] public support/contact flow exists
+- [x] real production deploy/DNS runbook exists
 
 ## Legal/trust
 
@@ -1923,7 +1923,7 @@ After completing all tasks, verify:
 - [ ] provider coverage docs/tests exist for supported OSS provider classes
 - [ ] accessibility smoke coverage exists for critical flows
 - [ ] docs/accessibility.md exists
-- [ ] OSS public release packaging is documented and wired
+- [x] OSS public release packaging is documented and wired
 - [ ] OSS E2E matrix passes <!-- in aegis/ repo -->
 - [x] SaaS E2E matrix passes <!-- 65 specs in tests/e2e/ -->
 - [x] real OSS<->SaaS integration coverage passes on nightly or release gate <!-- nightly job documented in e2e-test-plan.md -->
