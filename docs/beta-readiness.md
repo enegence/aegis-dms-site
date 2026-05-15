@@ -2,9 +2,9 @@
 
 Last updated: 2026-05-14
 
-## Status: IN PROGRESS (Phase 5)
+## Status: COMPLETE (Phase 5)
 
-This document tracks progress toward beta readiness. Alpha-readiness was declared at the end of Phase 4. Phase 5 (this document) tracks the additional hardening required for a public beta.
+This document tracks progress toward beta readiness. Alpha-readiness was declared at the end of Phase 4. Phase 5 (this document) tracks the additional hardening required for a public beta. All 11 Phase 5 tasks are complete.
 
 ---
 
@@ -21,11 +21,9 @@ This document tracks progress toward beta readiness. Alpha-readiness was declare
 - [x] **Task 7**: Legal and trust pages — `/terms`, `/privacy`, `/security`, `/acceptable-use`, `/disclaimers`, `/data-deletion`; terms acceptance on signup; `trust_acknowledgements` write at registration (615 tests)
 - [x] **Task 8**: Beta E2E test matrix — 65 E2E specs (11 spec files), CI workflow, `docs/e2e-test-plan.md`
 
-### Pending
-
-- [ ] **Task 9**: Beta documentation — known limitations, release checklist, DeadDrop architecture doc, DeadDrop API preview (IN PROGRESS)
-- [ ] **Task 10**: OSS Relay linking, TOTP recovery codes, owner password change, rate-limit carryovers, provider coverage, accessibility polish
-- [ ] **Task 11**: Production deployment, email templates, operator alerting, OSS beta release packaging
+- [x] **Task 9**: Beta documentation — known limitations, release checklist, DeadDrop architecture doc, DeadDrop API preview
+- [x] **Task 10**: OSS Relay linking, TOTP recovery codes, owner password change, rate-limit carryovers, provider coverage, accessibility polish
+- [x] **Task 11**: Production deployment, email templates, operator alerting, OSS beta release packaging
 
 ---
 
@@ -67,9 +65,9 @@ This document tracks progress toward beta readiness. Alpha-readiness was declare
 - [x] Account export and deletion
 - [x] Admin dashboard
 - [x] Legal pages with terms acceptance
-- [ ] Branded email templates — deferred to Task 11
-- [ ] OSS Relay auth-code linking — deferred to Task 10
-- [ ] TOTP recovery codes (OSS) — deferred to Task 10
+- [x] Branded email templates (Task 11)
+- [x] OSS Relay auth-code linking (Task 10)
+- [x] TOTP recovery codes (OSS) (Task 10)
 
 ### Documentation (required for beta)
 
@@ -84,17 +82,17 @@ This document tracks progress toward beta readiness. Alpha-readiness was declare
 - [x] `docs/release-checklist.md`
 - [x] `docs/deaddrop-architecture.md`
 - [x] `docs/deaddrop-api-preview.md`
-- [ ] `docs/beta-readiness.md` updates complete after Task 9
-- [ ] Accessibility doc — deferred to Task 10
+- [x] `docs/beta-readiness.md` updates complete after Task 9
+- [x] Accessibility doc (`docs/accessibility.md`)
 
 ### Infrastructure (required for beta)
 
 - [x] Railway deployment configured
 - [x] Multi-stage Docker build
 - [x] CI workflow (`.github/workflows/test.yml`)
-- [ ] Production domain and DNS — Task 11
-- [ ] Stripe production webhook configured — Task 11
-- [ ] Branded email templates — Task 11
+- [x] Production domain and DNS (Task 11)
+- [x] Stripe production webhook configured (Task 11)
+- [x] Branded email templates (Task 11)
 
 ---
 

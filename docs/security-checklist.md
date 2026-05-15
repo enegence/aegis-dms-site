@@ -157,7 +157,7 @@ Status: Alpha — see Known Limitations
 **Tests proving behavior:**
 - `server/tests/hosted-claim-routes.test.ts`
 
-**Known limitations:** Claim brute-force throttling not yet implemented.
+**Known limitations:** Claim rate limiting implemented via `@fastify/rate-limit` (Phase 5 Task 10).
 
 ---
 
@@ -169,7 +169,7 @@ Status: Alpha — see Known Limitations
 
 **Tests proving behavior:** `server/tests/hosted-claim-routes.test.ts`
 
-**Known limitations:** Claim PIN brute-force throttling `it.todo` — not yet implemented.
+**Known limitations:** Claim PIN rate limiting implemented via `@fastify/rate-limit` (Phase 5 Task 10).
 
 ---
 
@@ -280,13 +280,14 @@ Status: Alpha — see Known Limitations
 
 ## Rate Limiting
 
-**Required behavior:** Login, register, password reset endpoints should be rate-limited.
+**Required behavior:** Login, register, password reset, and claim endpoints are rate-limited.
 
-**Implemented files:** Not yet implemented in Phase 4.
+**Implemented files:**
+- `@fastify/rate-limit` applied on login, register, request-reset, and claim routes (added Phase 5 Task 10)
 
-**Tests proving behavior:** `server/tests/security-baseline.test.ts` — `it.todo`
+**Tests proving behavior:** `server/tests/security-baseline.test.ts`
 
-**Known limitations:** No rate limiting implemented. Critical gap for production.
+**Known limitations:** Rate limits are configurable via env vars; default values suitable for beta. No distributed rate-limit store (in-process only — resets on restart).
 
 ---
 

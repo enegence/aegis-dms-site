@@ -52,7 +52,7 @@ Use this checklist before every significant release (beta launch, GA, point rele
 
 - [ ] Email delivery tested with real Postmark credentials
 - [ ] `notification_deliveries` retry logic verified (max 3 retries, backoff)
-- [ ] Postmark webhook ingest verified (`POST /api/notifications/postmark/webhook`)
+- [ ] Postmark webhook ingest verified (`POST /webhooks/postmark`)
 - [ ] Telegram bot token active and verified (if configured)
 
 ## Worker and Release
@@ -89,7 +89,7 @@ Use this checklist before every significant release (beta launch, GA, point rele
 
 Run these manually after deploying to production:
 
-- [ ] `GET /api/health` returns `{ status: "ok" }`
+- [ ] `GET /health` returns `{ status: "ok" }`
 - [ ] `GET /api/health/details` returns worker + DB metrics
 - [ ] Landing page loads (`/`)
 - [ ] Register form works end-to-end

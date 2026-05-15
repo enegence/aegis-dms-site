@@ -1595,7 +1595,7 @@ git commit -m "docs: beta readiness known limitations and deaddrop architecture"
 - Modify: `web/src/pages/Login.tsx` in OSS
 - Modify: `web/src/pages/claim/*` in OSS
 - Create/Modify: `server/src/routes/security.ts` in OSS
-- Create/Modify: `server/tests/relay-linking.test.ts`
+- Create/Modify: `server/tests/relay-linking.test.ts` <!-- DEVIATION: named relay-link.test.ts; full relay auth-code linking coverage exists there -->
 - Create/Modify: `server/tests/accessibility-smoke.test.ts`
 - Create/Modify: `docs/accessibility.md`
 - Modify: corresponding Relay auth-code/linking routes in `aegis-dms-site/` if needed
