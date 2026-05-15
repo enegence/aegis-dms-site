@@ -7,6 +7,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { loadConfig, validateProductionConfig, type AppConfig } from './config.js';
 import { getDb, type AegisDb } from './db/index.js';
+import { createLoggerConfig } from './logger.js';
 import authPlugin from './auth/plugin.js';
 import { validateCsrfToken } from './auth/csrf.js';
 import { healthRoutes } from './routes/health.js';
@@ -28,6 +29,8 @@ import { onboardingRoutes } from './routes/onboarding.js';
 import { relayLinkRoutes } from './routes/relay-link.js';
 import { settingsRoutes } from './routes/settings.js';
 import { securityRoutes } from './routes/security.js';
+import { postmarkWebhookRoutes } from './routes/postmark-webhook.js';
+import { accountRoutes } from './routes/account.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -47,9 +50,10 @@ const __dirname = dirname(__filename);
 export async function buildApp(overrides: Partial<AppConfig> = {}) {
   const config = loadConfig(overrides);
   const isProduction = process.env.NODE_ENV === 'production';
+  const loggerConfig = createLoggerConfig({ testing: !!config.testing });
 
   const app = Fastify({
-    logger: !config.testing,
+    logger: loggerConfig as any,
     // Trust Railway's reverse proxy so req.ip / X-Forwarded-For are correct
     trustProxy: isProduction,
   });
@@ -96,6 +100,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
   await app.register(relayLinkRoutes);
   await app.register(settingsRoutes);
   await app.register(securityRoutes);
+  await app.register(postmarkWebhookRoutes);
+  await app.register(accountRoutes);
 
   // Serve built Vite frontend in production (or when server/static exists)
   // Static dir is at <server-root>/static relative to this compiled file's directory
@@ -137,6 +143,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}) {
       '/api/relay/heartbeat',
       '/api/relay/link/exchange',
       '/api/claim/',
+      '/webhooks/',
+      '/api/account/confirm-deletion', // token-authenticated, no session required
     ];
     if (exemptPaths.some(p => url.startsWith(p))) return;
 

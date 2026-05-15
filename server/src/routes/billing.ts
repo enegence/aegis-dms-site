@@ -1,8 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
-import { users, subscriptions, stripeWebhookEvents } from '../db/schema.js';
+import { users, subscriptions } from '../db/schema.js';
 import { getStripe, createCheckoutSession, createPortalSession } from '../services/stripe.js';
+import { checkOrSetIdempotencyKey } from '../services/idempotency-keys.js';
 import type Stripe from 'stripe';
 
 const checkoutSchema = z.object({
@@ -147,37 +148,41 @@ export async function billingRoutes(app: FastifyInstance) {
 
   // Stripe webhook
   app.post('/api/billing/webhook', async (req, reply) => {
-    const stripe = getStripe(app.config.stripe.secretKey);
     const sig = req.headers['stripe-signature'];
-
-    if (!sig || !app.config.stripe.webhookSecret) {
-      return reply.status(400).send({ error: 'Missing signature or webhook secret' });
-    }
+    const isTestBypass = app.config.testing && req.headers['x-stripe-test-bypass'] === '1';
 
     let event: Stripe.Event;
-    try {
-      event = stripe.webhooks.constructEvent(
-        (req as any).rawBody as string,
-        sig as string,
-        app.config.stripe.webhookSecret,
-      );
-    } catch (err) {
-      return reply.status(400).send({ error: 'Invalid signature' });
+
+    if (isTestBypass) {
+      // In test mode, parse the raw body directly without signature verification
+      try {
+        event = JSON.parse((req as any).rawBody as string) as Stripe.Event;
+      } catch {
+        return reply.status(400).send({ error: 'Invalid JSON' });
+      }
+    } else {
+      if (!sig || !app.config.stripe.webhookSecret) {
+        return reply.status(400).send({ error: 'Missing signature or webhook secret' });
+      }
+
+      const stripe = getStripe(app.config.stripe.secretKey);
+      try {
+        event = stripe.webhooks.constructEvent(
+          (req as any).rawBody as string,
+          sig as string,
+          app.config.stripe.webhookSecret,
+        );
+      } catch {
+        return reply.status(400).send({ error: 'Invalid signature' });
+      }
     }
 
-    // Idempotency check
-    const [existing] = await app.db.select()
-      .from(stripeWebhookEvents)
-      .where(eq(stripeWebhookEvents.id, event.id));
-
-    if (existing) {
+    // Idempotency check using idempotency_keys table
+    const idemKey = `stripe_webhook:${event.id}`;
+    const idem = await checkOrSetIdempotencyKey(app.db, idemKey, 'stripe_webhook');
+    if (idem.found) {
       return reply.send({ received: true });
     }
-
-    await app.db.insert(stripeWebhookEvents).values({
-      id: event.id,
-      type: event.type,
-    });
 
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -197,19 +202,27 @@ export async function billingRoutes(app: FastifyInstance) {
         break;
       }
 
+      case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const sub = event.data.object as Stripe.Subscription;
+        const newStatus = sub.status === 'active' ? 'active'
+          : sub.status === 'past_due' ? 'past_due'
+          : sub.status === 'canceled' ? 'cancelled'
+          : sub.status === 'trialing' ? 'trialing'
+          : sub.status === 'paused' ? 'paused'
+          : 'active';
+
+        const updateFields: Record<string, unknown> = {
+          status: newStatus,
+          updatedAt: new Date(),
+        };
+
+        if ((sub as any).current_period_end) {
+          updateFields.currentPeriodEnd = new Date((sub as any).current_period_end * 1000);
+        }
+
         await app.db.update(subscriptions)
-          .set({
-            status: sub.status === 'active' ? 'active'
-              : sub.status === 'past_due' ? 'past_due'
-              : sub.status === 'canceled' ? 'cancelled'
-              : sub.status === 'trialing' ? 'trialing'
-              : sub.status === 'paused' ? 'paused'
-              : 'active',
-            currentPeriodEnd: new Date((sub as any).current_period_end * 1000),
-            updatedAt: new Date(),
-          })
+          .set(updateFields as Parameters<ReturnType<typeof app.db.update>['set']>[0])
           .where(eq(subscriptions.stripeSubscriptionId, sub.id));
         break;
       }
@@ -223,6 +236,56 @@ export async function billingRoutes(app: FastifyInstance) {
             updatedAt: new Date(),
           })
           .where(eq(subscriptions.stripeSubscriptionId, sub.id));
+        break;
+      }
+
+      case 'customer.subscription.paused': {
+        const sub = event.data.object as Stripe.Subscription;
+        await app.db.update(subscriptions)
+          .set({
+            status: 'paused',
+            updatedAt: new Date(),
+          })
+          .where(eq(subscriptions.stripeSubscriptionId, sub.id));
+        break;
+      }
+
+      case 'invoice.paid': {
+        const invoice = event.data.object as Stripe.Invoice;
+        if (invoice.subscription) {
+          await app.db.update(subscriptions)
+            .set({
+              status: 'active',
+              updatedAt: new Date(),
+            })
+            .where(eq(subscriptions.stripeSubscriptionId, invoice.subscription as string));
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed':
+      case 'invoice.payment_action_required': {
+        const invoice = event.data.object as Stripe.Invoice;
+        if (invoice.subscription) {
+          await app.db.update(subscriptions)
+            .set({
+              status: 'past_due',
+              updatedAt: new Date(),
+            })
+            .where(eq(subscriptions.stripeSubscriptionId, invoice.subscription as string));
+        }
+        break;
+      }
+
+      case 'customer.deleted': {
+        const customer = event.data.object as Stripe.Customer;
+        await app.db.update(subscriptions)
+          .set({
+            status: 'cancelled',
+            cancelledAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(subscriptions.stripeCustomerId, customer.id));
         break;
       }
     }

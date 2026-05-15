@@ -15,6 +15,12 @@ export const users = pgTable('users', {
   timezone: text('timezone').notNull().default('UTC'),
   phone: text('phone'),
   role: text('role').notNull().default('user'),
+  // Account deletion flow
+  deletionTokenHash: text('deletion_token_hash'),
+  deletionTokenExpiresAt: timestamp('deletion_token_expires_at'),
+  pendingDeletion: boolean('pending_deletion').notNull().default(false),
+  deletedAt: timestamp('deleted_at'),
+  lastLoginAt: timestamp('last_login_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -282,6 +288,39 @@ export const userOnboarding = pgTable('user_onboarding', {
 // relay_escrow_materials: stores encrypted release material for Relay Escrow.
 // materialEncrypted must always be set — unencrypted key material is never stored.
 // acceptedAcknowledgementId links to the trust_acknowledgements record for consent.
+export const idempotencyKeys = pgTable('idempotency_keys', {
+  key: text('key').primaryKey(),
+  scope: text('scope').notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  resultJson: jsonb('result_json'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  expiresAt: timestamp('expires_at'),
+});
+
+export const notificationDeliveries = pgTable('notification_deliveries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  releaseRunId: uuid('release_run_id').references(() => releaseRuns.id, { onDelete: 'cascade' }),
+  claimId: uuid('claim_id'),
+  contactId: uuid('contact_id').notNull(),
+  channel: text('channel').notNull(), // 'email' | 'telegram'
+  provider: text('provider').notNull(),
+  // queued|sending|sent|delivered|failed_retryable|failed_permanent|cancelled
+  status: text('status').notNull().default('queued'),
+  attemptCount: integer('attempt_count').notNull().default(0),
+  lastAttemptAt: timestamp('last_attempt_at'),
+  nextAttemptAt: timestamp('next_attempt_at'),
+  providerMessageId: text('provider_message_id'),
+  lastErrorCode: text('last_error_code'),
+  lastErrorMessageRedacted: text('last_error_message_redacted'),
+  payloadHash: text('payload_hash'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  releaseRunIdx: index('notification_deliveries_release_run_id_idx').on(table.releaseRunId),
+  statusNextAttemptIdx: index('notification_deliveries_status_next_attempt_idx').on(table.status, table.nextAttemptAt),
+  providerMessageIdx: index('notification_deliveries_provider_message_id_idx').on(table.providerMessageId),
+}));
+
 export const relayEscrowMaterials = pgTable('relay_escrow_materials', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
@@ -296,4 +335,16 @@ export const relayEscrowMaterials = pgTable('relay_escrow_materials', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   revokedAt: timestamp('revoked_at'),
+});
+
+// worker_heartbeats: single-row upsert table (id = 'singleton').
+// Records last tick time, last success, last error for operational health checks.
+// lastErrorRedacted stores error type/code only — no stack traces, no user data.
+export const workerHeartbeats = pgTable('worker_heartbeats', {
+  id: text('id').primaryKey().default('singleton'),
+  lastTickAt: timestamp('last_tick_at'),
+  lastSuccessAt: timestamp('last_success_at'),
+  lastErrorAt: timestamp('last_error_at'),
+  lastErrorRedacted: text('last_error_redacted'),
+  tickDurationMs: integer('tick_duration_ms'),
 });

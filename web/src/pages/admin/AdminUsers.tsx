@@ -23,31 +23,37 @@ export default function AdminUsers() {
       .catch((e: Error) => setError(e.message));
   }, []);
 
-  if (error) return <div className="p-8 text-brand-danger font-sans">{error}</div>;
+  if (error) {
+    return (
+      <div className="p-8 font-sans">
+        <div role="alert" aria-live="assertive" className="text-brand-danger">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-brand-bg p-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="font-hand text-4xl font-bold mb-1 text-brand-ink">Users</h1>
-        <p className="font-sans text-sm text-brand-muted mb-6">{users.length} registered</p>
+        <p className="font-sans text-sm text-brand-muted mb-6" aria-live="polite">{users.length} registered</p>
 
-        <nav className="flex gap-4 mb-8 text-sm font-sans">
+        <nav aria-label="Admin navigation" className="flex gap-4 mb-8 text-sm font-sans">
           <Link to="/admin" className="text-brand-muted hover:text-brand-ink">Overview</Link>
-          <Link to="/admin/users" className="text-brand-accent font-semibold">Users</Link>
+          <Link to="/admin/users" className="text-brand-accent font-semibold" aria-current="page">Users</Link>
           <Link to="/admin/relay" className="text-brand-muted hover:text-brand-ink">Relay</Link>
           <Link to="/admin/release-runs" className="text-brand-muted hover:text-brand-ink">Release Runs</Link>
         </nav>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm font-sans border border-brand-border rounded-lg overflow-hidden">
+          <table aria-label="Registered users" className="w-full text-sm font-sans border border-brand-border rounded-lg overflow-hidden">
             <thead className="bg-brand-surface text-brand-muted">
               <tr>
-                <th className="px-4 py-2 text-left">Email</th>
-                <th className="px-4 py-2 text-left">Display Name</th>
-                <th className="px-4 py-2 text-left">Role</th>
-                <th className="px-4 py-2 text-left">Verified</th>
-                <th className="px-4 py-2 text-left">TOTP</th>
-                <th className="px-4 py-2 text-left">Joined</th>
+                <th scope="col" className="px-4 py-2 text-left">Email</th>
+                <th scope="col" className="px-4 py-2 text-left">Display Name</th>
+                <th scope="col" className="px-4 py-2 text-left">Role</th>
+                <th scope="col" className="px-4 py-2 text-left">Verified</th>
+                <th scope="col" className="px-4 py-2 text-left">TOTP</th>
+                <th scope="col" className="px-4 py-2 text-left">Joined</th>
               </tr>
             </thead>
             <tbody>
@@ -71,13 +77,13 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-4 py-2">
                     {u.emailVerified
-                      ? <span className="text-green-600">✓</span>
-                      : <span className="text-brand-muted">—</span>}
+                      ? <span className="text-green-600" aria-label="Email verified">✓</span>
+                      : <span className="text-brand-muted" aria-label="Email not verified">—</span>}
                   </td>
                   <td className="px-4 py-2">
                     {u.totpEnabled
-                      ? <span className="text-green-600">✓</span>
-                      : <span className="text-brand-muted">—</span>}
+                      ? <span className="text-green-600" aria-label="TOTP enabled">✓</span>
+                      : <span className="text-brand-muted" aria-label="TOTP not enabled">—</span>}
                   </td>
                   <td className="px-4 py-2 text-brand-muted">
                     {new Date(u.createdAt).toLocaleDateString()}

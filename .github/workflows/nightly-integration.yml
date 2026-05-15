@@ -1,0 +1,78 @@
+name: Nightly OSS↔SaaS Integration
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # 03:00 UTC daily
+  workflow_dispatch: {}
+
+# Real OSS<->SaaS integration: OSS authenticates to SaaS Relay via auth-code exchange,
+# sends heartbeats, SaaS detects offline state, and alerts fire.
+# Requires both repos to be checked out and network-connected services running.
+#
+# Alpha status: this job documents the intended integration path. Until both repos are
+# deployed to a shared test environment, the job runs the OSS and SaaS unit/integration
+# test suites as a substitute gate. See docs/e2e-test-plan.md for the full nightly spec.
+
+jobs:
+  saas-integration:
+    name: SaaS Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aegis
+          POSTGRES_PASSWORD: aegis
+          POSTGRES_DB: aegis_site_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://aegis:aegis@localhost:5432/aegis_site_test
+      SESSION_SECRET: nightly-session-secret-that-is-long-enough-for-tests
+      POSTMARK_API_TOKEN: ""
+      STRIPE_SECRET_KEY: ""
+      STRIPE_WEBHOOK_SECRET: ""
+      BASE_URL: http://localhost:3000
+      PORT: "3001"
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Run SaaS server tests
+        run: npm test
+        working-directory: server
+
+  oss-integration:
+    name: OSS Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/aegis
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: aegis-oss
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: aegis-oss/package-lock.json
+      - run: npm ci
+        working-directory: aegis-oss
+      - run: npm run build --workspace=packages/shared --workspace=packages/contracts
+        working-directory: aegis-oss
+      - name: Run OSS server tests
+        run: npm test
+        working-directory: aegis-oss/server

@@ -121,6 +121,8 @@ In Railway → Service → **Logs**. Filter by deployment or time range.
 
 ## Health Check
 
+### Public health (minimal)
+
 ```
 GET /health
 ```
@@ -135,11 +137,125 @@ Returns:
 - No auth required.
 - Railway uses this endpoint to validate deploys. If it returns non-200 within 100s, the deploy fails and the previous version is kept.
 
-To test manually:
-
 ```bash
 curl https://your-domain.com/health
 ```
+
+### Detailed health (admin-only)
+
+```
+GET /api/health/details
+Authorization: admin session cookie required
+```
+
+Returns a structured health report with no PII or secrets:
+
+```json
+{
+  "database":   { "status": "ok" },
+  "worker":     { "status": "ok|degraded|unknown", "lastTickAt": "<ISO>", "lastSuccessAt": "<ISO>", "tickDurationMs": 123 },
+  "storage":    { "status": "ok|error|unconfigured" },
+  "notifications": { "failedCount": 0, "retryableCount": 2 },
+  "activeReleaseRuns": 0,
+  "pendingClaims": 0,
+  "alerts": []
+}
+```
+
+**Status values:**
+- `database.status` — `ok` (query succeeded) or `error` (DB unreachable)
+- `worker.status` — `ok` (ticked within threshold), `degraded` (stale), `unknown` (never ticked)
+- `storage.status` — `ok` (S3/R2 env vars set), `unconfigured` (no cloud storage configured)
+
+---
+
+## Worker Heartbeat
+
+The background worker upserts a single row in `worker_heartbeats` (id = `singleton`) on every tick.
+
+| Field | Description |
+|-------|-------------|
+| `lastTickAt` | Start time of the most recent tick |
+| `lastSuccessAt` | Timestamp the most recent tick completed without error |
+| `lastErrorAt` | Timestamp of the most recent tick that threw an error |
+| `lastErrorRedacted` | Error class name only — no stack trace, no user data |
+| `tickDurationMs` | Duration of the most recent successful tick in milliseconds |
+
+**Interpreting worker status:**
+- `ok` — `lastTickAt` within `ALERT_WORKER_STALE_MINUTES` (default 10 minutes)
+- `degraded` — `lastTickAt` is beyond the stale threshold
+- `unknown` — no heartbeat row exists (worker never ran, or table was reset)
+
+Worker is enabled by default. To disable: set `AEGIS_WORKER_ENABLED=false`.
+
+---
+
+## Operational Alerts
+
+Alerts are computed from DB state on every `/api/health/details` and `/api/admin/metrics` request. No persistent alert log — the state is re-evaluated each time.
+
+Alerts also appear in `GET /api/admin/metrics` as `recentAlerts`.
+
+| Type | Severity | Condition |
+|------|----------|-----------|
+| `worker_never_ticked` | warning | No heartbeat row in `worker_heartbeats` |
+| `worker_stale` | critical | `lastTickAt` older than `ALERT_WORKER_STALE_MINUTES` (default 10 min) |
+| `notification_failures_threshold` | warning | `failed_permanent` delivery count ≥ `ALERT_FAILED_NOTIFICATION_COUNT` (default 5) |
+| `stuck_release_run` | critical | Active release run older than `ALERT_STUCK_RELEASE_RUN_HOURS` (default 24h) |
+
+**Environment variables to tune thresholds:**
+
+```
+ALERT_WORKER_STALE_MINUTES=10
+ALERT_FAILED_NOTIFICATION_COUNT=5
+ALERT_STUCK_RELEASE_RUN_HOURS=24
+```
+
+**Resolving alerts:**
+
+- `worker_stale` / `worker_never_ticked` — Check Railway logs for `[worker] relay monitor error:` or `[worker] hosted worker error:`. Verify `AEGIS_WORKER_ENABLED` is not set to `false`.
+- `notification_failures_threshold` — Check `notification_deliveries` table for `status='failed_permanent'` rows. Review `last_error_code` and `last_error_message_redacted`. Common causes: invalid `POSTMARK_API_TOKEN`, rate limits.
+- `stuck_release_run` — Check `release_runs` table for active/cascade_active rows older than 24h. Review audit events for the run ID. May indicate a cascade loop or blocked contact claim.
+
+---
+
+## Log Format
+
+Aegis uses [pino](https://getpino.io/) structured JSON logging (via Fastify's built-in logger).
+
+### Log fields
+
+```json
+{
+  "level": "info",
+  "time": 1747785600000,
+  "msg": "...",
+  "req": { "method": "GET", "url": "/health", "requestId": "req-1" },
+  "res": { "statusCode": 200 }
+}
+```
+
+### Redacted fields
+
+The following fields are replaced with `"[Redacted]"` in all log output:
+
+- `password`, `passwordHash`, `sessionId`, `csrfToken`
+- `req.headers.authorization`, `req.headers.cookie`
+- `*.apiKey`, `*.apiSecret`, `*.stripeSecret`, `*.stripeWebhookSecret`
+- `*.postmarkToken`, `*.postmarkApiKey`, `*.secretAccessKey`, `*.accessKeyId`
+- `*.s3SecretKey`, `*.s3AccessKey`, `*.packetKey`, `*.releaseKey`
+- `*.encryptionKey`, `*.totpSecret`, `*.keyMaterialEncrypted`, `*.packetKeyEncrypted`
+- `*.email`, `*.phone`, `*.fullName`, `*.institutionName`
+- `*.fullNameEncrypted`, `*.emailEncrypted`, `*.phoneEncrypted`
+
+### Log levels
+
+Set with `LOG_LEVEL` env var (default: `info`).
+
+- `error` — Unrecoverable errors requiring immediate attention
+- `warn` — Unexpected states, retryable failures
+- `info` — Normal operational events
+- `debug` — Verbose detail for troubleshooting
 
 ---
 

@@ -17,6 +17,13 @@ import Settings from './pages/app/Settings';
 import Landing from './pages/marketing/Landing';
 import Pricing from './pages/marketing/Pricing';
 import Docs from './pages/marketing/Docs';
+import Terms from './pages/marketing/Terms';
+import Privacy from './pages/marketing/Privacy';
+import Security from './pages/marketing/Security';
+import AcceptableUse from './pages/marketing/AcceptableUse';
+import Disclaimers from './pages/marketing/Disclaimers';
+import DataDeletion from './pages/marketing/DataDeletion';
+import Contact from './pages/marketing/Contact';
 import ClaimLanding from './pages/claim/ClaimLanding';
 import ClaimVerify from './pages/claim/ClaimVerify';
 import ClaimAccept from './pages/claim/ClaimAccept';
@@ -75,6 +82,13 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/docs" element={<Docs />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/security" element={<Security />} />
+        <Route path="/acceptable-use" element={<AcceptableUse />} />
+        <Route path="/disclaimers" element={<Disclaimers />} />
+        <Route path="/data-deletion" element={<DataDeletion />} />
+        <Route path="/contact" element={<Contact />} />
 
         {/* Auth */}
         <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register />} />

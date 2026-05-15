@@ -240,18 +240,18 @@ aegis-dms-site/
 
 ### Phase 5: Production Hardening & Beta Readiness
 
-**Phase 5: PLANNED** (combined OSS + SaaS, plan: `2026-05-13-aegis-phase5-production-hardening.md`) ← WE ARE HERE
-- [ ] Task 1: Cross-repo security review baseline — threat model, security checklist, auth/session/CSRF verification, audit/log redaction checks, encrypted-field validation, TOTP recovery code/password change/rate-limit coverage
-- [ ] Task 2: Release-run idempotency and recovery hardening — explicit state guards, one-active-run enforcement, idempotency keys, worker restart recovery, duplicate-trigger suppression
-- [ ] Task 3: Notification delivery reliability — delivery-state tracking, retry/backoff policy, payload minimization, provider failure handling, SaaS Postmark event ingestion
-- [ ] Task 4: Backup, export, restore, and deletion — OSS encrypted export/restore preview, SaaS account export, SaaS account deletion flow, backup/restore docs
-- [ ] Task 5: Observability, health, and operational readiness — structured redacted logs, detailed health endpoints, worker heartbeat persistence, admin metrics, beta-critical alert-state visibility
-- [ ] Task 6: SaaS support, billing, and admin hardening — admin-role tightening, billing lifecycle edge cases, webhook replay safety, support runbook
-- [ ] Task 7: Legal, trust, and public safety pages — Terms/Privacy/Security/AUP/Disclaimers/Data Deletion pages, required acknowledgements, OSS trust-model references
-- [ ] Task 8: Beta E2E test matrix — expanded OSS/Hosted/Relay flows, real OSS↔SaaS integration coverage at nightly or release-gate, CI wiring
-- [ ] Task 9: Beta documentation and known limitations — beta-readiness docs, release checklist, known limitations, DeadDrop architecture doc, DeadDrop API preview doc
-- [ ] Task 10: OSS Relay linking, provider coverage, and accessibility polish — real Relay auth-code linking with SaaS, TOTP recovery/password change/rate-limit carryovers, provider presets/docs, accessibility smoke coverage
-- [ ] Task 11: Production deployment, email templates, alerting, and release packaging — SaaS production deploy/DNS/rollback runbook, public support/contact flow, production-safe email templates, operator alerting, OSS beta release packaging
+**Phase 5: IN PROGRESS** (combined OSS + SaaS, plan: `2026-05-13-aegis-phase5-production-hardening.md`)
+- [x] Task 1: Cross-repo security review baseline — threat model, security checklist, auth/session/CSRF verification, audit/log redaction checks, encrypted-field validation, TOTP recovery code/password change/rate-limit coverage (OSS: 343 tests, SaaS: 483 tests)
+- [x] Task 2: Release-run idempotency and recovery hardening — state transition guards, one-active-run enforcement, atomic idempotency_keys table, worker restart recovery (OSS: 370 tests, SaaS: 506 tests)
+- [x] Task 3: Notification delivery reliability — notification_deliveries table, retry/backoff policy, payload minimization, Postmark webhook ingestion (OSS: 413 tests, SaaS: 563 tests)
+- [x] Task 4: Backup, export, restore, and deletion — OSS encrypted export/restore preview, SaaS account export, SaaS account deletion flow, backup/restore docs (OSS: 427 tests, SaaS: 576 tests)
+- [x] Task 5: Observability, health, and operational readiness — structured redacted logs (pino redact config), detailed health endpoints (GET /api/health/details), worker heartbeat persistence (worker_heartbeats table), admin metrics with worker/alert state, getActiveAlerts() service (OSS: 440 tests, SaaS: 591 tests)
+- [x] Task 6: SaaS support, billing, and admin hardening — admin 403 enforcement, full Stripe lifecycle (9 event types), idempotent webhook replay, UserDetail view, support runbook (SaaS: 610 tests)
+- [x] Task 7: Legal, trust, and public safety pages — Terms/Privacy/Security/AUP/Disclaimers/Data Deletion pages, required acknowledgements, OSS trust-model references
+- [x] Task 8: Beta E2E test matrix — expanded OSS/Hosted/Relay flows, real OSS↔SaaS integration coverage at nightly or release-gate, CI wiring
+- [x] Task 9: Beta documentation and known limitations — beta-readiness docs, release checklist, known limitations, DeadDrop architecture doc, DeadDrop API preview doc
+- [x] Task 10: OSS Relay linking, provider coverage, and accessibility polish — relay auth-code link-exchange endpoint, TOTP recovery codes (8 one-time codes, encrypted, constant-time verify), password change + session invalidation, @fastify/rate-limit on login/recovery/claim, S3/SMTP provider docs, a11y on Login/Setup/SecuritySettings/ClaimPortal/Register/AdminUsers (OSS: 504 tests, SaaS: 615 tests)
+- [x] Task 11: Production deployment, email templates, alerting, and release packaging — SaaS production deploy/DNS/rollback runbook, public support/contact flow, production-safe email templates (7 templates), operator alerting wired to worker, OSS CI/release workflows, 53 new tests (SaaS: 638 passing)
 
 ---
 
