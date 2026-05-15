@@ -20,6 +20,7 @@ export const users = pgTable('users', {
   deletionTokenExpiresAt: timestamp('deletion_token_expires_at'),
   pendingDeletion: boolean('pending_deletion').notNull().default(false),
   deletedAt: timestamp('deleted_at'),
+  lastLoginAt: timestamp('last_login_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

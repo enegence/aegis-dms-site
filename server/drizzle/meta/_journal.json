@@ -85,6 +85,13 @@
       "when": 1778522400000,
       "tag": "0011_phase5_worker_heartbeat",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1778608800000,
+      "tag": "0012_phase5_last_login",
+      "breakpoints": true
     }
   ]
 }

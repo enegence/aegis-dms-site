@@ -115,6 +115,10 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.status(401).send({ error: 'Invalid email or password' });
     }
 
+    await app.db.update(users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(users.id, user.id));
+
     const sessionId = await createSession(app.db, user.id);
 
     reply.setCookie('aegis_session', sessionId, {

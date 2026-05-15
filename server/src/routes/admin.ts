@@ -10,6 +10,7 @@ import {
   releaseRuns,
   packets,
   notificationEvents,
+  switches,
 } from '../db/schema.js';
 
 async function requireAdmin(req: FastifyRequest, reply: FastifyReply): Promise<void> {
@@ -78,6 +79,7 @@ async function adminPlugin(app: FastifyInstance) {
         role: users.role,
         timezone: users.timezone,
         totpEnabled: users.totpEnabled,
+        lastLoginAt: users.lastLoginAt,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -123,6 +125,12 @@ async function adminPlugin(app: FastifyInstance) {
         sql`${notificationEvents.status} IN ('failed', 'failed_permanent', 'failed_retryable')`,
       ));
 
+    // Hosted switch count
+    const [switchRow] = await app.db
+      .select({ cnt: count() })
+      .from(switches)
+      .where(eq(switches.userId, id));
+
     return reply.send({
       user: {
         ...row,
@@ -132,6 +140,7 @@ async function adminPlugin(app: FastifyInstance) {
         relayConnectionCount: relayRow?.cnt ?? 0,
         activeReleaseRunCount: rrRow?.cnt ?? 0,
         failedNotificationCount: notifRow?.cnt ?? 0,
+        hostedSwitchCount: switchRow?.cnt ?? 0,
       },
     });
   });

@@ -205,6 +205,11 @@ describe('Admin API — Phase 5 Task 6 hardening', () => {
     expect(typeof body.user.activeReleaseRunCount).toBe('number');
     expect(body.user).toHaveProperty('failedNotificationCount');
     expect(typeof body.user.failedNotificationCount).toBe('number');
+    // lastLoginAt — nullable, may be null on fresh user but property must exist
+    expect(body.user).toHaveProperty('lastLoginAt');
+    // hostedSwitchCount
+    expect(body.user).toHaveProperty('hostedSwitchCount');
+    expect(typeof body.user.hostedSwitchCount).toBe('number');
   });
 
   it('Admin user detail does NOT include Stripe IDs', async () => {
