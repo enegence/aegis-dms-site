@@ -93,6 +93,11 @@ export async function createTestUser(
   await page.getByPlaceholder('Your name').fill(user.displayName);
   await page.getByPlaceholder('Email').fill(user.email);
   await page.getByPlaceholder('Passphrase (8+ characters)').fill(user.password);
+  // Accept terms — required since Task 7 added the terms acceptance checkbox.
+  const termsCheckbox = page.getByRole('checkbox');
+  if (await termsCheckbox.isVisible()) {
+    await termsCheckbox.check();
+  }
   await page.getByRole('button', { name: /create account/i }).click();
 
   // After registration the app redirects to /dashboard (or /onboarding).

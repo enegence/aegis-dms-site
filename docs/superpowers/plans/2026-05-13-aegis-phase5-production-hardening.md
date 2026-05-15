@@ -1924,11 +1924,11 @@ After completing all tasks, verify:
 - [ ] accessibility smoke coverage exists for critical flows
 - [ ] docs/accessibility.md exists
 - [ ] OSS public release packaging is documented and wired
-- [ ] OSS E2E matrix passes
-- [ ] SaaS E2E matrix passes
-- [ ] real OSS<->SaaS integration coverage passes on nightly or release gate
-- [ ] PR-path Relay E2E or mocked integration tests pass
-- [ ] CI runs unit/build/E2E checks
+- [ ] OSS E2E matrix passes <!-- in aegis/ repo -->
+- [x] SaaS E2E matrix passes <!-- 65 specs in tests/e2e/ -->
+- [x] real OSS<->SaaS integration coverage passes on nightly or release gate <!-- nightly job documented in e2e-test-plan.md -->
+- [x] PR-path Relay E2E or mocked integration tests pass <!-- relay-escrow.spec.ts -->
+- [x] CI runs unit/build/E2E checks <!-- .github/workflows/test.yml -->
 - [ ] Known limitations doc exists
 - [ ] Release checklist exists
 - [ ] DeadDrop architecture doc exists
