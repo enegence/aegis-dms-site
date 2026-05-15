@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, count, sql } from 'drizzle-orm';
 import { getAdminMetrics } from '../services/admin-metrics.js';
 import { writeAuditEvent } from '../services/audit.js';
 import {
@@ -85,7 +85,55 @@ async function adminPlugin(app: FastifyInstance) {
       .where(eq(users.id, id));
 
     if (!row) return reply.status(404).send({ error: 'User not found' });
-    return reply.send({ user: row });
+
+    // Subscription summary (no Stripe IDs)
+    const [sub] = await app.db
+      .select({
+        plan: subscriptions.plan,
+        status: subscriptions.status,
+        currentPeriodEnd: subscriptions.currentPeriodEnd,
+        cancelledAt: subscriptions.cancelledAt,
+      })
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, id))
+      .orderBy(desc(subscriptions.createdAt))
+      .limit(1);
+
+    // Relay connection count
+    const [relayRow] = await app.db
+      .select({ cnt: count() })
+      .from(relayConnections)
+      .where(eq(relayConnections.userId, id));
+
+    // Active release run count
+    const [rrRow] = await app.db
+      .select({ cnt: count() })
+      .from(releaseRuns)
+      .where(and(
+        eq(releaseRuns.userId, id),
+        eq(releaseRuns.status, 'active'),
+      ));
+
+    // Failed notification count
+    const [notifRow] = await app.db
+      .select({ cnt: count() })
+      .from(notificationEvents)
+      .where(and(
+        eq(notificationEvents.userId, id),
+        sql`${notificationEvents.status} IN ('failed', 'failed_permanent', 'failed_retryable')`,
+      ));
+
+    return reply.send({
+      user: {
+        ...row,
+        subscriptionStatus: sub?.status ?? null,
+        subscriptionPlan: sub?.plan ?? null,
+        subscriptionCurrentPeriodEnd: sub?.currentPeriodEnd?.toISOString() ?? null,
+        relayConnectionCount: relayRow?.cnt ?? 0,
+        activeReleaseRunCount: rrRow?.cnt ?? 0,
+        failedNotificationCount: notifRow?.cnt ?? 0,
+      },
+    });
   });
 
   app.get('/api/admin/relay-connections', { preHandler: requireAdmin }, async (_req, reply) => {

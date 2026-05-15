@@ -686,7 +686,7 @@ git commit -m "feat: notification delivery tracking with retry and payload minim
 
 ---
 
-# Task 4: Backup, Export, Restore, and Deletion
+# Task 4: Backup, Export, Restore, and Deletion ✅
 
 **Goal:** Give users and operators a safe path to export, restore, and delete data before beta.
 
@@ -862,7 +862,7 @@ git commit -m "feat: encrypted export restore and account deletion flows"
 
 ---
 
-# Task 5: Observability, Health, and Operational Readiness
+# Task 5: Observability, Health, and Operational Readiness ✅
 
 **Goal:** Make both apps observable enough to debug beta incidents without exposing sensitive data.
 
