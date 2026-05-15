@@ -172,14 +172,96 @@ This runs `tsx src/db/migrate.ts` which applies all pending Drizzle migrations.
 
 ---
 
-## Rollback Notes
+## Custom Domain and DNS Setup
+
+### Pointing `aegisdms.life` to Railway
+
+1. In Railway → Service → **Settings** → **Domains**, click **Generate Domain** to get your Railway service URL (e.g. `aegis-site-production.up.railway.app`).
+2. In your DNS provider (e.g. Cloudflare), add a **CNAME** record:
+   - **Name**: `app` (or `@` for apex, using CNAME flattening)
+   - **Target**: your Railway service URL (without `https://`)
+   - **TTL**: 300 (or Automatic)
+3. Back in Railway → Domains, click **+ Custom Domain** and enter `app.aegisdms.life`.
+4. Railway provisions a TLS certificate automatically via Let's Encrypt. Wait ~2 minutes for DNS propagation and certificate issuance.
+5. Update `AEGIS_BASE_URL` to `https://app.aegisdms.life`.
+
+> **Note:** Railway does not support bare apex CNAME on all DNS providers without CNAME flattening. Use a `www.` or `app.` subdomain if your DNS provider does not support CNAME flattening.
+
+### Cookie / CORS / CSRF production settings
+
+These are validated at startup when `NODE_ENV=production`. Verify:
+
+- `SESSION_SECRET` (mapped to `AEGIS_SECRET_KEY`) is >= 32 chars and does not contain "change-me"
+- `AEGIS_BASE_URL` is `https://app.aegisdms.life` (no trailing slash, no localhost)
+- The React frontend `VITE_API_BASE_URL` points to the same origin (same-origin deployment; the server serves the frontend)
+- Cookies are `HttpOnly`, `Secure`, `SameSite=Lax` — enforced by the server in production
+- CORS allows `https://app.aegisdms.life` explicitly (no wildcard in production)
+- CSRF token is fetched at `/api/csrf` and sent as `X-CSRF-Token` header on all state-changing requests
+
+---
+
+## Environment Separation
+
+Aegis DMS uses three Railway environments:
+
+| Environment | Branch | `NODE_ENV` | `AEGIS_BASE_URL` | Purpose |
+|---|---|---|---|---|
+| **Production** | `main` | `production` | `https://app.aegisdms.life` | Live traffic |
+| **Staging** | `phase-5` or `staging` | `production` | `https://staging.aegisdms.life` | Pre-release validation |
+| **Development** | Feature branches | `development` | `http://localhost:8001` | Local dev (no Railway) |
+
+### Setting up a staging environment
+
+1. In Railway → **Environments**, click **+ New Environment** → name it `staging`.
+2. In the staging environment, add a new service pointing to the same repo.
+3. Set `NODE_ENV=production` and all required secrets (use separate Stripe test-mode keys).
+4. Add a staging domain (e.g. `staging.aegisdms.life`) following the same DNS setup steps above.
+
+Staging uses **Stripe test-mode** keys (`sk_test_...`, `pk_test_...`). Never use live-mode keys in staging.
+
+---
+
+## Rollback Procedure
 
 Railway automatically keeps the previous successful deployment. To rollback:
 
 1. Go to Railway → Service → **Deployments**.
 2. Find the last successful deployment and click **Redeploy**.
+3. Verify the rollback succeeded by checking the health endpoint: `curl https://app.aegisdms.life/health`
 
-If a schema migration was applied and the rollback requires reverting it, you must manually apply a down-migration SQL. Drizzle does not auto-generate down migrations — keep a SQL backup before applying destructive schema changes.
+**If a schema migration was applied before the rollback:**
+- Drizzle does not auto-generate down migrations.
+- Keep a SQL dump before applying any destructive schema change: `railway run pg_dump $DATABASE_URL > backup-$(date +%Y%m%d).sql`
+- Manually apply a reverting SQL statement via Railway shell if the migration must be rolled back.
+
+**Rollback decision matrix:**
+
+| Condition | Action |
+|---|---|
+| Code bug, no schema change | Redeploy previous via Railway UI |
+| Code bug + additive schema change (new nullable column) | Redeploy previous (old code tolerates new column) |
+| Code bug + destructive schema change (column removed) | Restore DB from backup, redeploy previous |
+
+---
+
+## Post-Deploy Smoke-Test Checklist
+
+Run these checks after every production deploy before marking the release complete.
+
+| # | Check | Command / Action | Expected |
+|---|---|---|---|
+| 1 | **Health endpoint** | `curl -sf https://app.aegisdms.life/health` | `{"status":"ok"}` with HTTP 200 |
+| 2 | **CSRF endpoint** | `curl -sf https://app.aegisdms.life/api/csrf` | Returns `{"token":"..."}` |
+| 3 | **Static assets load** | Open `https://app.aegisdms.life` in browser | Landing page renders, no console errors |
+| 4 | **Auth: register flow** | Create a new test account | Registration succeeds, verification email received via Postmark |
+| 5 | **Auth: login flow** | Log in with the test account | Dashboard loads, session cookie set |
+| 6 | **Auth: logout flow** | Log out | Redirected to `/`, session cleared |
+| 7 | **Stripe billing portal** | Navigate to `/app/billing` | Billing page loads, "Manage Subscription" link visible |
+| 8 | **Postmark delivery** | Trigger a password-reset email | Email received in < 2 minutes |
+| 9 | **Database connectivity** | `/health` returns 200 (server connected) + check Railway Metrics → DB connections > 0 | No DB errors in Railway logs |
+| 10 | **TLS certificate** | `curl -Iv https://app.aegisdms.life` | TLS handshake succeeds, cert valid, no hostname mismatch |
+
+If any check fails: roll back immediately (see Rollback Procedure above) and investigate Railway logs.
 
 ---
 

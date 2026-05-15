@@ -1,8 +1,9 @@
 /**
- * Operational alerting service (Phase 5 Task 5).
+ * Operational alerting service (Phase 5 Task 5 + Task 11).
  *
  * Reads DB state to determine if any operational conditions require attention.
- * Does NOT send alerts — detection only. Sending is Task 11.
+ * Task 5: getActiveAlerts — detection only.
+ * Task 11: sendOperatorAlerts — detection + email dispatch.
  *
  * Alert shapes contain no PII — only system-level operational data.
  */
@@ -10,6 +11,7 @@
 import { eq, count, and, lte, inArray } from 'drizzle-orm';
 import type { AegisDb } from '../db/index.js';
 import { workerHeartbeats, notificationDeliveries, releaseRuns } from '../db/schema.js';
+import { sendEmailStructured } from './email.js';
 
 export interface Alert {
   type: string;
@@ -109,4 +111,99 @@ export async function getActiveAlerts(db: AegisDb): Promise<Alert[]> {
   }
 
   return alerts;
+}
+
+// ── Operator alert sending (Task 11) ─────────────────────────────────────────
+
+/**
+ * Minute-level deduplication set.
+ * Key format: `${alert.type}:${raisedAt.toISOString().slice(0, 16)}`
+ * Resets on module reload — acceptable for beta.
+ */
+const _sentAlertKeys = new Set<string>();
+
+/**
+ * Detects active alerts via getActiveAlerts and emails each one to the operator.
+ * Uses minute-level deduplication to suppress repeated sends within the same minute.
+ * If postmarkApiToken is empty, logs to console and skips send (stub mode).
+ * Individual send errors are caught and logged — does not throw.
+ */
+export async function sendOperatorAlerts(
+  db: AegisDb,
+  opts: {
+    operatorEmail: string;
+    fromEmail: string;
+    postmarkApiToken: string;
+    baseUrl: string;
+  },
+): Promise<void> {
+  let alerts: Alert[];
+  try {
+    alerts = await getActiveAlerts(db);
+  } catch (err) {
+    console.error('[alerts] Failed to fetch active alerts:', err);
+    return;
+  }
+
+  if (alerts.length === 0) return;
+
+  for (const alert of alerts) {
+    if (alert.severity === 'info') continue; // only critical + warning go to operator
+
+    const dedupeKey = `${alert.type}:${alert.raisedAt.toISOString().slice(0, 16)}`;
+    if (_sentAlertKeys.has(dedupeKey)) {
+      continue; // already sent this alert in this minute
+    }
+
+    const subject = `[Aegis Alert] ${alert.type} — ${alert.severity}`;
+    const textBody =
+      `Aegis DMS Operator Alert\n\n` +
+      `Type: ${alert.type}\n` +
+      `Severity: ${alert.severity}\n` +
+      `Message: ${alert.message}\n` +
+      `Raised at: ${alert.raisedAt.toISOString()}\n\n` +
+      `---\nThis is an automated operational alert. No user PII is included.`;
+    const htmlBody = `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>${subject}</title></head>
+<body style="font-family:sans-serif;max-width:500px;margin:40px auto;padding:0 16px;">
+  <div style="background:#0B1C2C;padding:16px 20px;border-radius:6px 6px 0 0;">
+    <span style="font-size:16px;font-weight:700;color:#DDE8F4;">Aegis DMS — Operator Alert</span>
+  </div>
+  <div style="background:#fff;padding:24px 20px;border:1px solid #DDE8F4;border-top:none;border-radius:0 0 6px 6px;">
+    <table style="border-collapse:collapse;width:100%;font-size:14px;color:#0B1C2C;">
+      <tr><td style="padding:6px 0;color:#4A6B8A;width:100px;"><strong>Type</strong></td><td style="padding:6px 0;">${alert.type}</td></tr>
+      <tr><td style="padding:6px 0;color:#4A6B8A;"><strong>Severity</strong></td><td style="padding:6px 0;">${alert.severity}</td></tr>
+      <tr><td style="padding:6px 0;color:#4A6B8A;"><strong>Message</strong></td><td style="padding:6px 0;">${alert.message}</td></tr>
+      <tr><td style="padding:6px 0;color:#4A6B8A;"><strong>Raised at</strong></td><td style="padding:6px 0;">${alert.raisedAt.toISOString()}</td></tr>
+    </table>
+    <p style="font-size:11px;color:#8AAAC8;margin-top:20px;">This is an automated operational alert. No user PII is included.</p>
+  </div>
+</body>
+</html>`.trim();
+
+    if (!opts.postmarkApiToken) {
+      console.log(`[alerts-stub] Would send operator alert: ${subject} — ${alert.message}`);
+      _sentAlertKeys.add(dedupeKey);
+      continue;
+    }
+
+    try {
+      const result = await sendEmailStructured(opts.postmarkApiToken, {
+        from: opts.fromEmail,
+        to: opts.operatorEmail,
+        subject,
+        htmlBody,
+        textBody,
+      });
+      if (result.error) {
+        console.error(`[alerts] Failed to send operator alert for ${alert.type}: ${result.error}`);
+      } else {
+        _sentAlertKeys.add(dedupeKey);
+      }
+    } catch (err) {
+      console.error(`[alerts] Unexpected error sending operator alert for ${alert.type}:`, err);
+    }
+  }
 }
