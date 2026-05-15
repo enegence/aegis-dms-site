@@ -121,7 +121,7 @@ jobs:
           node server/dist/index.js &
           echo $! > /tmp/server.pid
           # Wait for server to be ready.
-          timeout 30 bash -c 'until curl -sf http://localhost:8001/api/health; do sleep 1; done'
+          timeout 30 bash -c 'until curl -sf http://localhost:8001/health; do sleep 1; done'
         env:
           PORT: 8001
 
