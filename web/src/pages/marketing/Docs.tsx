@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import MarketingShell from '../../components/marketing/MarketingShell';
 
 const SECTIONS = [
   { id: 'overview', label: 'Overview' },
@@ -11,21 +12,7 @@ const SECTIONS = [
 
 export default function Docs() {
   return (
-    <div className="min-h-screen bg-brand-bg">
-      {/* Nav */}
-      <nav className="border-b border-brand-border bg-brand-surface px-6 py-4 flex items-center justify-between">
-        <Link to="/" className="font-hand text-2xl font-bold text-brand-ink">Aegis DMS</Link>
-        <div className="flex items-center gap-4">
-          <Link to="/pricing" className="font-sans text-sm text-brand-muted hover:text-brand-accent">Pricing</Link>
-          <Link to="/login" className="font-sans text-sm text-brand-muted hover:text-brand-accent">Log in</Link>
-          <Link
-            to="/register"
-            className="font-sans text-sm font-semibold px-4 py-2 bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors"
-          >
-            Get started
-          </Link>
-        </div>
-      </nav>
+    <MarketingShell>
 
       <div className="max-w-5xl mx-auto px-6 py-12 flex gap-12">
         {/* Sidebar TOC */}
@@ -227,16 +214,6 @@ export default function Docs() {
         </main>
       </div>
 
-      <footer className="border-t border-brand-border bg-brand-surface px-6 py-8 mt-16">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <span className="font-hand text-xl font-bold text-brand-ink">Aegis DMS</span>
-          <div className="flex gap-6">
-            <Link to="/" className="font-sans text-xs text-brand-muted hover:text-brand-accent">Home</Link>
-            <Link to="/pricing" className="font-sans text-xs text-brand-muted hover:text-brand-accent">Pricing</Link>
-            <Link to="/docs" className="font-sans text-xs text-brand-muted hover:text-brand-accent">Docs</Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </MarketingShell>
   );
 }

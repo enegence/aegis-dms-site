@@ -1,17 +1,11 @@
 import { Link } from 'react-router-dom';
+import MarketingShell from '../../components/marketing/MarketingShell';
+import { SketchCard } from '../../components/ui';
 
 export default function AcceptableUse() {
   return (
-    <div className="min-h-screen bg-brand-bg">
-      <nav className="border-b border-brand-border bg-brand-surface px-6 py-4 flex items-center justify-between">
-        <Link to="/" className="font-hand text-2xl font-bold text-brand-ink">Aegis DMS</Link>
-        <div className="flex items-center gap-4">
-          <Link to="/login" className="font-sans text-sm text-brand-muted hover:text-brand-accent">Log in</Link>
-          <Link to="/register" className="font-sans text-sm font-semibold px-4 py-2 bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors">Get started</Link>
-        </div>
-      </nav>
-
-      <div className="max-w-3xl mx-auto px-6 py-16">
+    <MarketingShell>
+      <SketchCard style={{ padding: '32px 28px' }}>
         <h1 className="font-hand text-5xl font-bold text-brand-ink mb-2">Acceptable Use Policy</h1>
         <p className="font-sans text-xs text-brand-muted mb-10">Last updated: May 2026 (draft)</p>
 
@@ -64,7 +58,7 @@ export default function AcceptableUse() {
             Related: <Link to="/terms" className="text-brand-accent hover:underline">Terms of Service</Link> · <Link to="/disclaimers" className="text-brand-accent hover:underline">Disclaimers</Link>
           </p>
         </div>
-      </div>
-    </div>
+      </SketchCard>
+    </MarketingShell>
   );
 }
