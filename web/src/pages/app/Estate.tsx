@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import {
   listEstateItems,
   createEstateItem,
   deleteEstateItem,
   type EstateItem,
 } from '../../lib/estate';
+import { useAuth } from '../../App';
+import { useTheme } from '../../lib/theme';
+import AppShell from '../../components/layout/AppShell';
+import { buildNavItems } from '../../components/layout/navModel';
+import { SketchCard, SectionTitle, InkButton } from '../../components/ui';
 
 const CATEGORIES = [
   'bank_account',
@@ -30,9 +35,12 @@ const emptyForm = {
 };
 
 export default function Estate() {
+  const { user } = useAuth();
+  const t = useTheme();
   const [items, setItems] = useState<EstateItem[]>([]);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -82,155 +90,112 @@ export default function Estate() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-brand-bg p-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="font-hand text-4xl font-bold text-brand-ink">Estate Items</h1>
-          <button
-            onClick={() => setShowForm((v) => !v)}
-            className="font-sans font-semibold text-sm px-4 py-2 bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors"
-          >
-            {showForm ? 'Cancel' : '+ Add Item'}
-          </button>
-        </div>
+  const isAdmin = user?.role === 'admin' || user?.role === 'sa';
+  const catItems = items.filter((i) => i.category === activeCategory);
 
-        <p className="font-sans text-xs text-brand-muted mb-6 p-3 bg-brand-surface border border-brand-border rounded">
+  const inputStyle: CSSProperties = {
+    width: '100%', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, padding: '8px 10px',
+    marginBottom: 8, background: t.bg, border: `1.5px solid ${t.border}`, borderRadius: 4,
+    color: t.ink, boxSizing: 'border-box', outline: 'none',
+  };
+
+  return (
+    <AppShell navItems={buildNavItems(isAdmin)} releaseTo="/release">
+      <SectionTitle sub="WHAT YOUR PEOPLE NEED TO FIND">Legacy Packet</SectionTitle>
+
+      <SketchCard style={{ marginBottom: 16, padding: '12px 16px' }}>
+        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted, lineHeight: 1.7 }}>
           Sensitive estate and contact details are encrypted at rest. Aegis Hosted is a managed
           service and requires trusting Aegis SaaS with server-side encryption for v1.
-        </p>
+        </div>
+      </SketchCard>
 
-        {error && <p className="font-sans text-sm text-brand-danger mb-4">{error}</p>}
+      {error && <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.danger, marginBottom: 12 }}>{error}</p>}
 
-        {/* Add form */}
-        {showForm && (
-          <form
-            onSubmit={handleCreate}
-            className="mb-6 p-6 bg-brand-surface border-2 border-brand-border rounded-lg"
-          >
-            <h2 className="font-hand text-2xl font-bold text-brand-ink mb-4">New Estate Item</h2>
-
-            <select
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              required
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-            >
-              <option value="">Select category</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c.replace(/_/g, ' ')}
-                </option>
-              ))}
-            </select>
-
-            <input
-              name="title"
-              placeholder="Title (e.g. Main Checking Account)"
-              value={form.title}
-              onChange={handleChange}
-              required
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-            />
-            <input
-              name="institutionName"
-              placeholder="Institution name (optional)"
-              value={form.institutionName}
-              onChange={handleChange}
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-            />
-            <input
-              name="accountType"
-              placeholder="Account type (optional)"
-              value={form.accountType}
-              onChange={handleChange}
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-            />
-            <input
-              name="referenceHint"
-              placeholder="Reference hint (optional, e.g. last 4 digits)"
-              value={form.referenceHint}
-              onChange={handleChange}
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-            />
-            <textarea
-              name="assetDescription"
-              placeholder="Asset description (optional)"
-              value={form.assetDescription}
-              onChange={handleChange}
-              rows={2}
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent resize-none"
-            />
-            <textarea
-              name="locationNotes"
-              placeholder="Location notes (optional)"
-              value={form.locationNotes}
-              onChange={handleChange}
-              rows={2}
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent resize-none"
-            />
-            <textarea
-              name="executorNotes"
-              placeholder="Executor notes (optional)"
-              value={form.executorNotes}
-              onChange={handleChange}
-              rows={2}
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent resize-none"
-            />
-
-            {submitError && (
-              <p className="font-sans text-sm text-brand-danger mb-3">{submitError}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full font-sans font-semibold text-sm p-3 cursor-pointer bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors disabled:opacity-50"
-            >
-              {submitting ? 'Saving...' : 'Save Item'}
-            </button>
-          </form>
-        )}
-
-        {/* Item list */}
-        {items.length === 0 && !showForm ? (
-          <div className="p-6 bg-brand-surface border border-dashed border-brand-border rounded-lg text-center">
-            <p className="font-sans text-sm text-brand-muted">No estate items yet.</p>
-            <button
-              onClick={() => setShowForm(true)}
-              className="mt-2 font-sans text-sm text-brand-accent hover:underline"
-            >
-              Add your first item
-            </button>
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {items.map((item) => (
-              <li
-                key={item.id}
-                className="p-4 bg-brand-surface border border-brand-border rounded-lg flex items-start justify-between gap-4"
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+        {/* Category list */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 170 }}>
+          {CATEGORIES.map((cat) => {
+            const count = items.filter((i) => i.category === cat).length;
+            const active = cat === activeCategory;
+            return (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                style={{
+                  fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: active ? 700 : 400,
+                  padding: '8px 14px', textAlign: 'left',
+                  background: active ? t.ink : 'transparent',
+                  color: active ? t.bg : t.ink,
+                  border: `2px solid ${active ? t.ink : t.border}`,
+                  borderRadius: '3px 8px 3px 8px / 8px 3px 8px 3px',
+                  cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  transform: active ? 'rotate(0.3deg)' : 'none', transition: 'all 0.1s',
+                }}
               >
-                <div className="flex-1 min-w-0">
-                  <p className="font-sans text-sm font-semibold text-brand-ink truncate">
-                    {item.title}
-                  </p>
-                  <p className="font-sans text-xs text-brand-muted">
-                    {item.category.replace(/_/g, ' ')}
-                    {item.institutionName ? ` · ${item.institutionName}` : ''}
-                  </p>
+                {cat.replace(/_/g, ' ')}
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, background: active ? t.bg : t.border, color: active ? t.ink : t.muted, borderRadius: 99, padding: '1px 7px', minWidth: 18, textAlign: 'center' }}>{count}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Items panel */}
+        <div style={{ flex: 1, minWidth: 280 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {catItems.length === 0 && !showForm && (
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, color: t.muted, padding: '24px 0', textAlign: 'center' }}>
+                Nothing here yet.<br />Add an item to get started.
+              </div>
+            )}
+            {catItems.map((item, i) => (
+              <SketchCard key={item.id} tilt={i % 2 === 0 ? 0.2 : -0.2} style={{ padding: '14px 18px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: t.ink }}>{item.title}</div>
+                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: t.accent, letterSpacing: '0.08em', textTransform: 'uppercase', margin: '2px 0 0' }}>
+                      {item.category.replace(/_/g, ' ')}{item.institutionName ? ` · ${item.institutionName}` : ''}
+                    </div>
+                  </div>
+                  <button onClick={() => handleDelete(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.danger, fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>
+                    Delete
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="font-sans text-xs text-brand-danger hover:underline flex-shrink-0"
-                >
-                  Delete
-                </button>
-              </li>
+              </SketchCard>
             ))}
-          </ul>
-        )}
+
+            {showForm ? (
+              <SketchCard>
+                <form onSubmit={handleCreate}>
+                  <div style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: t.ink, marginBottom: 12 }}>New Estate Item</div>
+                  <select name="category" value={form.category} onChange={handleChange} required style={inputStyle}>
+                    <option value="">Select category</option>
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
+                    ))}
+                  </select>
+                  <input name="title" placeholder="Title (e.g. Main Checking Account)" value={form.title} onChange={handleChange} required style={inputStyle} />
+                  <input name="institutionName" placeholder="Institution name (optional)" value={form.institutionName} onChange={handleChange} style={inputStyle} />
+                  <input name="accountType" placeholder="Account type (optional)" value={form.accountType} onChange={handleChange} style={inputStyle} />
+                  <input name="referenceHint" placeholder="Reference hint (optional, e.g. last 4 digits)" value={form.referenceHint} onChange={handleChange} style={inputStyle} />
+                  <textarea name="assetDescription" placeholder="Asset description (optional)" value={form.assetDescription} onChange={handleChange} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+                  <textarea name="locationNotes" placeholder="Location notes (optional)" value={form.locationNotes} onChange={handleChange} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+                  <textarea name="executorNotes" placeholder="Executor notes (optional)" value={form.executorNotes} onChange={handleChange} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+                  {submitError && <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.danger, marginBottom: 8 }}>{submitError}</p>}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <InkButton type="submit" size="sm" disabled={submitting} ariaBusy={submitting}>{submitting ? 'Saving...' : 'Save Item'}</InkButton>
+                    <InkButton size="sm" variant="ghost" onClick={() => setShowForm(false)}>Cancel</InkButton>
+                  </div>
+                </form>
+              </SketchCard>
+            ) : (
+              <InkButton variant="ghost" size="sm" onClick={() => { setForm({ ...emptyForm, category: activeCategory }); setShowForm(true); }} style={{ alignSelf: 'flex-start' }}>
+                + Add {activeCategory.replace(/_/g, ' ')} Item
+              </InkButton>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

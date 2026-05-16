@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import {
   listContacts,
   createContact,
   deleteContact,
   type Contact,
 } from '../../lib/contacts';
+import { useAuth } from '../../App';
+import { useTheme } from '../../lib/theme';
+import AppShell from '../../components/layout/AppShell';
+import { buildNavItems } from '../../components/layout/navModel';
+import { SketchCard, SectionTitle, InkButton } from '../../components/ui';
 
 const emptyForm = {
   fullName: '',
@@ -16,6 +21,8 @@ const emptyForm = {
 };
 
 export default function Contacts() {
+  const { user } = useAuth();
+  const t = useTheme();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -66,138 +73,88 @@ export default function Contacts() {
     }
   }
 
+  const isAdmin = user?.role === 'admin' || user?.role === 'sa';
+  const ordered = [...contacts].sort((a, b) => a.priorityOrder - b.priorityOrder);
+
+  const inputStyle: CSSProperties = {
+    width: '100%', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, padding: '8px 10px',
+    marginBottom: 8, background: t.bg, border: `1.5px solid ${t.border}`, borderRadius: 4,
+    color: t.ink, boxSizing: 'border-box', outline: 'none',
+  };
+
   return (
-    <div className="min-h-screen bg-brand-bg p-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="font-hand text-4xl font-bold text-brand-ink">Contacts</h1>
-          <button
-            onClick={() => setShowForm((v) => !v)}
-            className="font-sans font-semibold text-sm px-4 py-2 bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors"
-          >
-            {showForm ? 'Cancel' : '+ Add Contact'}
-          </button>
+    <AppShell navItems={buildNavItems(isAdmin)} releaseTo="/release">
+      <SectionTitle sub="WHO GETS NOTIFIED, AND WHEN">Contact Cascade</SectionTitle>
+
+      <SketchCard style={{ marginBottom: 20, padding: '12px 16px' }}>
+        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted, lineHeight: 1.7 }}>
+          Contacts are notified in priority order. Each receives an encrypted claim link.<br />
+          They must verify identity before unlocking the legacy packet.
         </div>
+      </SketchCard>
 
-        {error && <p className="font-sans text-sm text-brand-danger mb-4">{error}</p>}
+      {error && <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.danger, marginBottom: 12 }}>{error}</p>}
 
-        {/* Add form */}
-        {showForm && (
-          <form
-            onSubmit={handleCreate}
-            className="mb-6 p-6 bg-brand-surface border-2 border-brand-border rounded-lg"
-          >
-            <h2 className="font-hand text-2xl font-bold text-brand-ink mb-4">New Contact</h2>
-
-            <input
-              name="fullName"
-              placeholder="Full name"
-              value={form.fullName}
-              onChange={handleChange}
-              required
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-            />
-            <input
-              name="email"
-              type="email"
-              placeholder="Email address"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-            />
-            <input
-              name="relationship"
-              placeholder="Relationship (e.g. spouse, sibling, attorney)"
-              value={form.relationship}
-              onChange={handleChange}
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-            />
-            <input
-              name="phone"
-              type="tel"
-              placeholder="Phone (optional)"
-              value={form.phone}
-              onChange={handleChange}
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-            />
-            <input
-              name="telegramHandle"
-              placeholder="Telegram handle (optional)"
-              value={form.telegramHandle}
-              onChange={handleChange}
-              className="w-full font-sans text-sm p-3 mb-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-            />
-            <div className="mb-4">
-              <label className="font-sans text-xs text-brand-muted block mb-1">
-                Confirmation window (hours)
-              </label>
-              <input
-                name="confirmationWindowHours"
-                type="number"
-                min="1"
-                max="720"
-                value={form.confirmationWindowHours}
-                onChange={handleChange}
-                className="w-full font-sans text-sm p-3 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent"
-              />
-            </div>
-
-            {submitError && (
-              <p className="font-sans text-sm text-brand-danger mb-3">{submitError}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full font-sans font-semibold text-sm p-3 cursor-pointer bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors disabled:opacity-50"
-            >
-              {submitting ? 'Saving...' : 'Save Contact'}
-            </button>
-          </form>
-        )}
-
-        {/* Contact list */}
-        {contacts.length === 0 && !showForm ? (
-          <div className="p-6 bg-brand-surface border border-dashed border-brand-border rounded-lg text-center">
-            <p className="font-sans text-sm text-brand-muted">No contacts yet.</p>
-            <button
-              onClick={() => setShowForm(true)}
-              className="mt-2 font-sans text-sm text-brand-accent hover:underline"
-            >
-              Add your first contact
-            </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+        {ordered.length === 0 && !showForm && (
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, color: t.muted, padding: '24px 0', textAlign: 'center' }}>
+            No contacts yet.<br />Add your first trusted contact.
           </div>
-        ) : (
-          <ul className="space-y-3">
-            {contacts.map((contact) => (
-              <li
-                key={contact.id}
-                className="p-4 bg-brand-surface border border-brand-border rounded-lg flex items-start justify-between gap-4"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-sans text-sm font-semibold text-brand-ink truncate">
-                    {contact.fullName}
-                  </p>
-                  <p className="font-sans text-xs text-brand-muted truncate">
-                    {contact.email}
-                    {contact.relationship ? ` · ${contact.relationship}` : ''}
-                  </p>
-                  <p className="font-sans text-xs text-brand-muted">
-                    Priority {contact.priorityOrder} · {contact.confirmationWindowHours}h window
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleDelete(contact.id)}
-                  className="font-sans text-xs text-brand-danger hover:underline flex-shrink-0"
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
         )}
+        {ordered.map((c, i) => (
+          <div key={c.id} style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: 32 }}>
+              <span style={{ fontFamily: "'Caveat',cursive", fontSize: 28, fontWeight: 700, color: t.accent, lineHeight: 1 }}>{c.priorityOrder}</span>
+            </div>
+            <SketchCard tilt={i % 2 === 0 ? 0.3 : -0.2} style={{ flex: 1, padding: '14px 18px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: t.ink, lineHeight: 1 }}>{c.fullName}</div>
+                  {c.relationship && (
+                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: t.accent, letterSpacing: '0.08em', textTransform: 'uppercase', margin: '3px 0 8px' }}>{c.relationship}</div>
+                  )}
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted }}>
+                    {c.email}{c.phone ? ` · ${c.phone}` : ''}
+                  </div>
+                </div>
+                <button onClick={() => handleDelete(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.muted, fontSize: 16, padding: 4, opacity: 0.5 }} aria-label={`Remove ${c.fullName}`}>✕</button>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: t.muted }}>
+                  {c.confirmationWindowHours}H WINDOW
+                </span>
+                {['email', c.phone ? 'sms' : null, c.telegramHandle ? 'telegram' : null].filter(Boolean).map((n) => (
+                  <span key={n as string} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, background: t.border, color: t.ink, borderRadius: 99, padding: '2px 8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{n}</span>
+                ))}
+              </div>
+            </SketchCard>
+          </div>
+        ))}
       </div>
-    </div>
+
+      {showForm ? (
+        <SketchCard>
+          <form onSubmit={handleCreate}>
+            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: t.ink, marginBottom: 12 }}>Add Trusted Contact</div>
+            <input name="fullName" placeholder="Full name" value={form.fullName} onChange={handleChange} required style={inputStyle} />
+            <input name="email" type="email" placeholder="Email address" value={form.email} onChange={handleChange} required style={inputStyle} />
+            <input name="relationship" placeholder="Relationship (e.g. spouse, sibling, attorney)" value={form.relationship} onChange={handleChange} style={inputStyle} />
+            <input name="phone" type="tel" placeholder="Phone (optional)" value={form.phone} onChange={handleChange} style={inputStyle} />
+            <input name="telegramHandle" placeholder="Telegram handle (optional)" value={form.telegramHandle} onChange={handleChange} style={inputStyle} />
+            <label style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted, display: 'block', marginBottom: 4 }}>
+              Confirmation window (hours)
+            </label>
+            <input name="confirmationWindowHours" type="number" min="1" max="720" value={form.confirmationWindowHours} onChange={handleChange} style={inputStyle} />
+            {submitError && <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.danger, margin: '4px 0 8px' }}>{submitError}</p>}
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <InkButton type="submit" size="sm" disabled={submitting} ariaBusy={submitting}>{submitting ? 'Saving...' : 'Save Contact'}</InkButton>
+              <InkButton size="sm" variant="ghost" onClick={() => setShowForm(false)}>Cancel</InkButton>
+            </div>
+          </form>
+        </SketchCard>
+      ) : (
+        <InkButton variant="ghost" size="sm" onClick={() => setShowForm(true)}>+ Add Contact</InkButton>
+      )}
+    </AppShell>
   );
 }

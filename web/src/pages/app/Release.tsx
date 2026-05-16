@@ -1,6 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { get, post } from '../../lib/api';
+import { useAuth } from '../../App';
+import { useTheme, type Theme } from '../../lib/theme';
+import AppShell from '../../components/layout/AppShell';
+import { buildNavItems } from '../../components/layout/navModel';
+import { SketchCard, SectionTitle, InkButton } from '../../components/ui';
 
 interface PacketMeta {
   id: string;
@@ -44,14 +49,16 @@ interface CascadeStatus {
   claims: CascadeClaim[];
 }
 
-function statusColor(status: string) {
-  if (status === 'active') return 'text-brand-accent';
-  if (status === 'completed') return 'text-green-600';
-  if (status === 'failed') return 'text-brand-danger';
-  return 'text-brand-muted';
+function statusColor(status: string, t: Theme) {
+  if (status === 'active') return t.accent;
+  if (status === 'completed') return '#27AE60';
+  if (status === 'failed') return t.danger;
+  return t.muted;
 }
 
 export default function Release() {
+  const { user } = useAuth();
+  const t = useTheme();
   const [packets, setPackets] = useState<PacketMeta[]>([]);
   const [runs, setRuns] = useState<ReleaseRun[]>([]);
   const [cascadeStatuses, setCascadeStatuses] = useState<Record<string, CascadeStatus>>({});
@@ -68,7 +75,6 @@ export default function Release() {
       .then(async ([pd, rd]) => {
         setPackets(pd.packets);
         setRuns(rd.releaseRuns);
-        // Load cascade status for active runs
         const active = rd.releaseRuns.filter(
           r => !['completed', 'cancelled', 'failed'].includes(r.status),
         );
@@ -116,163 +122,148 @@ export default function Release() {
     }
   }
 
-  if (error) return <div className="p-8 text-brand-danger font-sans">{error}</div>;
-
+  const isAdmin = user?.role === 'admin' || user?.role === 'sa';
   const activeRuns = runs.filter(r => !['completed', 'cancelled', 'failed'].includes(r.status));
   const pastRuns = runs.filter(r => ['completed', 'cancelled', 'failed'].includes(r.status));
 
   return (
-    <div className="min-h-screen bg-brand-bg p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="font-hand text-4xl font-bold mb-1 text-brand-ink">Release Status</h1>
-        <p className="font-sans text-sm text-brand-muted mb-6">
-          Packets, release runs, and cascade status.
-        </p>
-
-        {actionMsg && (
-          <div className="mb-4 p-3 bg-brand-surface border border-brand-border rounded text-brand-ink font-sans text-sm">
-            {actionMsg}
-          </div>
-        )}
-
-        {/* Active release runs */}
-        <section className="mb-8">
-          <h2 className="font-hand text-2xl font-bold mb-3 text-brand-ink">Active Releases</h2>
-          {activeRuns.length === 0 ? (
-            <div className="p-4 bg-brand-surface border border-brand-border rounded text-brand-muted font-sans text-sm">
-              No active release runs.
+    <AppShell navItems={buildNavItems(isAdmin)} releaseTo="/release">
+      {error && <div style={{ color: t.danger, fontFamily: "'JetBrains Mono',monospace" }}>{error}</div>}
+      {!error && (
+        <>
+          {activeRuns.length > 0 && (
+            <div style={{
+              background: t.danger, color: '#fff', border: `3px solid ${t.danger}`,
+              borderRadius: '4px 12px 4px 12px / 12px 4px 12px 4px', padding: '18px 24px',
+              marginBottom: 24, transform: 'rotate(-0.3deg)', fontFamily: "'Caveat',cursive",
+              fontSize: 28, fontWeight: 700,
+            }}>
+              ⚠ WARNING — Release Process Active
             </div>
-          ) : (
-            <div className="space-y-3">
-              {activeRuns.map(r => {
-                const cascade = cascadeStatuses[r.id];
-                return (
-                  <div key={r.id} className="p-4 bg-brand-surface border border-brand-border rounded-lg">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className={`font-sans font-semibold text-sm ${statusColor(r.status)}`}>
-                          {r.status.toUpperCase()}
-                        </div>
-                        <div className="font-sans text-xs text-brand-muted mt-1">
-                          Source: {r.source}
-                          {r.triggeringSwitchId && ` · switch ${r.triggeringSwitchId.slice(0, 8)}`}
-                          {r.relayConnectionId && ` · relay ${r.relayConnectionId.slice(0, 8)}`}
-                        </div>
-                        <div className="font-sans text-xs text-brand-muted">
-                          Started: {new Date(r.startedAt).toLocaleString()}
-                        </div>
-                        {cascade && cascade.claims.length > 0 && (
-                          <div className="mt-3">
-                            <p className="font-sans text-xs font-semibold text-brand-muted mb-1">
-                              Cascade ({cascade.claims.length} contact{cascade.claims.length !== 1 ? 's' : ''})
-                            </p>
-                            <div className="space-y-1">
-                              {cascade.claims.map((c, i) => (
-                                <div key={c.id} className="flex items-center gap-2 font-sans text-xs">
-                                  <span className="text-brand-muted">Contact {i + 1}:</span>
-                                  <span className={
-                                    c.acknowledgedAt ? 'text-green-600' :
-                                    c.escalatedAt ? 'text-brand-muted line-through' :
-                                    c.status === 'notified' ? 'text-brand-accent' :
-                                    'text-brand-muted'
-                                  }>
-                                    {c.status}
-                                  </span>
-                                  {c.acknowledgedAt && <span className="text-green-600">✓</span>}
+          )}
+
+          <SectionTitle sub="PACKETS, RELEASE RUNS, AND CASCADE STATUS">Release Mode</SectionTitle>
+
+          {actionMsg && (
+            <SketchCard style={{ marginBottom: 16, padding: '12px 16px' }}>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.ink }}>{actionMsg}</span>
+            </SketchCard>
+          )}
+
+          {/* Active releases */}
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: t.ink, marginBottom: 10 }}>Active Releases</div>
+            {activeRuns.length === 0 ? (
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted }}>No active release runs.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {activeRuns.map((r, i) => {
+                  const cascade = cascadeStatuses[r.id];
+                  return (
+                    <SketchCard key={r.id} tilt={i % 2 === 0 ? -0.3 : 0.3}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: statusColor(r.status, t) }}>
+                            {r.status.toUpperCase()}
+                          </div>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted, marginTop: 4 }}>
+                            Source: {r.source}
+                            {r.triggeringSwitchId && ` · switch ${r.triggeringSwitchId.slice(0, 8)}`}
+                            {r.relayConnectionId && ` · relay ${r.relayConnectionId.slice(0, 8)}`}
+                          </div>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted }}>
+                            Started: {new Date(r.startedAt).toLocaleString()}
+                          </div>
+                          {cascade && cascade.claims.length > 0 && (
+                            <div style={{ marginTop: 12, borderTop: `1px dashed ${t.border}`, paddingTop: 10 }}>
+                              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: t.ink, marginBottom: 6 }}>
+                                Notification Timeline ({cascade.claims.length} contact{cascade.claims.length !== 1 ? 's' : ''})
+                              </div>
+                              {cascade.claims.map((c, idx) => (
+                                <div key={c.id} style={{ display: 'flex', gap: 10, alignItems: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 11, padding: '4px 0' }}>
+                                  <span style={{ color: t.muted, minWidth: 70 }}>Contact {idx + 1}</span>
+                                  <span style={{
+                                    color: c.acknowledgedAt ? '#27AE60' : c.escalatedAt ? t.muted : c.status === 'notified' ? t.accent : t.muted,
+                                    textDecoration: c.escalatedAt ? 'line-through' : 'none',
+                                  }}>{c.status}</span>
+                                  {c.acknowledgedAt && <span style={{ color: '#27AE60' }}>✓</span>}
                                 </div>
                               ))}
                             </div>
-                          </div>
-                        )}
-                        {cascade && cascade.claims.length === 0 && r.status === 'active' && (
-                          <p className="font-sans text-xs text-brand-muted mt-2 italic">
-                            Cascade pending — waiting for first tick
-                          </p>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => cancelRun(r.id)}
-                        disabled={cancellingId === r.id}
-                        className="px-3 py-1 border border-brand-danger text-brand-danger rounded font-sans text-xs hover:bg-brand-danger/10 disabled:opacity-50"
-                      >
-                        {cancellingId === r.id ? 'Cancelling...' : 'Cancel'}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        {/* Packets */}
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-hand text-2xl font-bold text-brand-ink">Packets</h2>
-            <Link
-              to="/switches"
-              className="font-sans text-xs text-brand-accent hover:underline"
-            >
-              Generate via switch &rarr;
-            </Link>
-          </div>
-          {packets.length === 0 ? (
-            <div className="p-4 bg-brand-surface border border-brand-border rounded text-brand-muted font-sans text-sm">
-              No packets. <Link to="/switches" className="text-brand-accent hover:underline">Generate one from a switch.</Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {packets.map(p => (
-                <div key={p.id} className="p-4 bg-brand-surface border border-brand-border rounded-lg">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="font-sans text-sm font-semibold text-brand-ink">
-                        v{p.version}
-                        {p.switchId && <span className="ml-2 font-normal text-brand-muted">switch {p.switchId.slice(0, 8)}</span>}
-                      </div>
-                      <div className="font-sans text-xs text-brand-muted mt-1">
-                        Created: {new Date(p.createdAt).toLocaleDateString()}
-                        {p.storageProvider && ` · storage: ${p.storageProvider}`}
-                      </div>
-                      {p.lastVerifiedAt && (
-                        <div className="font-sans text-xs text-green-600">
-                          Verified: {new Date(p.lastVerifiedAt).toLocaleString()}
+                          )}
+                          {cascade && cascade.claims.length === 0 && r.status === 'active' && (
+                            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted, fontStyle: 'italic', marginTop: 8 }}>
+                              Cascade pending — waiting for first tick
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {!p.lastVerifiedAt && p.storageBucket && (
-                        <div className="font-sans text-xs text-brand-muted">Not yet verified</div>
-                      )}
+                        <InkButton size="sm" variant="danger" disabled={cancellingId === r.id} ariaBusy={cancellingId === r.id} onClick={() => cancelRun(r.id)}>
+                          {cancellingId === r.id ? 'Cancelling...' : '🛑 Abort'}
+                        </InkButton>
+                      </div>
+                    </SketchCard>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Packets */}
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: t.ink }}>Packets</div>
+              <Link to="/switches" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.accent, textDecoration: 'none' }}>Generate via switch →</Link>
+            </div>
+            {packets.length === 0 ? (
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted }}>
+                No packets. <Link to="/switches" style={{ color: t.accent }}>Generate one from a switch.</Link>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {packets.map((p, i) => (
+                  <SketchCard key={p.id} tilt={i % 2 === 0 ? 0.2 : -0.2} style={{ padding: '14px 18px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+                      <div>
+                        <div style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: t.ink }}>
+                          v{p.version}{p.switchId && <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted, marginLeft: 8 }}>switch {p.switchId.slice(0, 8)}</span>}
+                        </div>
+                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted, marginTop: 2 }}>
+                          Created: {new Date(p.createdAt).toLocaleDateString()}{p.storageProvider && ` · storage: ${p.storageProvider}`}
+                        </div>
+                        {p.lastVerifiedAt && (
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: '#27AE60' }}>Verified: {new Date(p.lastVerifiedAt).toLocaleString()}</div>
+                        )}
+                        {!p.lastVerifiedAt && p.storageBucket && (
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted }}>Not yet verified</div>
+                        )}
+                      </div>
+                      <InkButton size="sm" variant="ghost" disabled={verifyingId === p.id} ariaBusy={verifyingId === p.id} onClick={() => verifyPacket(p.id)}>
+                        {verifyingId === p.id ? 'Verifying...' : 'Verify'}
+                      </InkButton>
                     </div>
-                    <button
-                      onClick={() => verifyPacket(p.id)}
-                      disabled={verifyingId === p.id}
-                      className="px-3 py-1 border border-brand-border rounded font-sans text-xs hover:bg-brand-surface disabled:opacity-50"
-                    >
-                      {verifyingId === p.id ? 'Verifying...' : 'Verify'}
-                    </button>
+                  </SketchCard>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Past runs */}
+          {pastRuns.length > 0 && (
+            <div>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: t.ink, marginBottom: 10 }}>Past Releases</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {pastRuns.slice(0, 10).map(r => (
+                  <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '8px 14px', border: `1.5px solid ${t.border}`, borderRadius: '3px 8px 3px 8px / 8px 3px 8px 3px' }}>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: statusColor(r.status, t) }}>{r.status}</span>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted }}>{r.source}</span>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted }}>{new Date(r.startedAt).toLocaleDateString()}</span>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
-        </section>
-
-        {/* Past runs */}
-        {pastRuns.length > 0 && (
-          <section>
-            <h2 className="font-hand text-2xl font-bold mb-3 text-brand-ink">Past Releases</h2>
-            <div className="space-y-2">
-              {pastRuns.slice(0, 10).map(r => (
-                <div key={r.id} className="p-3 bg-brand-surface border border-brand-border rounded flex items-center gap-4">
-                  <span className={`font-sans text-xs font-semibold ${statusColor(r.status)}`}>{r.status}</span>
-                  <span className="font-sans text-xs text-brand-muted">{r.source}</span>
-                  <span className="font-sans text-xs text-brand-muted">{new Date(r.startedAt).toLocaleDateString()}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
-    </div>
+        </>
+      )}
+    </AppShell>
   );
 }
