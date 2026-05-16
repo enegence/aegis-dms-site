@@ -7,6 +7,10 @@ interface InkButtonProps {
   variant?: 'primary' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   style?: CSSProperties;
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  ariaBusy?: boolean;
+  ariaLabel?: string;
 }
 
 export default function InkButton({
@@ -15,6 +19,10 @@ export default function InkButton({
   variant = 'primary',
   size = 'md',
   style = {},
+  type = 'button',
+  disabled = false,
+  ariaBusy,
+  ariaLabel,
 }: InkButtonProps) {
   const t = useTheme();
   const [tw] = useTweaks();
@@ -33,6 +41,10 @@ export default function InkButton({
   const sz = sizes[size] || sizes.md;
   return (
     <button
+      type={type}
+      disabled={disabled}
+      aria-busy={ariaBusy}
+      aria-label={ariaLabel}
       onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
@@ -46,11 +58,12 @@ export default function InkButton({
         color: isPrimary || isDanger ? t.bg : t.ink,
         border: `2px solid ${isDanger ? t.danger : t.ink}`,
         borderRadius: radii[btnShape] || radii.sketchy,
-        cursor: 'pointer',
-        transform: hov ? 'translateY(-1px)' : 'none',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+        transform: hov && !disabled ? 'translateY(-1px)' : 'none',
         transition: 'all 0.1s',
         letterSpacing: '0.02em',
-        boxShadow: hov
+        boxShadow: hov && !disabled
           ? `4px 4px 0 ${isDanger ? t.danger : t.accent}`
           : `3px 3px 0 ${isDanger ? t.danger + '88' : t.accent + '66'}`,
         outline: 'none',

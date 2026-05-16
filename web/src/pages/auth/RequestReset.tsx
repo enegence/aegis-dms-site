@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { post } from '../../lib/api';
+import { useTheme } from '../../lib/theme';
+import { SketchCard, InkButton } from '../../components/ui';
+import { AegisLockup } from '../../components/brand';
 
 export default function RequestReset() {
+  const t = useTheme();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
@@ -22,40 +26,50 @@ export default function RequestReset() {
     }
   }
 
+  const wrap = (children: React.ReactNode) => (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: t.bg }}>
+      <div style={{ width: '100%', maxWidth: 420 }}>
+        <SketchCard style={{ padding: '32px 30px' }}>{children}</SketchCard>
+      </div>
+    </div>
+  );
+
   if (sent) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-brand-bg">
-        <div className="w-full max-w-md p-8 bg-brand-surface border-2 border-brand-border rounded-lg text-center">
-          <h1 className="font-hand text-4xl font-bold mb-4 text-brand-ink">Check Your Email</h1>
-          <p className="font-sans text-sm text-brand-muted mb-4">
-            If an account exists with that email, we sent a password reset link.
-          </p>
-          <Link to="/login" className="font-sans text-sm text-brand-accent hover:underline">Back to login</Link>
-        </div>
+    return wrap(
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}><AegisLockup size="sm" color={t.ink} /></div>
+        <h1 style={{ fontFamily: "'Caveat',cursive", fontSize: 36, fontWeight: 700, color: t.ink, margin: '0 0 12px' }}>Check Your Email</h1>
+        <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted, marginBottom: 16, lineHeight: 1.7 }}>
+          If an account exists with that email, we sent a password reset link.
+        </p>
+        <Link to="/login" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.accent, textDecoration: 'none' }}>Back to login</Link>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-brand-bg">
-      <form onSubmit={handleSubmit} className="w-full max-w-md p-8 bg-brand-surface border-2 border-brand-border rounded-lg">
-        <h1 className="font-hand text-4xl font-bold mb-2 text-brand-ink">Reset Password</h1>
-        <p className="font-sans text-sm text-brand-muted mb-6">Enter your email to receive a reset link.</p>
+  const inputStyle: CSSProperties = {
+    width: '100%', fontFamily: "'JetBrains Mono',monospace", fontSize: 13, padding: '10px 12px',
+    marginBottom: 16, background: t.bg, border: `1.5px solid ${t.border}`, borderRadius: 4, color: t.ink,
+    boxSizing: 'border-box', outline: 'none',
+  };
 
-        <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
-          className="w-full font-sans text-sm p-3 mb-4 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent" />
+  return wrap(
+    <form onSubmit={handleSubmit}>
+      <div style={{ marginBottom: 18 }}><AegisLockup size="sm" color={t.ink} /></div>
+      <h1 style={{ fontFamily: "'Caveat',cursive", fontSize: 36, fontWeight: 700, color: t.ink, margin: '0 0 4px' }}>Reset Password</h1>
+      <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted, marginBottom: 22 }}>Enter your email to receive a reset link.</p>
 
-        {error && <div className="font-sans text-sm mb-3 text-brand-danger">{error}</div>}
+      <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={inputStyle} />
 
-        <button type="submit" disabled={loading}
-          className="w-full font-sans font-semibold text-sm p-3 cursor-pointer bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors disabled:opacity-50">
-          {loading ? 'Sending...' : 'Send Reset Link'}
-        </button>
+      {error && <div role="alert" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, marginBottom: 12, color: t.danger }}>{error}</div>}
 
-        <p className="font-sans text-sm text-brand-muted mt-4 text-center">
-          <Link to="/login" className="text-brand-accent hover:underline">Back to login</Link>
-        </p>
-      </form>
-    </div>
+      <InkButton type="submit" disabled={loading} ariaBusy={loading} style={{ width: '100%' }}>
+        {loading ? 'Sending...' : 'Send Reset Link'}
+      </InkButton>
+
+      <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted, marginTop: 16, textAlign: 'center' }}>
+        <Link to="/login" style={{ color: t.accent, textDecoration: 'none' }}>Back to login</Link>
+      </p>
+    </form>
   );
 }

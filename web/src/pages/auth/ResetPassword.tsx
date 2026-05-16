@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { post } from '../../lib/api';
+import { useTheme } from '../../lib/theme';
+import { SketchCard, InkButton } from '../../components/ui';
+import { AegisLockup } from '../../components/brand';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const t = useTheme();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
   const [password, setPassword] = useState('');
@@ -26,45 +30,52 @@ export default function ResetPassword() {
     }
   }
 
+  const wrap = (children: React.ReactNode) => (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: t.bg }}>
+      <div style={{ width: '100%', maxWidth: 420 }}>
+        <SketchCard style={{ padding: '32px 30px' }}>{children}</SketchCard>
+      </div>
+    </div>
+  );
+
   if (!token) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-brand-bg">
-        <div className="w-full max-w-md p-8 bg-brand-surface border-2 border-brand-border rounded-lg text-center">
-          <h1 className="font-hand text-4xl font-bold mb-4 text-brand-danger">Invalid Link</h1>
-          <p className="font-sans text-sm text-brand-muted mb-4">This reset link is invalid or expired.</p>
-          <Link to="/forgot-password" className="font-sans text-sm text-brand-accent hover:underline">Request a new one</Link>
-        </div>
+    return wrap(
+      <div style={{ textAlign: 'center' }}>
+        <h1 style={{ fontFamily: "'Caveat',cursive", fontSize: 36, fontWeight: 700, color: t.danger, margin: '0 0 12px' }}>Invalid Link</h1>
+        <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted, marginBottom: 16 }}>This reset link is invalid or expired.</p>
+        <Link to="/forgot-password" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.accent, textDecoration: 'none' }}>Request a new one</Link>
       </div>
     );
   }
 
   if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-brand-bg">
-        <div className="w-full max-w-md p-8 bg-brand-surface border-2 border-brand-border rounded-lg text-center">
-          <h1 className="font-hand text-4xl font-bold mb-4 text-brand-success">Password Reset</h1>
-          <p className="font-sans text-sm text-brand-muted">Redirecting to login...</p>
-        </div>
+    return wrap(
+      <div style={{ textAlign: 'center' }}>
+        <h1 style={{ fontFamily: "'Caveat',cursive", fontSize: 36, fontWeight: 700, color: t.accent, margin: '0 0 12px' }}>Password Reset</h1>
+        <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted }}>Redirecting to login...</p>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-brand-bg">
-      <form onSubmit={handleSubmit} className="w-full max-w-md p-8 bg-brand-surface border-2 border-brand-border rounded-lg">
-        <h1 className="font-hand text-4xl font-bold mb-2 text-brand-ink">New Password</h1>
-        <p className="font-sans text-sm text-brand-muted mb-6">Enter your new passphrase.</p>
+  const inputStyle: CSSProperties = {
+    width: '100%', fontFamily: "'JetBrains Mono',monospace", fontSize: 13, padding: '10px 12px',
+    marginBottom: 16, background: t.bg, border: `1.5px solid ${t.border}`, borderRadius: 4, color: t.ink,
+    boxSizing: 'border-box', outline: 'none',
+  };
 
-        <input type="password" placeholder="New passphrase (8+ characters)" value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
-          className="w-full font-sans text-sm p-3 mb-4 rounded border border-brand-border bg-brand-bg text-brand-ink outline-none focus:border-brand-accent" />
+  return wrap(
+    <form onSubmit={handleSubmit}>
+      <div style={{ marginBottom: 18 }}><AegisLockup size="sm" color={t.ink} /></div>
+      <h1 style={{ fontFamily: "'Caveat',cursive", fontSize: 36, fontWeight: 700, color: t.ink, margin: '0 0 4px' }}>New Password</h1>
+      <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted, marginBottom: 22 }}>Enter your new passphrase.</p>
 
-        {error && <div className="font-sans text-sm mb-3 text-brand-danger">{error}</div>}
+      <input type="password" placeholder="New passphrase (8+ characters)" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} style={inputStyle} />
 
-        <button type="submit" disabled={loading}
-          className="w-full font-sans font-semibold text-sm p-3 cursor-pointer bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors disabled:opacity-50">
-          {loading ? 'Resetting...' : 'Set New Password'}
-        </button>
-      </form>
-    </div>
+      {error && <div role="alert" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, marginBottom: 12, color: t.danger }}>{error}</div>}
+
+      <InkButton type="submit" disabled={loading} ariaBusy={loading} style={{ width: '100%' }}>
+        {loading ? 'Resetting...' : 'Set New Password'}
+      </InkButton>
+    </form>
   );
 }
