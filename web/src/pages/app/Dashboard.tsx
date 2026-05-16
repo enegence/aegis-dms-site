@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getDashboard, type DashboardSummary } from '../../lib/dashboard';
 import { get, getOnboardingState, type OnboardingState } from '../../lib/api';
-import { Nav } from '../../components/Nav';
+import { useAuth } from '../../App';
+import { useTheme } from '../../lib/theme';
+import AppShell from '../../components/layout/AppShell';
+import { buildNavItems } from '../../components/layout/navModel';
+import { SketchCard, SectionTitle, StatPill, InkButton } from '../../components/ui';
+import { IconCheck, IconHeartbeat, IconCloud } from '../../components/icons';
 
 interface ReleaseOverview {
   packetCount: number;
@@ -19,7 +24,21 @@ function shouldShowHostedOnboarding(onboarding: OnboardingState | null): boolean
   return onboarding.subscription.hasHosted;
 }
 
+function countdownParts(iso: string | null | undefined): { d: number; h: number; m: number } | null {
+  if (!iso) return null;
+  const ms = new Date(iso).getTime() - Date.now();
+  if (isNaN(ms)) return null;
+  const clamped = Math.max(0, ms);
+  return {
+    d: Math.floor(clamped / 86_400_000),
+    h: Math.floor((clamped % 86_400_000) / 3_600_000),
+    m: Math.floor((clamped % 3_600_000) / 60_000),
+  };
+}
+
 export default function Dashboard() {
+  const { user } = useAuth();
+  const t = useTheme();
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [release, setRelease] = useState<ReleaseOverview | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingState | null>(null);
@@ -40,206 +59,177 @@ export default function Dashboard() {
     }).catch(() => {}); // non-critical
   }, []);
 
-  if (error) return <div className="p-8 text-brand-danger font-sans">{error}</div>;
-  if (!data) return <div className="p-8 text-brand-muted font-sans">Loading...</div>;
+  const isAdmin = user?.role === 'admin' || user?.role === 'sa';
+  const navItems = buildNavItems(isAdmin);
 
-  return (
-    <div className="min-h-screen bg-brand-bg">
-      <Nav />
-      <div className="p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="font-hand text-4xl font-bold mb-1 text-brand-ink">
-          Aegis Dashboard
-        </h1>
-        <p className="font-sans text-sm text-brand-muted mb-6">
+  const statusLines = data
+    ? [
+        `Switches: ${data.activeSwitchCount} active`,
+        `Plan: ${data.subscription.plan ?? 'none'}`,
+        `Relay: ${data.relayConnectionCount} linked`,
+      ]
+    : undefined;
+
+  const body = () => {
+    if (error) return <div style={{ color: t.danger, fontFamily: "'JetBrains Mono',monospace" }}>{error}</div>;
+    if (!data) return <div style={{ color: t.muted, fontFamily: "'JetBrains Mono',monospace" }}>Loading...</div>;
+
+    const cd = countdownParts(data.nextActionAt);
+    const warning = data.triggeredSwitchCount > 0 || data.warningSwitchCount > 0;
+    const statusColor = warning ? t.danger : t.accent;
+
+    return (
+      <div>
+        <SectionTitle sub={data.nextSwitch ? `NEXT: ${data.nextSwitch.name.toUpperCase()}` : 'NO ACTIVE SWITCH'}>
+          Still Alive Dashboard
+        </SectionTitle>
+        <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted, margin: '-12px 0 18px' }}>
           Welcome, {data.user.displayName}
         </p>
 
         {!data.user.emailVerified && (
-          <div className="mb-4 p-3 bg-brand-surface border border-brand-border rounded text-brand-danger font-sans text-sm">
-            Please verify your email address to arm switches.
-          </div>
+          <SketchCard tilt={-0.3} style={{ marginBottom: 16, borderColor: t.danger }}>
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.danger }}>
+              Please verify your email address to arm switches.
+            </span>
+          </SketchCard>
         )}
 
-        {/* Hosted onboarding banner */}
         {!onboardingDismissed && shouldShowHostedOnboarding(onboarding) && (
-          <div className="mb-6 p-4 bg-brand-surface border border-brand-accent rounded-lg">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="font-sans text-sm font-semibold text-brand-ink">
+          <SketchCard style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: t.ink }}>
                   Finish setting up Aegis Hosted
-                </p>
-                <p className="font-sans text-xs text-brand-muted mt-1">
+                </div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted, marginTop: 4 }}>
                   Complete your onboarding checklist to get your legacy switch ready.
-                </p>
+                </div>
               </div>
-              <button
-                onClick={() => setOnboardingDismissed(true)}
-                className="flex-shrink-0 font-sans text-xs text-brand-muted hover:text-brand-ink transition-colors"
-                aria-label="Dismiss onboarding banner"
-              >
-                ✕
-              </button>
+              <button onClick={() => setOnboardingDismissed(true)} aria-label="Dismiss onboarding banner"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.muted, fontSize: 16 }}>✕</button>
             </div>
-            <div className="mt-3 flex gap-3">
-              <Link
-                to="/onboarding"
-                className="font-sans text-xs font-semibold text-white bg-brand-accent px-3 py-1.5 rounded hover:opacity-90 transition-opacity"
-              >
-                Continue setup &rarr;
+            <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
+              <Link to="/onboarding" style={{ textDecoration: 'none' }}>
+                <InkButton size="sm">Continue setup →</InkButton>
               </Link>
-              <button
-                onClick={() => setOnboardingDismissed(true)}
-                className="font-sans text-xs text-brand-muted hover:text-brand-ink transition-colors"
-              >
-                Remind me later
-              </button>
+              <InkButton size="sm" variant="ghost" onClick={() => setOnboardingDismissed(true)}>Remind me later</InkButton>
             </div>
-          </div>
+          </SketchCard>
         )}
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <StatCard label="Estate Items" count={data.estateItemCount} to="/estate" />
-          <StatCard label="Contacts" count={data.contactCount} to="/contacts" />
-          <StatCard
-            label="Active Switches"
-            count={data.activeSwitchCount}
-            to="/switches"
-            badge={
-              data.triggeredSwitchCount > 0
-                ? `${data.triggeredSwitchCount} triggered`
-                : data.warningSwitchCount > 0
-                ? `${data.warningSwitchCount} warning`
-                : undefined
-            }
-            badgeColor={data.triggeredSwitchCount > 0 ? 'danger' : 'warning'}
-          />
-          <StatCard
-            label="Relay Connections"
-            count={data.relayConnectionCount}
-            to="/relay"
-            badge={data.offlineRelayConnectionCount > 0 ? `${data.offlineRelayConnectionCount} offline` : undefined}
-            badgeColor="danger"
-          />
+        {/* Big heartbeat card */}
+        <SketchCard style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>
+                time until release begins
+              </div>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 64, fontWeight: 700, color: statusColor, lineHeight: 1, letterSpacing: '-2px' }}>
+                {cd ? `${cd.d}d ${cd.h}h ${cd.m}m` : '—'}
+              </div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: t.muted, marginTop: 8 }}>
+                {data.nextActionAt
+                  ? `Next action: ${new Date(data.nextActionAt).toLocaleString()}`
+                  : 'No active switch scheduled'}
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              <Link to="/switches" style={{ textDecoration: 'none' }}>
+                <InkButton size="lg">👋 Check in / Manage</InkButton>
+              </Link>
+            </div>
+          </div>
+        </SketchCard>
+
+        {/* Stats row */}
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+          <Link to="/estate" style={{ textDecoration: 'none' }}><StatPill label="Legacy Items" value={data.estateItemCount} /></Link>
+          <Link to="/contacts" style={{ textDecoration: 'none' }}><StatPill label="Contacts" value={data.contactCount} /></Link>
+          <Link to="/switches" style={{ textDecoration: 'none' }}>
+            <StatPill
+              label={data.triggeredSwitchCount > 0 ? 'Triggered' : data.warningSwitchCount > 0 ? 'Warning' : 'Active Switches'}
+              value={data.activeSwitchCount}
+              accent={data.triggeredSwitchCount > 0 || data.warningSwitchCount > 0 ? t.danger : undefined}
+            />
+          </Link>
+          <Link to="/relay" style={{ textDecoration: 'none' }}>
+            <StatPill
+              label={data.offlineRelayConnectionCount > 0 ? 'Relay Offline' : 'Relay'}
+              value={<IconCloud size={22} color={data.offlineRelayConnectionCount > 0 ? t.danger : t.accent} />}
+              accent={data.offlineRelayConnectionCount > 0 ? t.danger : undefined}
+            />
+          </Link>
         </div>
 
         {/* Subscription */}
-        <div className="mb-6 p-4 bg-brand-surface border border-brand-border rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="font-sans text-sm text-brand-muted">Plan: </span>
-              <span className="font-sans text-sm font-semibold text-brand-ink">
-                {data.subscription.plan ?? 'None'}
-              </span>
-              <span className="ml-2 font-sans text-xs text-brand-muted">
-                ({data.subscription.status ?? 'inactive'})
-              </span>
+        <SketchCard tilt={0.2} style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.ink }}>
+              Plan: <strong>{data.subscription.plan ?? 'None'}</strong>{' '}
+              <span style={{ color: t.muted }}>({data.subscription.status ?? 'inactive'})</span>
             </div>
-            <Link
-              to="/app/billing"
-              className="font-sans text-xs text-brand-accent hover:underline"
-            >
-              Manage billing
+            <Link to="/app/billing" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.accent, textDecoration: 'none' }}>
+              Manage billing →
             </Link>
           </div>
-        </div>
+        </SketchCard>
 
         {/* Next switch */}
         {data.nextSwitch && (
-          <div className="mb-6 p-4 bg-brand-surface border border-brand-border rounded-lg">
-            <p className="font-sans text-xs text-brand-muted mb-1">Next action</p>
-            <p className="font-sans text-sm font-semibold text-brand-ink">
-              {data.nextSwitch.name}
-            </p>
+          <SketchCard tilt={-0.2} style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: t.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Next action</div>
+            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: t.ink }}>{data.nextSwitch.name}</div>
             {data.nextActionAt && (
-              <p className="font-sans text-xs text-brand-muted">
-                {new Date(data.nextActionAt).toLocaleString()}
-              </p>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted }}>{new Date(data.nextActionAt).toLocaleString()}</div>
             )}
-            <Link to="/switches" className="font-sans text-xs text-brand-accent hover:underline mt-1 inline-block">
-              View switches &rarr;
+            <Link to="/switches" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.accent, textDecoration: 'none', marginTop: 6, display: 'inline-block' }}>
+              View switches →
             </Link>
-          </div>
+          </SketchCard>
         )}
 
-        {/* Release health cards */}
+        {/* Release health */}
         {release !== null && (
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <Link
-              to="/release"
-              className="p-4 bg-brand-surface border border-brand-border rounded-lg hover:border-brand-accent transition-colors"
-            >
-              <p className="font-hand text-3xl font-bold text-brand-ink">{release.packetCount}</p>
-              <p className="font-sans text-xs text-brand-muted">Packets stored</p>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+            <Link to="/release" style={{ textDecoration: 'none' }}>
+              <StatPill label="Packets stored" value={release.packetCount} />
             </Link>
-            <Link
-              to="/release"
-              className={`p-4 bg-brand-surface border rounded-lg hover:border-brand-accent transition-colors ${
-                release.activeRunCount > 0 ? 'border-brand-danger' : 'border-brand-border'
-              }`}
-            >
-              <p className={`font-hand text-3xl font-bold ${release.activeRunCount > 0 ? 'text-brand-danger' : 'text-brand-ink'}`}>
-                {release.activeRunCount}
-              </p>
-              <p className="font-sans text-xs text-brand-muted">Active release runs</p>
+            <Link to="/release" style={{ textDecoration: 'none' }}>
+              <StatPill label="Active release runs" value={release.activeRunCount} accent={release.activeRunCount > 0 ? t.danger : undefined} />
             </Link>
           </div>
         )}
 
-        {/* Empty state prompts */}
-        {data.estateItemCount === 0 && (
-          <EmptyPrompt to="/estate" text="Add your first estate item to get started." />
-        )}
-        {data.contactCount === 0 && (
-          <EmptyPrompt to="/contacts" text="Add trusted contacts who will receive your information." />
-        )}
+        {/* Empty-state prompts */}
+        {data.estateItemCount === 0 && <EmptyPrompt to="/estate" text="Add your first estate item to get started." t={t} />}
+        {data.contactCount === 0 && <EmptyPrompt to="/contacts" text="Add trusted contacts who will receive your information." t={t} />}
         {data.activeSwitchCount === 0 && data.estateItemCount > 0 && data.contactCount > 0 && (
-          <EmptyPrompt to="/switches" text="Create and arm your first switch." />
+          <EmptyPrompt to="/switches" text="Create and arm your first switch." t={t} />
         )}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap', alignItems: 'center', color: t.muted }}>
+          <IconCheck size={16} color={t.accent} />
+          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>
+            {data.estateItemCount} items · {data.contactCount} contacts · {data.activeSwitchCount} active switches
+          </span>
+          <IconHeartbeat size={16} color={t.accent} />
+        </div>
       </div>
-      </div>
-    </div>
+    );
+  };
+
+  return (
+    <AppShell navItems={navItems} releaseTo="/release" statusLines={statusLines}>
+      {body()}
+    </AppShell>
   );
 }
 
-function StatCard({
-  label,
-  count,
-  to,
-  badge,
-  badgeColor,
-}: {
-  label: string;
-  count: number;
-  to: string;
-  badge?: string;
-  badgeColor?: string;
-}) {
+function EmptyPrompt({ to, text, t }: { to: string; text: string; t: { accent: string; border: string } }) {
   return (
-    <Link
-      to={to}
-      className="block p-4 bg-brand-surface border border-brand-border rounded-lg hover:border-brand-accent transition-colors"
-    >
-      <p className="font-hand text-3xl font-bold text-brand-ink">{count}</p>
-      <p className="font-sans text-xs text-brand-muted">{label}</p>
-      {badge && (
-        <span
-          className={`font-sans text-xs ${
-            badgeColor === 'danger' ? 'text-brand-danger' : 'text-amber-600'
-          }`}
-        >
-          {badge}
-        </span>
-      )}
-    </Link>
-  );
-}
-
-function EmptyPrompt({ to, text }: { to: string; text: string }) {
-  return (
-    <div className="mb-3 p-3 bg-brand-surface border border-dashed border-brand-border rounded">
-      <Link to={to} className="font-sans text-sm text-brand-accent hover:underline">
+    <div style={{ marginBottom: 12, padding: '12px 14px', border: `1.5px dashed ${t.border}`, borderRadius: '3px 10px 3px 10px / 10px 3px 10px 3px' }}>
+      <Link to={to} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.accent, textDecoration: 'none' }}>
         {text}
       </Link>
     </div>
