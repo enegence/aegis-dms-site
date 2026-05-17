@@ -9,7 +9,11 @@ import {
 } from '../../lib/relay';
 import { RelayConnectionList } from '../../components/relay/RelayConnectionList';
 import { RelayConnectCard } from '../../components/relay/RelayConnectCard';
-import { Nav } from '../../components/Nav';
+import { useAuth } from '../../App';
+import { useTheme } from '../../lib/theme';
+import AppShell from '../../components/layout/AppShell';
+import { buildNavItems } from '../../components/layout/navModel';
+import { SketchCard, SectionTitle, InkButton } from '../../components/ui';
 
 interface NewKeyReveal {
   connectionId: string;
@@ -17,6 +21,8 @@ interface NewKeyReveal {
 }
 
 export default function Relay() {
+  const { user } = useAuth();
+  const t = useTheme();
   const [connections, setConnections] = useState<RelayConnection[]>([]);
   const [error, setError] = useState('');
   const [showConnect, setShowConnect] = useState(false);
@@ -48,9 +54,7 @@ export default function Relay() {
     if (!confirm('Revoke this connection? The relay will stop sending heartbeats.')) return;
     try {
       await revokeRelayConnection(id);
-      setConnections((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, status: 'disconnected' } : c)),
-      );
+      setConnections((prev) => prev.map((c) => (c.id === id ? { ...c, status: 'disconnected' } : c)));
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Revoke failed');
     }
@@ -69,7 +73,7 @@ export default function Relay() {
 
   async function handleRename(id: string, currentLabel: string | null) {
     const next = prompt('Enter new label:', currentLabel ?? '');
-    if (next === null) return; // cancelled
+    if (next === null) return;
     try {
       const result = await renameRelayConnection(id, next);
       setConnections((prev) => prev.map((c) => (c.id === id ? result.connection : c)));
@@ -84,82 +88,61 @@ export default function Relay() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  const isAdmin = user?.role === 'admin' || user?.role === 'sa';
+
   return (
-    <div className="min-h-screen bg-brand-bg">
-      <Nav />
-      <div className="p-8">
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="font-hand text-4xl font-bold text-brand-ink">Relay Connections</h1>
-          {!showConnect && (
-            <button
-              onClick={() => setShowConnect(true)}
-              className="font-sans font-semibold text-sm px-4 py-2 bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors"
-            >
-              + Connect Instance
-            </button>
-          )}
-        </div>
-
-        <p className="font-sans text-xs text-brand-muted mb-6 p-3 bg-brand-surface border border-brand-border rounded">
-          Relay Monitoring detects missed heartbeats from your self-hosted Aegis Core instance
-          and alerts you. API keys are never sent in URLs — your instance exchanges a
-          short-lived code for a key server-to-server.
-        </p>
-
-        {error && <p className="font-sans text-sm text-brand-danger mb-4">{error}</p>}
-
-        {/* New key reveal (after rotate) */}
-        {newKey && (
-          <div className="mb-6 p-4 bg-brand-surface border-2 border-brand-danger rounded-lg">
-            <p className="font-sans text-sm font-semibold text-brand-danger mb-1">
-              Copy this key now. Aegis stores only a hash and cannot show it again.
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <code className="flex-1 font-mono text-xs text-brand-ink bg-brand-bg border border-brand-border rounded p-2 break-all select-all">
-                {newKey.apiKey}
-              </code>
-              <button
-                onClick={() => copyKey(newKey.apiKey)}
-                className="font-sans text-xs px-3 py-2 bg-brand-ink text-brand-bg rounded hover:bg-brand-accent transition-colors flex-shrink-0"
-              >
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-            <button
-              onClick={() => setNewKey(null)}
-              className="mt-2 font-sans text-xs text-brand-muted hover:underline"
-            >
-              I have saved this key, dismiss
-            </button>
-          </div>
-        )}
-
-        {/* Secure connect flow */}
-        {showConnect && (
-          <RelayConnectCard
-            onConnected={() => {
-              setShowConnect(false);
-              loadConnections();
-            }}
-            onCancel={() => setShowConnect(false)}
-          />
-        )}
-
-        {/* Connection list */}
+    <AppShell navItems={buildNavItems(isAdmin)} releaseTo="/release">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+        <SectionTitle sub="CLOUD MONITORING FOR YOUR SELF-HOSTED INSTANCE">Relay Connections</SectionTitle>
         {!showConnect && (
-          <RelayConnectionList
-            connections={connections}
-            onRotate={handleRotate}
-            onRevoke={handleRevoke}
-            onDelete={handleDelete}
-            onRename={handleRename}
-            onConnect={() => setShowConnect(true)}
-          />
+          <InkButton size="sm" onClick={() => setShowConnect(true)}>+ Connect Instance</InkButton>
         )}
       </div>
-      </div>
-    </div>
+
+      <SketchCard style={{ marginBottom: 16, padding: '12px 16px' }}>
+        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted, lineHeight: 1.7 }}>
+          Relay Monitoring detects missed heartbeats from your self-hosted Aegis Core instance and
+          alerts you. API keys are never sent in URLs — your instance exchanges a short-lived code
+          for a key server-to-server.
+        </div>
+      </SketchCard>
+
+      {error && <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.danger, marginBottom: 12 }}>{error}</p>}
+
+      {newKey && (
+        <SketchCard style={{ marginBottom: 20, border: `2px solid ${t.danger}` }}>
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: t.danger, marginBottom: 8 }}>
+            Copy this key now. Aegis stores only a hash and cannot show it again.
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <code style={{ flex: 1, fontFamily: 'monospace', fontSize: 11, color: t.ink, background: t.bg, border: `1px solid ${t.border}`, borderRadius: 4, padding: 8, wordBreak: 'break-all', userSelect: 'all' }}>
+              {newKey.apiKey}
+            </code>
+            <InkButton size="sm" onClick={() => copyKey(newKey.apiKey)}>{copied ? 'Copied!' : 'Copy'}</InkButton>
+          </div>
+          <button onClick={() => setNewKey(null)} style={{ marginTop: 8, background: 'none', border: 'none', color: t.muted, cursor: 'pointer', fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>
+            I have saved this key, dismiss
+          </button>
+        </SketchCard>
+      )}
+
+      {showConnect && (
+        <RelayConnectCard
+          onConnected={() => { setShowConnect(false); loadConnections(); }}
+          onCancel={() => setShowConnect(false)}
+        />
+      )}
+
+      {!showConnect && (
+        <RelayConnectionList
+          connections={connections}
+          onRotate={handleRotate}
+          onRevoke={handleRevoke}
+          onDelete={handleDelete}
+          onRename={handleRename}
+          onConnect={() => setShowConnect(true)}
+        />
+      )}
+    </AppShell>
   );
 }

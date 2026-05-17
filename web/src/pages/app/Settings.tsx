@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { get } from '../../lib/api';
 import { AccountSettings } from '../../components/settings/AccountSettings';
 import { SecuritySettings } from '../../components/settings/SecuritySettings';
 import { NotificationPreferenceSettings } from '../../components/settings/NotificationPreferenceSettings';
-import { Nav } from '../../components/Nav';
+import { useAuth } from '../../App';
+import { useTheme } from '../../lib/theme';
+import AppShell from '../../components/layout/AppShell';
+import { buildNavItems } from '../../components/layout/navModel';
+import { SectionTitle } from '../../components/ui';
 
 interface AccountInfo {
   email: string;
@@ -25,6 +29,9 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 export default function Settings() {
+  const { user } = useAuth();
+  const t = useTheme();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('account');
   const [account, setAccount] = useState<AccountInfo | null>(null);
   const [error, setError] = useState('');
@@ -35,71 +42,46 @@ export default function Settings() {
       .catch((e: Error) => setError(e.message));
   }, []);
 
-  if (error) {
-    return <div className="p-8 text-brand-danger font-sans">{error}</div>;
-  }
-
-  if (!account) {
-    return <div className="p-8 text-brand-muted font-sans">Loading…</div>;
-  }
+  const isAdmin = user?.role === 'admin' || user?.role === 'sa';
 
   return (
-    <div className="min-h-screen bg-brand-bg">
-      <Nav />
-      <div className="p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="font-hand text-4xl font-bold mb-1 text-brand-ink">Settings</h1>
-        <p className="font-sans text-sm text-brand-muted mb-6">
-          Manage your account, security, and preferences.
-        </p>
+    <AppShell navItems={buildNavItems(isAdmin)} releaseTo="/release">
+      <SectionTitle sub="MANAGE YOUR ACCOUNT, SECURITY, AND PREFERENCES">Settings</SectionTitle>
 
-        {/* Tab navigation */}
-        <nav className="flex gap-1 border-b border-brand-border mb-6 overflow-x-auto">
-          {TABS.map(tab => {
-            const isLink = tab.id === 'billing' || tab.id === 'relay';
-            const href = tab.id === 'billing' ? '/app/billing' : '/relay';
+      {error && <div style={{ color: t.danger, fontFamily: "'JetBrains Mono',monospace" }}>{error}</div>}
+      {!error && !account && <div style={{ color: t.muted, fontFamily: "'JetBrains Mono',monospace" }}>Loading…</div>}
 
-            if (isLink) {
+      {account && (
+        <>
+          <nav style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 24 }}>
+            {TABS.map(tab => {
+              const isLink = tab.id === 'billing' || tab.id === 'relay';
+              const active = !isLink && activeTab === tab.id;
               return (
-                <Link
+                <button
                   key={tab.id}
-                  to={href}
-                  className="px-4 py-2 font-sans text-sm text-brand-muted hover:text-brand-ink whitespace-nowrap border-b-2 border-transparent hover:border-brand-muted transition-colors"
+                  onClick={() => (isLink ? navigate(tab.id === 'billing' ? '/app/billing' : '/relay') : setActiveTab(tab.id))}
+                  style={{
+                    fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: active ? 700 : 400,
+                    padding: '6px 16px', cursor: 'pointer',
+                    background: active ? t.ink : 'transparent',
+                    color: active ? t.bg : t.ink,
+                    border: `2px solid ${active ? t.ink : t.border}`,
+                    borderRadius: '3px 8px 3px 8px / 8px 3px 8px 3px',
+                    transform: active ? 'rotate(-0.4deg)' : 'none', transition: 'all 0.1s',
+                  }}
                 >
                   {tab.label}
-                </Link>
+                </button>
               );
-            }
+            })}
+          </nav>
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={[
-                  'px-4 py-2 font-sans text-sm whitespace-nowrap border-b-2 transition-colors',
-                  activeTab === tab.id
-                    ? 'text-brand-ink border-brand-accent font-medium'
-                    : 'text-brand-muted border-transparent hover:text-brand-ink hover:border-brand-muted',
-                ].join(' ')}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Tab content */}
-        {activeTab === 'account' && (
-          <AccountSettings account={account} onUpdated={setAccount} />
-        )}
-        {activeTab === 'security' && (
-          <SecuritySettings emailVerified={account.emailVerified} />
-        )}
-        {activeTab === 'notifications' && (
-          <NotificationPreferenceSettings />
-        )}
-      </div>
-      </div>
-    </div>
+          {activeTab === 'account' && <AccountSettings account={account} onUpdated={setAccount} />}
+          {activeTab === 'security' && <SecuritySettings emailVerified={account.emailVerified} />}
+          {activeTab === 'notifications' && <NotificationPreferenceSettings />}
+        </>
+      )}
+    </AppShell>
   );
 }

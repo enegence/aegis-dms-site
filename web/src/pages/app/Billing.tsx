@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { get, post } from '../../lib/api';
 import { PlanStatusCard } from '../../components/billing/PlanStatusCard';
 import { BillingActions } from '../../components/billing/BillingActions';
-import { Nav } from '../../components/Nav';
+import { useAuth } from '../../App';
+import { useTheme } from '../../lib/theme';
+import AppShell from '../../components/layout/AppShell';
+import { buildNavItems } from '../../components/layout/navModel';
+import { SketchCard, SectionTitle } from '../../components/ui';
 
 interface SubscriptionSummary {
   id: string;
@@ -21,6 +25,8 @@ interface BillingSummary {
 }
 
 export default function Billing() {
+  const { user } = useAuth();
+  const t = useTheme();
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const [error, setError] = useState('');
   const [portalLoading, setPortalLoading] = useState(false);
@@ -47,53 +53,48 @@ export default function Billing() {
     }
   }
 
-  if (error) return <div className="p-8 text-brand-danger font-sans">{error}</div>;
-  if (!summary) return <div className="p-8 text-brand-muted font-sans">Loading...</div>;
-
-  const hasActivePlan = summary.hasRelay || summary.hasHosted;
+  const isAdmin = user?.role === 'admin' || user?.role === 'sa';
+  const hasActivePlan = !!summary && (summary.hasRelay || summary.hasHosted);
 
   return (
-    <div className="min-h-screen bg-brand-bg">
-      <Nav />
-      <div className="p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="font-hand text-4xl font-bold mb-1 text-brand-ink">Billing</h1>
-        <p className="font-sans text-sm text-brand-muted mb-6">
-          Manage your subscription and payment details.
-        </p>
+    <AppShell navItems={buildNavItems(isAdmin)} releaseTo="/release">
+      <SectionTitle sub="MANAGE YOUR SUBSCRIPTION AND PAYMENT DETAILS">Billing</SectionTitle>
 
-        {/* Plan cards */}
-        {summary.subscriptions.length > 0 ? (
-          <div className="space-y-3 mb-6">
-            {summary.subscriptions.map(sub => (
-              <PlanStatusCard
-                key={sub.id}
-                plan={sub.plan}
-                status={sub.status}
-                currentPeriodEnd={sub.currentPeriodEnd}
-                cancelledAt={sub.cancelledAt}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="mb-6 p-4 bg-brand-surface border border-dashed border-brand-border rounded-lg">
-            <p className="font-sans text-sm text-brand-muted">No active subscriptions.</p>
-          </div>
-        )}
+      {error && <div style={{ color: t.danger, fontFamily: "'JetBrains Mono',monospace" }}>{error}</div>}
+      {!error && !summary && <div style={{ color: t.muted, fontFamily: "'JetBrains Mono',monospace" }}>Loading...</div>}
 
-        {/* Actions */}
-        <BillingActions
-          hasActivePlan={hasActivePlan}
-          onManageBilling={handleManageBilling}
-          isPortalLoading={portalLoading}
-          pricingUrl={summary.pricingUrl}
-        />
+      {summary && (
+        <>
+          {summary.subscriptions.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+              {summary.subscriptions.map(sub => (
+                <PlanStatusCard
+                  key={sub.id}
+                  plan={sub.plan}
+                  status={sub.status}
+                  currentPeriodEnd={sub.currentPeriodEnd}
+                  cancelledAt={sub.cancelledAt}
+                />
+              ))}
+            </div>
+          ) : (
+            <SketchCard style={{ marginBottom: 24 }}>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted }}>No active subscriptions.</span>
+            </SketchCard>
+          )}
 
-        {portalError && (
-          <p className="mt-3 font-sans text-sm text-brand-danger">{portalError}</p>
-        )}
-      </div>
-      </div>
-    </div>
+          <BillingActions
+            hasActivePlan={hasActivePlan}
+            onManageBilling={handleManageBilling}
+            isPortalLoading={portalLoading}
+            pricingUrl={summary.pricingUrl}
+          />
+
+          {portalError && (
+            <p style={{ marginTop: 12, fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.danger }}>{portalError}</p>
+          )}
+        </>
+      )}
+    </AppShell>
   );
 }

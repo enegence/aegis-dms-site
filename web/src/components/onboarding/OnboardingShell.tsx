@@ -1,4 +1,7 @@
 import type { ReactNode } from 'react';
+import { useTheme } from '../../lib/theme';
+import { AegisLockup } from '../brand';
+import { SketchCard } from '../ui';
 
 interface OnboardingShellProps {
   title: string;
@@ -9,10 +12,8 @@ interface OnboardingShellProps {
 }
 
 /**
- * OnboardingShell — layout wrapper for all onboarding step pages.
- *
- * Renders a branded card with progress indicator, title, and slot for step content.
- * Follows the Dashboard color / typography conventions (font-hand, font-sans, brand-* tokens).
+ * OnboardingShell — sketch-aesthetic layout wrapper for all onboarding step pages.
+ * Branded card with step-dot progress, title, and a slot for step content.
  */
 export default function OnboardingShell({
   title,
@@ -21,35 +22,41 @@ export default function OnboardingShell({
   totalSteps,
   children,
 }: OnboardingShellProps) {
-  const progressPct = Math.round((currentStep / totalSteps) * 100);
-
+  const t = useTheme();
   return (
-    <div className="min-h-screen bg-brand-bg flex items-center justify-center p-6">
-      <div className="w-full max-w-lg">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="font-hand text-4xl font-bold text-brand-ink">Aegis Setup</h1>
-          <p className="font-sans text-sm text-brand-muted mt-1">
-            Step {currentStep} of {totalSteps}
-          </p>
-        </div>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', background: t.bg }}>
+      <div style={{ marginBottom: 24 }}>
+        <AegisLockup size="sm" color={t.ink} />
+      </div>
 
-        {/* Progress bar */}
-        <div className="w-full bg-brand-surface border border-brand-border rounded-full h-2 mb-6">
+      {/* Step-dot progress */}
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 28 }}>
+        {Array.from({ length: totalSteps }).map((_, i) => (
           <div
-            className="bg-brand-accent h-2 rounded-full transition-all duration-300"
-            style={{ width: `${progressPct}%` }}
+            key={i}
+            style={{
+              width: i + 1 === currentStep ? 28 : 10,
+              height: 10,
+              borderRadius: 99,
+              background: i + 1 <= currentStep ? t.ink : t.border,
+              transition: 'all 0.2s',
+            }}
           />
-        </div>
+        ))}
+      </div>
 
-        {/* Card */}
-        <div className="bg-brand-surface border border-brand-border rounded-xl p-6 shadow-sm">
-          <h2 className="font-hand text-2xl font-bold text-brand-ink mb-1">{title}</h2>
+      <div style={{ width: '100%', maxWidth: 540 }}>
+        <SketchCard style={{ padding: '28px 26px' }}>
+          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 28, fontWeight: 700, color: t.ink, lineHeight: 1.1 }}>
+            {title}
+          </div>
           {subtitle && (
-            <p className="font-sans text-sm text-brand-muted mb-4">{subtitle}</p>
+            <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted, margin: '6px 0 0' }}>
+              {subtitle}
+            </p>
           )}
-          <div className="mt-4">{children}</div>
-        </div>
+          <div style={{ marginTop: 18 }}>{children}</div>
+        </SketchCard>
       </div>
     </div>
   );
