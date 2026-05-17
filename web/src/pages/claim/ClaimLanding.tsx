@@ -1,18 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getClaimStatus, openClaim, type ClaimStatus } from '../../lib/api';
+import ClaimShell from '../../components/claim/ClaimShell';
 
 const TERMINAL_STATES = new Set(['acknowledged', 'expired', 'escalated', 'failed']);
 
-function ClaimCard({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-brand-bg">
-      <div className="w-full max-w-lg p-8 bg-brand-surface border-2 border-brand-border rounded-lg">
-        {children}
-      </div>
-    </div>
-  );
-}
+const ClaimCard = ClaimShell;
 
 function TerminalMessage({ status }: { status: string }) {
   const messages: Record<string, { title: string; body: string }> = {

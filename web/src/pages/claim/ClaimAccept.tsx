@@ -1,16 +1,9 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { acceptClaim } from '../../lib/api';
+import ClaimShell from '../../components/claim/ClaimShell';
 
-function ClaimCard({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-brand-bg">
-      <div className="w-full max-w-lg p-8 bg-brand-surface border-2 border-brand-border rounded-lg">
-        {children}
-      </div>
-    </div>
-  );
-}
+const ClaimCard = ClaimShell;
 
 export default function ClaimAccept() {
   const { token } = useParams<{ token: string }>();
