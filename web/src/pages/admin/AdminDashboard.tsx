@@ -5,6 +5,10 @@ import UserTable from '../../components/admin/UserTable';
 import SubscriptionMetrics from '../../components/admin/SubscriptionMetrics';
 import RelayMetrics from '../../components/admin/RelayMetrics';
 import SystemHealthPanel from '../../components/admin/SystemHealthPanel';
+import { useTheme } from '../../lib/theme';
+import AppShell from '../../components/layout/AppShell';
+import { buildNavItems } from '../../components/layout/navModel';
+import { SketchCard, SectionTitle, StatPill } from '../../components/ui';
 
 interface AdminMetrics {
   totalUsers: number;
@@ -72,31 +76,10 @@ interface SystemHealth {
   timestamp: string;
 }
 
-function MetricCard({ label, value, warn }: { label: string; value: number; warn?: boolean }) {
-  return (
-    <div className="p-4 bg-brand-surface border border-brand-border rounded-lg">
-      <div className={`text-2xl font-bold font-sans ${warn && value > 0 ? 'text-brand-danger' : 'text-brand-ink'}`}>
-        {value}
-      </div>
-      <div className="text-xs font-sans text-brand-muted mt-1">{label}</div>
-    </div>
-  );
-}
-
-function SectionHeader({ title, count }: { title: string; count?: number }) {
-  return (
-    <div className="flex items-baseline gap-2 mb-3">
-      <h2 className="font-sans font-semibold text-brand-ink text-base">{title}</h2>
-      {count !== undefined && (
-        <span className="text-xs text-brand-muted font-sans">({count})</span>
-      )}
-    </div>
-  );
-}
-
 type ActivePanel = 'overview' | 'users' | 'subscriptions' | 'relay' | 'release-runs' | 'health';
 
 export default function AdminDashboard() {
+  const t = useTheme();
   const [activePanel, setActivePanel] = useState<ActivePanel>('overview');
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -128,10 +111,7 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (error) return <div className="p-8 text-brand-danger font-sans">{error}</div>;
-  if (loading) return <div className="p-8 text-brand-muted font-sans">Loading...</div>;
-
-  const navItems: { key: ActivePanel; label: string }[] = [
+  const panels: { key: ActivePanel; label: string }[] = [
     { key: 'overview', label: 'Overview' },
     { key: 'users', label: 'Users' },
     { key: 'subscriptions', label: 'Subscriptions' },
@@ -141,159 +121,127 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-brand-bg p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="font-hand text-4xl font-bold mb-1 text-brand-ink">Admin</h1>
-        <p className="font-sans text-sm text-brand-muted mb-6">Operations dashboard</p>
+    <AppShell navItems={buildNavItems(true)} releaseTo="/release">
+      <SectionTitle sub="OPERATIONS DASHBOARD">Admin</SectionTitle>
 
-        {/* Top nav — in-page panels + links to dedicated pages */}
-        <div className="flex flex-wrap gap-2 mb-8 text-sm font-sans border-b border-brand-border pb-3">
-          {navItems.map(item => (
-            <button
-              key={item.key}
-              onClick={() => setActivePanel(item.key)}
-              className={`px-3 py-1.5 rounded transition-colors ${
-                activePanel === item.key
-                  ? 'bg-brand-accent text-white'
-                  : 'text-brand-muted hover:text-brand-ink hover:bg-brand-surface'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-          <div className="ml-auto flex gap-2">
-            <Link
-              to="/admin/users"
-              className="px-3 py-1.5 border border-brand-border rounded text-brand-muted hover:text-brand-ink hover:bg-brand-surface"
-            >
-              Full Users Page
-            </Link>
-            <Link
-              to="/admin/relay"
-              className="px-3 py-1.5 border border-brand-border rounded text-brand-muted hover:text-brand-ink hover:bg-brand-surface"
-            >
-              Full Relay Page
-            </Link>
-            <Link
-              to="/admin/release-runs"
-              className="px-3 py-1.5 border border-brand-border rounded text-brand-muted hover:text-brand-ink hover:bg-brand-surface"
-            >
-              Full Runs Page
-            </Link>
+      {error && <div style={{ color: t.danger, fontFamily: "'JetBrains Mono',monospace" }}>{error}</div>}
+      {!error && loading && <div style={{ color: t.muted, fontFamily: "'JetBrains Mono',monospace" }}>Loading...</div>}
+
+      {!error && !loading && (
+        <>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24, alignItems: 'center' }}>
+            {panels.map(item => {
+              const active = activePanel === item.key;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => setActivePanel(item.key)}
+                  style={{
+                    fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: active ? 700 : 400,
+                    padding: '6px 14px', cursor: 'pointer',
+                    background: active ? t.ink : 'transparent', color: active ? t.bg : t.ink,
+                    border: `2px solid ${active ? t.ink : t.border}`,
+                    borderRadius: '3px 8px 3px 8px / 8px 3px 8px 3px',
+                    transform: active ? 'rotate(-0.4deg)' : 'none', transition: 'all 0.1s',
+                  }}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+            <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+              <Link to="/admin/users" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.accent, textDecoration: 'none' }}>Full Users →</Link>
+              <Link to="/admin/relay" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.accent, textDecoration: 'none' }}>Full Relay →</Link>
+              <Link to="/admin/release-runs" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.accent, textDecoration: 'none' }}>Full Runs →</Link>
+            </span>
           </div>
-        </div>
 
-        {/* Overview panel */}
-        {activePanel === 'overview' && metrics && (
-          <div>
-            <SectionHeader title="System Metrics" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <MetricCard label="Total Users" value={metrics.totalUsers} />
-              <MetricCard label="Verified Users" value={metrics.verifiedUsers} />
-              <MetricCard label="Active Subscriptions" value={metrics.activeSubscriptions} />
-              <MetricCard label="Packets Stored" value={metrics.packetsStored} />
-              <MetricCard label="Relay Active" value={metrics.relayConnectionsActive} />
-              <MetricCard label="Relay Offline" value={metrics.relayConnectionsOffline} warn />
-              <MetricCard label="Switches Armed" value={metrics.switchesArmed} />
-              <MetricCard label="Switches Warning" value={metrics.switchesWarning} warn />
-              <MetricCard label="Switches Triggered" value={metrics.switchesTriggered} warn />
-              <MetricCard label="Active Release Runs" value={metrics.activeReleaseRuns} warn />
-              <MetricCard label="Notification Failures (24h)" value={metrics.notificationFailuresLast24h} warn />
-            </div>
-            {health && (
-              <div className="max-w-sm">
-                <SectionHeader title="System Health" />
-                <SystemHealthPanel health={health} />
+          {activePanel === 'overview' && metrics && (
+            <div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
+                <StatPill label="Total Users" value={metrics.totalUsers} />
+                <StatPill label="Verified Users" value={metrics.verifiedUsers} />
+                <StatPill label="Active Subs" value={metrics.activeSubscriptions} />
+                <StatPill label="Packets Stored" value={metrics.packetsStored} />
+                <StatPill label="Relay Active" value={metrics.relayConnectionsActive} />
+                <StatPill label="Relay Offline" value={metrics.relayConnectionsOffline} accent={metrics.relayConnectionsOffline > 0 ? t.danger : undefined} />
+                <StatPill label="Switches Armed" value={metrics.switchesArmed} />
+                <StatPill label="Switches Warning" value={metrics.switchesWarning} accent={metrics.switchesWarning > 0 ? t.danger : undefined} />
+                <StatPill label="Switches Triggered" value={metrics.switchesTriggered} accent={metrics.switchesTriggered > 0 ? t.danger : undefined} />
+                <StatPill label="Active Runs" value={metrics.activeReleaseRuns} accent={metrics.activeReleaseRuns > 0 ? t.danger : undefined} />
+                <StatPill label="Notif Fails 24h" value={metrics.notificationFailuresLast24h} accent={metrics.notificationFailuresLast24h > 0 ? t.danger : undefined} />
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Users panel */}
-        {activePanel === 'users' && (
-          <div>
-            <SectionHeader title="Users" count={users.length} />
-            <UserTable users={users} />
-          </div>
-        )}
-
-        {/* Subscriptions panel */}
-        {activePanel === 'subscriptions' && (
-          <div>
-            <SectionHeader title="Subscriptions" count={subscriptions.length} />
-            <SubscriptionMetrics subscriptions={subscriptions} />
-          </div>
-        )}
-
-        {/* Relay panel */}
-        {activePanel === 'relay' && (
-          <div>
-            <SectionHeader title="Relay Connections" count={relay.length} />
-            <RelayMetrics connections={relay} />
-          </div>
-        )}
-
-        {/* Release Runs panel */}
-        {activePanel === 'release-runs' && (
-          <div>
-            <SectionHeader title="Hosted Release Runs" count={releaseRuns.length} />
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm font-sans border border-brand-border rounded-lg overflow-hidden">
-                <thead className="bg-brand-surface text-brand-muted">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Source</th>
-                    <th className="px-4 py-2 text-left">Status</th>
-                    <th className="px-4 py-2 text-left">Started</th>
-                    <th className="px-4 py-2 text-left">Completed</th>
-                    <th className="px-4 py-2 text-left">Cancelled</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {releaseRuns.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-brand-muted">No release runs.</td>
-                    </tr>
-                  )}
-                  {releaseRuns.map(r => (
-                    <tr key={r.id} className="border-t border-brand-border hover:bg-brand-surface/50">
-                      <td className="px-4 py-2 text-brand-muted">{r.source}</td>
-                      <td className="px-4 py-2">
-                        <span className={`px-2 py-0.5 rounded text-xs ${
-                          r.status === 'completed' ? 'bg-green-100 text-green-800'
-                          : r.status === 'active' ? 'bg-blue-100 text-blue-800'
-                          : r.status === 'cancelled' ? 'bg-brand-surface text-brand-muted'
-                          : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {r.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 text-brand-muted">
-                        {new Date(r.startedAt).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-2 text-brand-muted">
-                        {r.completedAt ? new Date(r.completedAt).toLocaleString() : '—'}
-                      </td>
-                      <td className="px-4 py-2 text-brand-muted">
-                        {r.cancelledAt ? new Date(r.cancelledAt).toLocaleString() : '—'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {health && (
+                <SketchCard style={{ maxWidth: 360 }}>
+                  <div style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: t.ink, marginBottom: 8 }}>System Health</div>
+                  <SystemHealthPanel health={health} />
+                </SketchCard>
+              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* System health panel */}
-        {activePanel === 'health' && health && (
-          <div>
-            <SectionHeader title="System Health" />
-            <div className="max-w-md">
+          {activePanel === 'users' && (
+            <SketchCard>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: t.ink, marginBottom: 10 }}>Users ({users.length})</div>
+              <UserTable users={users} />
+            </SketchCard>
+          )}
+
+          {activePanel === 'subscriptions' && (
+            <SketchCard>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: t.ink, marginBottom: 10 }}>Subscriptions ({subscriptions.length})</div>
+              <SubscriptionMetrics subscriptions={subscriptions} />
+            </SketchCard>
+          )}
+
+          {activePanel === 'relay' && (
+            <SketchCard>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: t.ink, marginBottom: 10 }}>Relay Connections ({relay.length})</div>
+              <RelayMetrics connections={relay} />
+            </SketchCard>
+          )}
+
+          {activePanel === 'release-runs' && (
+            <SketchCard>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: t.ink, marginBottom: 10 }}>Hosted Release Runs ({releaseRuns.length})</div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ color: t.muted, textAlign: 'left' }}>
+                      <th style={{ padding: '6px 10px' }}>Source</th>
+                      <th style={{ padding: '6px 10px' }}>Status</th>
+                      <th style={{ padding: '6px 10px' }}>Started</th>
+                      <th style={{ padding: '6px 10px' }}>Completed</th>
+                      <th style={{ padding: '6px 10px' }}>Cancelled</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {releaseRuns.length === 0 && (
+                      <tr><td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: t.muted }}>No release runs.</td></tr>
+                    )}
+                    {releaseRuns.map(r => (
+                      <tr key={r.id} style={{ borderTop: `1px dashed ${t.border}` }}>
+                        <td style={{ padding: '6px 10px', color: t.muted }}>{r.source}</td>
+                        <td style={{ padding: '6px 10px', color: r.status === 'completed' ? '#27AE60' : r.status === 'active' ? t.accent : r.status === 'cancelled' ? t.muted : '#C77700' }}>{r.status}</td>
+                        <td style={{ padding: '6px 10px', color: t.muted }}>{new Date(r.startedAt).toLocaleString()}</td>
+                        <td style={{ padding: '6px 10px', color: t.muted }}>{r.completedAt ? new Date(r.completedAt).toLocaleString() : '—'}</td>
+                        <td style={{ padding: '6px 10px', color: t.muted }}>{r.cancelledAt ? new Date(r.cancelledAt).toLocaleString() : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </SketchCard>
+          )}
+
+          {activePanel === 'health' && health && (
+            <SketchCard style={{ maxWidth: 420 }}>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: t.ink, marginBottom: 10 }}>System Health</div>
               <SystemHealthPanel health={health} />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+            </SketchCard>
+          )}
+        </>
+      )}
+    </AppShell>
   );
 }

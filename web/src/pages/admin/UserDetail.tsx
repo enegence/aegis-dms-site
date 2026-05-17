@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { get } from '../../lib/api';
+import { useTheme } from '../../lib/theme';
+import AppShell from '../../components/layout/AppShell';
+import { buildNavItems } from '../../components/layout/navModel';
+import { SketchCard, SectionTitle } from '../../components/ui';
 
 interface AdminUserDetail {
   id: string;
@@ -22,6 +26,7 @@ interface AdminUserDetail {
 
 export default function UserDetail() {
   const { id } = useParams<{ id: string }>();
+  const t = useTheme();
   const [user, setUser] = useState<AdminUserDetail | null>(null);
   const [error, setError] = useState('');
 
@@ -32,126 +37,76 @@ export default function UserDetail() {
       .catch((e: Error) => setError(e.message));
   }, [id]);
 
-  if (error) return <div className="p-8 text-brand-danger font-sans">{error}</div>;
-  if (!user) return <div className="p-8 text-brand-muted font-sans">Loading...</div>;
+  const dt = { color: t.muted, fontFamily: "'JetBrains Mono',monospace", fontSize: 12 } as const;
+  const dd = { color: t.ink, fontFamily: "'JetBrains Mono',monospace", fontSize: 12 } as const;
+  const h2 = { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: t.ink, margin: '0 0 10px' } as const;
 
   return (
-    <div className="min-h-screen bg-brand-bg p-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="font-hand text-4xl font-bold mb-1 text-brand-ink">User Detail</h1>
-        <p className="font-sans text-sm text-brand-muted mb-6">{user.email}</p>
+    <AppShell navItems={buildNavItems(true)} releaseTo="/release">
+      {error ? (
+        <div role="alert" style={{ color: t.danger, fontFamily: "'JetBrains Mono',monospace" }}>{error}</div>
+      ) : !user ? (
+        <div style={{ color: t.muted, fontFamily: "'JetBrains Mono',monospace" }}>Loading...</div>
+      ) : (
+        <>
+          <SectionTitle sub={user.email}>User Detail</SectionTitle>
+          <nav style={{ display: 'flex', gap: 16, marginBottom: 20, fontFamily: "'JetBrains Mono',monospace", fontSize: 12 }}>
+            <Link to="/admin" style={{ color: t.muted, textDecoration: 'none' }}>Overview</Link>
+            <Link to="/admin/users" style={{ color: t.muted, textDecoration: 'none' }}>Users</Link>
+            <span style={{ color: t.accent, fontWeight: 700 }}>User Detail</span>
+          </nav>
 
-        <nav className="flex gap-4 mb-8 text-sm font-sans">
-          <Link to="/admin" className="text-brand-muted hover:text-brand-ink">Overview</Link>
-          <Link to="/admin/users" className="text-brand-muted hover:text-brand-ink">Users</Link>
-          <span className="text-brand-accent font-semibold">User Detail</span>
-        </nav>
+          <SketchCard style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <section>
+              <div style={h2}>Account</div>
+              <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', columnGap: 24, rowGap: 8, margin: 0 }}>
+                <dt style={dt}>User ID</dt><dd style={dd}>{user.id}</dd>
+                <dt style={dt}>Email</dt><dd style={dd}>{user.email}</dd>
+                <dt style={dt}>Display Name</dt><dd style={dd}>{user.displayName}</dd>
+                <dt style={dt}>Role</dt>
+                <dd><span style={{ padding: '2px 8px', borderRadius: 99, fontSize: 10, background: user.role === 'admin' || user.role === 'sa' ? t.accent : t.border, color: user.role === 'admin' || user.role === 'sa' ? '#fff' : t.muted }}>{user.role}</span></dd>
+                <dt style={dt}>Email Verified</dt><dd style={{ ...dd, color: user.emailVerified ? '#27AE60' : t.muted }}>{user.emailVerified ? 'Yes' : 'No'}</dd>
+                <dt style={dt}>TOTP Enabled</dt><dd style={{ ...dd, color: user.totpEnabled ? '#27AE60' : t.muted }}>{user.totpEnabled ? 'Yes' : 'No'}</dd>
+                <dt style={dt}>Timezone</dt><dd style={dd}>{user.timezone || '—'}</dd>
+                <dt style={dt}>Joined</dt><dd style={dd}>{new Date(user.createdAt).toLocaleString()}</dd>
+              </dl>
+            </section>
 
-        <div className="bg-brand-surface border border-brand-border rounded-lg p-6 space-y-4 font-sans text-sm">
-          <section>
-            <h2 className="font-semibold text-brand-ink mb-3 text-base">Account</h2>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-2">
-              <dt className="text-brand-muted">User ID</dt>
-              <dd className="text-brand-ink font-mono text-xs">{user.id}</dd>
+            <hr style={{ border: 'none', borderTop: `1px dashed ${t.border}` }} />
 
-              <dt className="text-brand-muted">Email</dt>
-              <dd className="text-brand-ink">{user.email}</dd>
-
-              <dt className="text-brand-muted">Display Name</dt>
-              <dd className="text-brand-ink">{user.displayName}</dd>
-
-              <dt className="text-brand-muted">Role</dt>
-              <dd>
-                <span className={`px-2 py-0.5 rounded text-xs ${
-                  user.role === 'admin' || user.role === 'sa'
-                    ? 'bg-brand-accent text-white'
-                    : 'bg-brand-surface text-brand-muted border border-brand-border'
-                }`}>
-                  {user.role}
-                </span>
-              </dd>
-
-              <dt className="text-brand-muted">Email Verified</dt>
-              <dd>{user.emailVerified
-                ? <span className="text-green-600">Yes</span>
-                : <span className="text-brand-muted">No</span>}
-              </dd>
-
-              <dt className="text-brand-muted">TOTP Enabled</dt>
-              <dd>{user.totpEnabled
-                ? <span className="text-green-600">Yes</span>
-                : <span className="text-brand-muted">No</span>}
-              </dd>
-
-              <dt className="text-brand-muted">Timezone</dt>
-              <dd className="text-brand-ink">{user.timezone || '—'}</dd>
-
-              <dt className="text-brand-muted">Joined</dt>
-              <dd className="text-brand-ink">{new Date(user.createdAt).toLocaleString()}</dd>
-            </dl>
-          </section>
-
-          <hr className="border-brand-border" />
-
-          <section>
-            <h2 className="font-semibold text-brand-ink mb-3 text-base">Subscription</h2>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-2">
-              <dt className="text-brand-muted">Plan</dt>
-              <dd className="text-brand-ink">{user.subscriptionPlan ?? '—'}</dd>
-
-              <dt className="text-brand-muted">Status</dt>
-              <dd>
-                {user.subscriptionStatus ? (
-                  <span className={`px-2 py-0.5 rounded text-xs ${
-                    user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing'
-                      ? 'bg-green-100 text-green-700'
-                      : user.subscriptionStatus === 'past_due' || user.subscriptionStatus === 'paused'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-red-100 text-red-700'
-                  }`}>
-                    {user.subscriptionStatus}
-                  </span>
-                ) : (
-                  <span className="text-brand-muted">None</span>
+            <section>
+              <div style={h2}>Subscription</div>
+              <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', columnGap: 24, rowGap: 8, margin: 0 }}>
+                <dt style={dt}>Plan</dt><dd style={dd}>{user.subscriptionPlan ?? '—'}</dd>
+                <dt style={dt}>Status</dt>
+                <dd style={dd}>{user.subscriptionStatus ?? <span style={{ color: t.muted }}>None</span>}</dd>
+                {user.subscriptionCurrentPeriodEnd && (
+                  <>
+                    <dt style={dt}>Period End</dt>
+                    <dd style={dd}>{new Date(user.subscriptionCurrentPeriodEnd).toLocaleDateString()}</dd>
+                  </>
                 )}
-              </dd>
+              </dl>
+            </section>
 
-              {user.subscriptionCurrentPeriodEnd && (
-                <>
-                  <dt className="text-brand-muted">Period End</dt>
-                  <dd className="text-brand-ink">
-                    {new Date(user.subscriptionCurrentPeriodEnd).toLocaleDateString()}
-                  </dd>
-                </>
-              )}
-            </dl>
-          </section>
+            <hr style={{ border: 'none', borderTop: `1px dashed ${t.border}` }} />
 
-          <hr className="border-brand-border" />
+            <section>
+              <div style={h2}>Activity</div>
+              <dl style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', columnGap: 24, rowGap: 8, margin: 0 }}>
+                <dt style={dt}>Relay Connections</dt><dd style={dd}>{user.relayConnectionCount}</dd>
+                <dt style={dt}>Active Release Runs</dt><dd style={dd}>{user.activeReleaseRunCount}</dd>
+                <dt style={dt}>Failed Notifications</dt>
+                <dd style={{ ...dd, color: user.failedNotificationCount > 0 ? t.danger : t.ink }}>{user.failedNotificationCount}</dd>
+              </dl>
+            </section>
+          </SketchCard>
 
-          <section>
-            <h2 className="font-semibold text-brand-ink mb-3 text-base">Activity</h2>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-2">
-              <dt className="text-brand-muted">Relay Connections</dt>
-              <dd className="text-brand-ink">{user.relayConnectionCount}</dd>
-
-              <dt className="text-brand-muted">Active Release Runs</dt>
-              <dd className="text-brand-ink">{user.activeReleaseRunCount}</dd>
-
-              <dt className="text-brand-muted">Failed Notifications</dt>
-              <dd className={user.failedNotificationCount > 0 ? 'text-brand-danger' : 'text-brand-ink'}>
-                {user.failedNotificationCount}
-              </dd>
-            </dl>
-          </section>
-        </div>
-
-        <div className="mt-4">
-          <Link to="/admin/users" className="text-sm font-sans text-brand-muted hover:text-brand-ink">
-            ← Back to Users
-          </Link>
-        </div>
-      </div>
-    </div>
+          <div style={{ marginTop: 16 }}>
+            <Link to="/admin/users" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: t.muted, textDecoration: 'none' }}>← Back to Users</Link>
+          </div>
+        </>
+      )}
+    </AppShell>
   );
 }
