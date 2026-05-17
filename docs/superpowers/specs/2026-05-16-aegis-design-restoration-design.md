@@ -99,6 +99,10 @@ All modules are ported **pixel-faithfully** from the backup JSX, converted JS→
 
 - `AegisMascot.tsx` — dead-stick-figure "D" + hand-drawn "MS" wordmark. Props: `height?`, `color?`.
 - `AegisLockup.tsx` — mascot + "DIGITAL LEGACY SYSTEM" tagline. Props: `size: 'sm'|'md'|'lg'`, `color?`. Honors `tweaks.logoSize` where used in shell.
+<!-- DEVIATION (2026-05-17): AegisLockup now also renders a hand-drawn "AEGIS" badge stamp (wobbly box + Caveat lettering + accent underlines, tilted -4deg) above the mascot/wordmark. This is the new canonical lockup, applied byte-identically in BOTH repos (aegis-dms-site + aegis). Supersedes the "byte-identical to $BACKUP/aegis-logo.jsx lines 1–81" port intent — the badge is a deliberate post-plan brand enhancement, not drift. -->
+<!-- DEVIATION (2026-05-17): The three trust badges (No passwords stored / Self-hostable / Open source core) are now rendered as tinted PNG line-art via a CSS-mask `MaskArt` helper, NOT verbatim hand-drawn SVG. Applied in BOTH repos: SaaS `Landing.tsx` (inline MaskArt) and OSS `components/brand/TrustBadges.tsx` (MaskArt) on Setup Step 0. Assets live in `web/public/illustrations/{no-passwords,self-hostable,open-source-core}.png` in each repo. This supersedes the "verbatim SVG from $BACKUP/aegis-app.jsx lines 56–178" intent throughout this spec/plan. -->
+<!-- BACKLOG: 2026-05-16 plan checkboxes (P0 Task 1 Step 1; P1 Step 2; P9 Task 9.4 Step 2) were never ticked though the work shipped; tracking superseded by these DEVIATION notes — do not re-execute as written. -->
+
 
 ### 4.5 `components/animations/` — Mortality scenes (from `aegis-animations.jsx`)
 
