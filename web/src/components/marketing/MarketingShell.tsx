@@ -34,7 +34,7 @@ export default function MarketingShell({ children }: { children: ReactNode }) {
           AEGIS IS NOT A WILL, TRUST, OR LEGAL DOCUMENT. IT IS A METADATA DELIVERY SYSTEM.
         </div>
         <div style={{ fontSize: 11, color: t.muted, marginTop: 6, opacity: 0.6 }}>
-          © {new Date().getFullYear()} Aegis DMS — Open-source core under AGPL-3.0.
+          © {new Date().getFullYear()} Aegis DMS — Built with love and mild existential dread.
         </div>
         <div style={{ fontSize: 11, color: t.muted, marginTop: 10 }}>
           {LEGAL_LINKS.map(([label, to], i) => (

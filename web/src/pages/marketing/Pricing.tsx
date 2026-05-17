@@ -103,10 +103,6 @@ export default function Pricing() {
           ))}
         </div>
       )}
-
-      <p style={{ marginTop: 40, fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: t.muted, textAlign: 'center', lineHeight: 1.7, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto', padding: '12px 16px', border: `1.5px dashed ${t.border}`, borderRadius: '3px 10px 3px 10px / 10px 3px 10px 3px' }}>
-        Alpha software. Not a legal instrument. Does not replace a will, trust, or attorney. Security has not been independently audited. Use at your own risk.
-      </p>
     </MarketingShell>
   );
 }
